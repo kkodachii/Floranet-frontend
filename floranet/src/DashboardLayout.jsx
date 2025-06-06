@@ -23,13 +23,15 @@ import {
   Notifications as NotificationsIcon,
   ExpandLess,
   ExpandMore,
-  Inbox as InboxIcon,
+  Security as SecurityIcon,
   People as PeopleIcon,
-  Dashboard as DashboardIcon,
+  Person as PersonIcon,
   Message as MessageIcon,
-  ShoppingCart as ShoppingCartIcon,
+  Payment as PaymentIcon,
   Description as DescriptionIcon,
   Help as HelpIcon,
+  Groups as GroupsIcon,
+  Report as ReportIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 280;
@@ -61,11 +63,11 @@ function DashboardLayout({ children }) {
       <Divider />
       <List>
         <ListItem button>
-          <ListItemIcon><DashboardIcon /></ListItemIcon>
+          <ListItemIcon><PersonIcon /></ListItemIcon>
           <ListItemText primary="User Management" />
         </ListItem>
         <ListItem button onClick={() => handleSectionClick('pages')}>
-          <ListItemIcon><InboxIcon /></ListItemIcon>
+          <ListItemIcon><SecurityIcon /></ListItemIcon>
           <ListItemText primary="Alerts and Security" />
           {openSection === 'pages' ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
@@ -83,7 +85,7 @@ function DashboardLayout({ children }) {
           </List>
         </Collapse>
         <ListItem button onClick={() => handleSectionClick('sales')}>
-          <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
+          <ListItemIcon><PaymentIcon /></ListItemIcon>
           <ListItemText primary="Billing and Payment" />
           {openSection === 'sales' ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
@@ -101,11 +103,11 @@ function DashboardLayout({ children }) {
           </List>
         </Collapse>
         <ListItem button>
-          <ListItemIcon><DashboardIcon /></ListItemIcon>
+          <ListItemIcon><GroupsIcon /></ListItemIcon>
           <ListItemText primary="Community Hub" />
         </ListItem>
         <ListItem button onClick={() => handleSectionClick('auth')}>
-          <ListItemIcon><PeopleIcon /></ListItemIcon>
+          <ListItemIcon><MessageIcon /></ListItemIcon>
           <ListItemText primary="Complaints" />
           {openSection === 'auth' ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
