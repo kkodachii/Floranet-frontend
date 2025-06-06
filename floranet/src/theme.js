@@ -3,18 +3,16 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2', // Material UI's default blue
-      light: '#42a5f5',
-      dark: '#1565c0',
+      main: '#27667B', // Dark blue
+      light: '#A0C878', // Light green
+      dark: '#143D60', // Darker blue
     },
     secondary: {
-      main: '#9c27b0', // Material UI's default purple
-      light: '#ba68c8',
-      dark: '#7b1fa2',
+      main: '#DDEB9D', // Light mint
     },
     background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
+      default: '#FFFFFF',
+      paper: '#FFFFFF',
     },
   },
   typography: {
@@ -48,6 +46,34 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: 'none',
+          fontWeight: 600,
+        },
+        contained: {
+          '&:hover': {
+            backgroundColor: '#143D60',
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            '&:hover fieldset': {
+              borderColor: '#A0C878',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#27667B',
+            },
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+          backgroundColor: '#FFFFFF',
         },
       },
     },
