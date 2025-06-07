@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   AppBar,
   Toolbar,
@@ -17,7 +17,7 @@ import {
   CssBaseline,
   Avatar,
   Collapse,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
@@ -32,25 +32,18 @@ import {
   Help as HelpIcon,
   Groups as GroupsIcon,
   Report as ReportIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
+import Header from "./components/Header";
 
 const drawerWidth = 280;
 
 function DashboardLayout({ children }) {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState(null);
   const [openSection, setOpenSection] = React.useState(null);
+
+  const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-  };
-
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
   };
 
   const handleSectionClick = (section) => {
@@ -59,19 +52,24 @@ function DashboardLayout({ children }) {
 
   const drawer = (
     <div>
-      <Toolbar />
-      <Divider />
+      <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+        <img class="h-40  " src="/floranet_logo.png" alt="floranet logo" />
+      </Box>
       <List>
         <ListItem button>
-          <ListItemIcon><PersonIcon /></ListItemIcon>
+          <ListItemIcon>
+            <PersonIcon />
+          </ListItemIcon>
           <ListItemText primary="User Management" />
         </ListItem>
-        <ListItem button onClick={() => handleSectionClick('pages')}>
-          <ListItemIcon><SecurityIcon /></ListItemIcon>
+        <ListItem button onClick={() => handleSectionClick("pages")}>
+          <ListItemIcon>
+            <SecurityIcon />
+          </ListItemIcon>
           <ListItemText primary="Alerts and Security" />
-          {openSection === 'pages' ? <ExpandLess /> : <ExpandMore />}
+          {openSection === "pages" ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
-        <Collapse in={openSection === 'pages'} timeout="auto" unmountOnExit>
+        <Collapse in={openSection === "pages"} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             <ListItem button sx={{ pl: 4 }}>
               <ListItemText primary="Alerts" />
@@ -84,12 +82,14 @@ function DashboardLayout({ children }) {
             </ListItem>
           </List>
         </Collapse>
-        <ListItem button onClick={() => handleSectionClick('sales')}>
-          <ListItemIcon><PaymentIcon /></ListItemIcon>
+        <ListItem button onClick={() => handleSectionClick("sales")}>
+          <ListItemIcon>
+            <PaymentIcon />
+          </ListItemIcon>
           <ListItemText primary="Billing and Payment" />
-          {openSection === 'sales' ? <ExpandLess /> : <ExpandMore />}
+          {openSection === "sales" ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
-        <Collapse in={openSection === 'sales'} timeout="auto" unmountOnExit>
+        <Collapse in={openSection === "sales"} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             <ListItem button sx={{ pl: 4 }}>
               <ListItemText primary="Personal payment" />
@@ -103,15 +103,19 @@ function DashboardLayout({ children }) {
           </List>
         </Collapse>
         <ListItem button>
-          <ListItemIcon><GroupsIcon /></ListItemIcon>
+          <ListItemIcon>
+            <GroupsIcon />
+          </ListItemIcon>
           <ListItemText primary="Community Hub" />
         </ListItem>
-        <ListItem button onClick={() => handleSectionClick('auth')}>
-          <ListItemIcon><MessageIcon /></ListItemIcon>
+        <ListItem button onClick={() => handleSectionClick("auth")}>
+          <ListItemIcon>
+            <MessageIcon />
+          </ListItemIcon>
           <ListItemText primary="Complaints" />
-          {openSection === 'auth' ? <ExpandLess /> : <ExpandMore />}
+          {openSection === "auth" ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
-        <Collapse in={openSection === 'auth'} timeout="auto" unmountOnExit>
+        <Collapse in={openSection === "auth"} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             <ListItem button sx={{ pl: 4 }}>
               <ListItemText primary="General Complaints" />
@@ -125,56 +129,28 @@ function DashboardLayout({ children }) {
       <Divider />
       <List>
         <ListItem button>
-          <ListItemIcon><DescriptionIcon /></ListItemIcon>
+          <ListItemIcon>
+            <DescriptionIcon />
+          </ListItemIcon>
           <ListItemText primary="Settings" />
         </ListItem>
         <ListItem button>
-          <ListItemIcon><HelpIcon /></ListItemIcon>
+          <ListItemIcon>
+            <HelpIcon />
+          </ListItemIcon>
           <ListItemText primary="Help" />
         </ListItem>
       </List>
-      <Box sx={{ position: 'absolute', bottom: 0, width: '100%', p: 2 }}>
+      <Box sx={{ position: "absolute", bottom: 0, width: "100%", p: 2 }}>
         {/* No settings or logout */}
       </Box>
     </div>
   );
 
   return (
-    <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", bgcolor: "grey.50", minHeight: "100vh" }}>
       <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, bgcolor: 'background.paper', color: 'text.primary', borderBottom: 1, borderColor: 'divider' }} elevation={1}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Box sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: '#2767B7', mr: 1.5 }} />
-            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
-              Floranet
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton color="inherit" onClick={handleMenu} sx={{ ml: 1 }}>
-              <Avatar src="https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg" />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-              <MenuItem onClick={handleClose}>Profile</MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
+
       <Box
         component="nav"
         sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
@@ -186,8 +162,11 @@ function DashboardLayout({ children }) {
           onClose={handleDrawerToggle}
           ModalProps={{ keepMounted: true }}
           sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
         >
           {drawer}
@@ -195,8 +174,11 @@ function DashboardLayout({ children }) {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", md: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
           open
         >
@@ -205,12 +187,26 @@ function DashboardLayout({ children }) {
       </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 3, width: { md: `calc(100% - ${drawerWidth}px)` }, mt: 8 }}
+        sx={{
+          flexGrow: 1,
+          px: 3,
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+        }}
       >
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{ mr: 2, display: { md: "none" } }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <Header></Header>
         {children}
       </Box>
     </Box>
   );
 }
 
-export default DashboardLayout; 
+export default DashboardLayout;
