@@ -1,91 +1,68 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
+    mode: "light",
     primary: {
-      main: '#27667B', // Dark blue
-      light: '#A0C878', // Light green
-      dark: '#143D60', // Darker blue
+      main: "#23922c",
     },
     secondary: {
-      main: '#DDEB9D', // Light mint
-    },
-    background: {
-      default: '#FFFFFF',
-      paper: '#FFFFFF',
+      main: "#341abd",
     },
   },
-  typography: {
-    fontFamily: [
-      'Roboto',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 500,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 500,
-    },
-    h3: {
-      fontSize: '1.75rem',
-      fontWeight: 500,
-    },
-    body1: {
-      fontSize: '1rem',
-    },
+
+  shape: {
+    borderRadius: 15,
   },
   components: {
+    MuiSwitch: {
+      styleOverrides: {
+        root: {
+          width: 46,
+          height: 27,
+          padding: 0,
+          margin: 8,
+        },
+        switchBase: {
+          padding: 1,
+          "&$checked, &$colorPrimary$checked, &$colorSecondary$checked": {
+            transform: "translateX(16px)",
+            color: "#fff",
+            "& + $track": {
+              opacity: 1,
+              border: "none",
+            },
+          },
+        },
+        thumb: {
+          width: 24,
+          height: 24,
+        },
+        track: {
+          borderRadius: 13,
+          border: "1px solid #bdbdbd",
+          backgroundColor: "#fafafa",
+          opacity: 1,
+          transition:
+            "background-color 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 600,
-        },
-        contained: {
-          '&:hover': {
-            backgroundColor: '#143D60',
-          },
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': {
-              borderColor: '#A0C878',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#27667B',
-            },
-          },
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-          backgroundColor: '#FFFFFF',
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          background: "linear-gradient(45deg, #388E3C 30%, #2E7D32 90%)",
+          border: 0,
+          borderRadius: 10,
+          boxShadow:
+            "0 4px 10px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15)",
+          color: "white",
+          height: 35,
+          padding: "0 30px",
         },
       },
     },
   },
 });
 
-export default theme; 
+export default theme;

@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -31,8 +30,11 @@ import {
   Help as HelpIcon,
   Groups as GroupsIcon,
   Report as ReportIcon,
+  ExpandMore,
+  ExpandLess,
 } from "@mui/icons-material";
 import Header from "./components/Header";
+import NavbarBreadcrumbs from "./components/NavbarBreadcrumbs";
 
 const drawerWidth = 280;
 
@@ -52,7 +54,7 @@ function DashboardLayout({ children }) {
   const drawer = (
     <div>
       <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
-        <img class="h-40  " src="/floranet_logo.png" alt="floranet logo" />
+        <img className="h-40" src="/floranet_logo.png" alt="floranet logo" />
       </Box>
       <List>
         <ListItem button>
@@ -188,21 +190,29 @@ function DashboardLayout({ children }) {
         component="main"
         sx={{
           flexGrow: 1,
-          px: 3,
           width: { md: `calc(100% - ${drawerWidth}px)` },
         }}
       >
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
-          onClick={handleDrawerToggle}
-          sx={{ mr: 2, display: { md: "none" } }}
+        <Header>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { md: "none" } }}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Header>
+
+        <Box
+          sx={{
+            px: 3,
+          }}
         >
-          <MenuIcon />
-        </IconButton>
-        <Header></Header>
-        {children}
+          <NavbarBreadcrumbs />
+          {children}
+        </Box>
       </Box>
     </Box>
   );

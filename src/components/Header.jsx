@@ -1,13 +1,14 @@
 import * as React from "react";
 import { Avatar, Menu, MenuItem, IconButton, Box } from "@mui/material";
-import Stack from "@mui/material/Stack";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
-import NavbarBreadcrumbs from "./NavbarBreadcrumbs";
 import MenuButton from "./MenuButton";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 
 import Search from "./Search";
 
-export default function Header() {
+export default function Header({ children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   const handleMenu = (event) => {
@@ -19,21 +20,12 @@ export default function Header() {
   };
 
   return (
-    <Stack
-      direction="row"
-      sx={{
-        display: { xs: "none", md: "flex" },
-        width: "100%",
-        alignItems: { xs: "flex-start", md: "center" },
-        justifyContent: "space-between",
-        maxWidth: { sm: "100%", md: "1700px" },
-        pt: 1.5,
-      }}
-      spacing={2}
-    >
-      <NavbarBreadcrumbs />
-
-      <Stack direction="row" sx={{ gap: 1 }}>
+    <AppBar position="static">
+      <Toolbar>
+        {children}
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          Dashboard
+        </Typography>
         <Search />
         <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
@@ -52,7 +44,7 @@ export default function Header() {
             <MenuItem onClick={handleClose}>Profile</MenuItem>
           </Menu>
         </Box>
-      </Stack>
-    </Stack>
+      </Toolbar>
+    </AppBar>
   );
 }
