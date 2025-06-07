@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -16,13 +17,10 @@ import {
   Box,
   CssBaseline,
   Avatar,
-  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
-  ExpandLess,
-  ExpandMore,
   Security as SecurityIcon,
   People as PeopleIcon,
   Person as PersonIcon,
@@ -37,9 +35,10 @@ import {
 const drawerWidth = 280;
 
 function DashboardLayout({ children }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [openSection, setOpenSection] = React.useState(null);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -53,85 +52,49 @@ function DashboardLayout({ children }) {
     setAnchorEl(null);
   };
 
-  const handleSectionClick = (section) => {
-    setOpenSection(openSection === section ? null : section);
-  };
+  const menuItems = [
+    { text: 'User Management', icon: <PersonIcon />, path: '/user-management' },
+    { text: 'Alerts and Security', icon: <SecurityIcon />, path: '/alerts-security' },
+    { text: 'Billing and Payment', icon: <PaymentIcon />, path: '/billing-payment' },
+    { text: 'Community Hub', icon: <GroupsIcon />, path: '/community-hub' },
+    { text: 'Complaints', icon: <MessageIcon />, path: '/complaints' },
+  ];
+
+  const bottomMenuItems = [
+    { text: 'Settings', icon: <DescriptionIcon />, path: '/settings' },
+    { text: 'Help', icon: <HelpIcon />, path: '/help' },
+  ];
 
   const drawer = (
     <div>
       <Toolbar />
       <Divider />
       <List>
-        <ListItem button>
-          <ListItemIcon><PersonIcon /></ListItemIcon>
-          <ListItemText primary="User Management" />
-        </ListItem>
-        <ListItem button onClick={() => handleSectionClick('pages')}>
-          <ListItemIcon><SecurityIcon /></ListItemIcon>
-          <ListItemText primary="Alerts and Security" />
-          {openSection === 'pages' ? <ExpandLess /> : <ExpandMore />}
-        </ListItem>
-        <Collapse in={openSection === 'pages'} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="Alerts" />
-            </ListItem>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="CCTV" />
-            </ListItem>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="Waste Collection" />
-            </ListItem>
-          </List>
-        </Collapse>
-        <ListItem button onClick={() => handleSectionClick('sales')}>
-          <ListItemIcon><PaymentIcon /></ListItemIcon>
-          <ListItemText primary="Billing and Payment" />
-          {openSection === 'sales' ? <ExpandLess /> : <ExpandMore />}
-        </ListItem>
-        <Collapse in={openSection === 'sales'} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="Personal payment" />
-            </ListItem>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="Payment status" />
-            </ListItem>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="Collection report" />
-            </ListItem>
-          </List>
-        </Collapse>
-        <ListItem button>
-          <ListItemIcon><GroupsIcon /></ListItemIcon>
-          <ListItemText primary="Community Hub" />
-        </ListItem>
-        <ListItem button onClick={() => handleSectionClick('auth')}>
-          <ListItemIcon><MessageIcon /></ListItemIcon>
-          <ListItemText primary="Complaints" />
-          {openSection === 'auth' ? <ExpandLess /> : <ExpandMore />}
-        </ListItem>
-        <Collapse in={openSection === 'auth'} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="General Complaints" />
-            </ListItem>
-            <ListItem button sx={{ pl: 4 }}>
-              <ListItemText primary="Service complaints" />
-            </ListItem>
-          </List>
-        </Collapse>
+        {menuItems.map((item) => (
+          <ListItem 
+            button 
+            key={item.text}
+            onClick={() => navigate(item.path)}
+            selected={location.pathname === item.path}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItem>
+        ))}
       </List>
       <Divider />
       <List>
-        <ListItem button>
-          <ListItemIcon><DescriptionIcon /></ListItemIcon>
-          <ListItemText primary="Settings" />
-        </ListItem>
-        <ListItem button>
-          <ListItemIcon><HelpIcon /></ListItemIcon>
-          <ListItemText primary="Help" />
-        </ListItem>
+        {bottomMenuItems.map((item) => (
+          <ListItem 
+            button 
+            key={item.text}
+            onClick={() => navigate(item.path)}
+            selected={location.pathname === item.path}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItem>
+        ))}
       </List>
       <Box sx={{ position: 'absolute', bottom: 0, width: '100%', p: 2 }}>
         {/* No settings or logout */}
