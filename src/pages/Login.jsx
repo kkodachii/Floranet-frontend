@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, TextField, Button, Typography, Link } from "@mui/material";
+import { Box, TextField, Button, Typography, Link, useTheme } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import IconButton from "@mui/material/IconButton";
@@ -8,6 +8,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function FullForm() {
+  const theme = useTheme();
   const navigate = useNavigate();
   const [view, setView] = React.useState("login");
   const [showPassword, setShowPassword] = React.useState(false);
@@ -78,7 +79,8 @@ export default function FullForm() {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: theme.palette.background.default,
+        transition: 'background-color 0.3s ease-in-out',
       }}
     >
       <Box
@@ -89,18 +91,19 @@ export default function FullForm() {
           flexDirection: "column",
           gap: 1.5,
           padding: 4,
-          border: "1px solid #ccc",
+          border: `1px solid ${theme.palette.mode === 'light' ? '#ccc' : 'rgba(255, 255, 255, 0.12)'}`,
           borderRadius: 1,
           boxShadow: 3,
-          backgroundColor: "white",
+          backgroundColor: theme.palette.background.paper,
+          transition: 'background-color 0.3s ease-in-out, border-color 0.3s ease-in-out',
         }}
       >
         {view === "login" && (
           <>
-            <Typography variant="h5" fontWeight="bold" align="center">
+            <Typography variant="h5" fontWeight="bold" align="center" color="text.primary">
               Welcome
             </Typography>
-            <Typography variant="body2" align="center" color="gray">
+            <Typography variant="body2" align="center" color="text.secondary">
               Sign in to your account
             </Typography>
 
@@ -149,7 +152,7 @@ export default function FullForm() {
                 component="button"
                 variant="body2"
                 onClick={() => setView("forgot")}
-                sx={{ fontSize: "0.85rem", color: "green" }}
+                sx={{ fontSize: "0.85rem", color: theme.palette.primary.main }}
               >
                 Forgot Password?
               </Link>
@@ -167,10 +170,10 @@ export default function FullForm() {
 
         {view === "forgot" && (
           <>
-            <Typography variant="h5" fontWeight="bold" align="center">
+            <Typography variant="h5" fontWeight="bold" align="center" color="text.primary">
               Forgot Password
             </Typography>
-            <Typography variant="body2" align="center" color="gray">
+            <Typography variant="body2" align="center" color="text.secondary">
               Enter your email to receive an OTP
             </Typography>
 
@@ -195,7 +198,7 @@ export default function FullForm() {
                 component="button"
                 variant="body2"
                 onClick={() => setView("login")}
-                sx={{ fontSize: "0.85rem" }}
+                sx={{ fontSize: "0.85rem", color: theme.palette.primary.main }}
               >
                 Back to Login
               </Link>
@@ -213,10 +216,10 @@ export default function FullForm() {
 
         {view === "otp" && (
           <>
-            <Typography variant="h5" fontWeight="bold" align="center">
+            <Typography variant="h5" fontWeight="bold" align="center" color="text.primary">
               Verify OTP
             </Typography>
-            <Typography variant="body2" align="center" color="gray">
+            <Typography variant="body2" align="center" color="text.secondary">
               Enter the 6-digit code sent to your email
             </Typography>
 
@@ -272,7 +275,7 @@ export default function FullForm() {
                 component="button"
                 variant="body2"
                 onClick={() => setView("forgot")}
-                sx={{ fontSize: "0.85rem" }}
+                sx={{ fontSize: "0.85rem", color: theme.palette.primary.main }}
               >
                 Resend OTP
               </Link>

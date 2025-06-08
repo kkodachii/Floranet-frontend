@@ -1,19 +1,38 @@
 import { createTheme } from "@mui/material/styles";
 
-const theme = createTheme({
+const getTheme = (mode) => createTheme({
   palette: {
-    mode: "light",
+    mode,
     primary: {
       main: "#23922c",
+      light: "#4caf50",
+      dark: "#1b5e20",
     },
     secondary: {
-      main: "#0d19f1",
+      main: "#1976d2",
+      light: "#42a5f5",
+      dark: "#1565c0",
+    },
+    background: {
+      default: mode === 'light' ? '#f5f5f5' : '#0a1929',
+      paper: mode === 'light' ? '#ffffff' : '#132f4c',
+    },
+    text: {
+      primary: mode === 'light' ? 'rgba(0, 0, 0, 0.87)' : '#fff',
+      secondary: mode === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.7)',
     },
   },
   shape: {
     borderRadius: 15,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          transition: 'background-color 0.3s ease-in-out',
+        },
+      },
+    },
     MuiSwitch: {
       styleOverrides: {
         root: {
@@ -50,18 +69,29 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          background: "linear-gradient(45deg, #388E3C 30%, #2E7D32 90%)",
+          backgroundColor: "#23922c",
           border: 0,
           borderRadius: 10,
-          boxShadow:
-            "0 4px 10px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15)",
+          boxShadow: "0 4px 10px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15)",
           color: "white",
           height: 35,
           padding: "0 30px",
+          transition: 'all 0.3s ease-in-out',
+          '&:hover': {
+            backgroundColor: "#1b5e20",
+            boxShadow: '0 6px 15px rgba(0, 0, 0, 0.3)',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          transition: 'background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
         },
       },
     },
   },
 });
 
-export default theme;
+export default getTheme;
