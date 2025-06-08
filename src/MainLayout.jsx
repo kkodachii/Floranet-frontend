@@ -17,6 +17,7 @@ import {
   CssBaseline,
   Avatar,
   Collapse,
+  useTheme,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -37,11 +38,12 @@ import Header from "./components/Header";
 import NavbarBreadcrumbs from "./components/NavbarBreadcrumbs";
 import Sidebar from "./components/Sidebar";
 
-const drawerWidth = 290;
+const drawerWidth = 300;
 
 function MainLayout({ children }) {
   const [openSection, setOpenSection] = React.useState(null);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const theme = useTheme();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -52,7 +54,12 @@ function MainLayout({ children }) {
   };
 
   return (
-    <Box sx={{ display: "flex", bgcolor: "grey.50", minHeight: "100vh" }}>
+    <Box sx={{ 
+      display: "flex", 
+      minHeight: "100vh",
+      bgcolor: theme.palette.mode === 'light' ? 'grey.50' : 'background.default',
+      transition: 'background-color 0.3s ease-in-out'
+    }}>
       <CssBaseline />
 
       <Box
@@ -94,6 +101,8 @@ function MainLayout({ children }) {
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
+          bgcolor: theme.palette.mode === 'light' ? 'grey.50' : 'background.default',
+          transition: 'background-color 0.3s ease-in-out'
         }}
       >
         <Header>
@@ -111,6 +120,9 @@ function MainLayout({ children }) {
         <Box
           sx={{
             px: 3,
+            py: 2,
+            bgcolor: theme.palette.mode === 'light' ? 'grey.50' : 'background.default',
+            transition: 'background-color 0.3s ease-in-out'
           }}
         >
           <NavbarBreadcrumbs />

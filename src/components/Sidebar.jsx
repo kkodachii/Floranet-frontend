@@ -7,6 +7,7 @@ import {
   ListItemText,
   Divider,
   Collapse,
+  Typography,
 } from "@mui/material";
 import {
   Security as SecurityIcon,
@@ -22,6 +23,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from '@mui/material/styles';
 import { lighten, darken } from '@mui/system';
+import floranetLogo from '../assets/floranet_logo.svg';
 
 const sidebarItems = [
   {
@@ -93,8 +95,23 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
 
   return (
     <div>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", flexGrow: 1 }}>
-        <img className="h-24" src="/floranet_logo.png" alt="floranet logo" />
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexGrow: 1, mb: 2 }}>
+        <img className="h-24" src={floranetLogo} alt="floranet logo" />
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            fontWeight: 900,
+            '& .flora': {
+              color: theme.palette.mode === 'dark' ? '#fff' : '#424242',
+            },
+            '& .net': {
+              color: theme.palette.primary.main,
+            }
+          }}
+        >
+          <span className="flora">FLORA</span>
+          <span className="net">NET</span>
+        </Typography>
       </Box>
       <List>
         {sidebarItems.map((item) => {
@@ -112,8 +129,18 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
                   }}
                   onClick={() => handleSectionClick(item.section)}
                 >
-                  <ListItemIcon sx={{ color: theme.palette.secondary.main }}>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.label} />
+                  <ListItemIcon sx={{ 
+                    color: theme.palette.mode === 'dark' 
+                      ? theme.palette.primary.light 
+                      : theme.palette.secondary.main 
+                  }}>{item.icon}</ListItemIcon>
+                  <ListItemText 
+                    primary={item.label} 
+                    primaryTypographyProps={{
+                      fontWeight: 600,
+                      fontSize: '0.9rem'
+                    }}
+                  />
                   {openSection === item.section ? <ExpandLess /> : <ExpandMore />}
                 </ListItem>
                 <Collapse in={openSection === item.section} timeout="auto" unmountOnExit>
@@ -134,7 +161,13 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
                         }}
                         onClick={() => navigate(child.to)}
                       >
-                        <ListItemText primary={child.label} />
+                        <ListItemText 
+                          primary={child.label} 
+                          primaryTypographyProps={{
+                            fontWeight: 600,
+                            fontSize: '0.85rem'
+                          }}
+                        />
                       </ListItem>
                     ))}
                   </List>
@@ -158,9 +191,21 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
                 onClick={() => navigate(item.to)}
               >
                 <ListItemIcon
-                  sx={{ color: isActive(item.to) ? theme.palette.primary.contrastText : theme.palette.secondary.main }}
+                  sx={{ 
+                    color: isActive(item.to) 
+                      ? theme.palette.primary.contrastText 
+                      : theme.palette.mode === 'dark'
+                        ? theme.palette.primary.light
+                        : theme.palette.secondary.main
+                  }}
                 >{item.icon}</ListItemIcon>
-                <ListItemText primary={item.label} />
+                <ListItemText 
+                  primary={item.label} 
+                  primaryTypographyProps={{
+                    fontWeight: 600,
+                    fontSize: '0.9rem'
+                  }}
+                />
               </ListItem>
             );
           }
@@ -184,9 +229,21 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
             onClick={() => navigate(item.to)}
           >
             <ListItemIcon
-              sx={{ color: isActive(item.to) ? theme.palette.primary.contrastText : theme.palette.secondary.main }}
+              sx={{ 
+                color: isActive(item.to) 
+                  ? theme.palette.primary.contrastText 
+                  : theme.palette.mode === 'dark'
+                    ? theme.palette.primary.light
+                    : theme.palette.secondary.main
+              }}
             >{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
+            <ListItemText 
+              primary={item.label} 
+              primaryTypographyProps={{
+                fontWeight: 600,
+                fontSize: '0.9rem'
+              }}
+            />
           </ListItem>
         ))}
       </List>

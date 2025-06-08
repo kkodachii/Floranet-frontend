@@ -20,7 +20,17 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
   const paginatedRows = rows.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   return (
-    <TableContainer component={Paper} sx={{ maxHeight, borderRadius: 1, background: '#fff', px: 0, py: 0 }}>
+    <TableContainer 
+      component={Paper} 
+      sx={{ 
+        maxHeight, 
+        borderRadius: 1, 
+        background: theme.palette.mode === 'light' ? '#fff' : theme.palette.background.paper,
+        px: 0, 
+        py: 0,
+        transition: 'background-color 0.3s ease-in-out'
+      }}
+    >
       <Table stickyHeader size="small">
         <TableHead>
           <TableRow sx={{ background: theme.palette.primary.main }}>
@@ -54,8 +64,17 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
               key={row.id || row.residentId || idx}
               hover
               sx={{
-                backgroundColor: zebra && idx % 2 === 0 ? theme.palette.action.hover : '#fff',
-                transition: 'background 0.2s',
+                backgroundColor: zebra && idx % 2 === 0 
+                  ? theme.palette.mode === 'light' 
+                    ? theme.palette.action.hover 
+                    : theme.palette.action.hover
+                  : theme.palette.mode === 'light'
+                    ? '#fff'
+                    : theme.palette.background.paper,
+                transition: 'background-color 0.3s ease-in-out',
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                }
               }}
             >
               {columns.map((col) => (
@@ -69,6 +88,8 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
                     fontSize: 13,
                     py: 0.5,
                     px: 1,
+                    color: theme.palette.text.primary,
+                    transition: 'color 0.3s ease-in-out'
                   }}
                 >
                   <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
@@ -84,7 +105,12 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
                         size="small"
                         color={action.color || 'default'}
                         onClick={() => action.onClick(row)}
-                        sx={action.sx}
+                        sx={{
+                          ...action.sx,
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.hover,
+                          }
+                        }}
                       >
                         {action.icon}
                       </IconButton>
@@ -96,14 +122,21 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
           ))}
           {paginatedRows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={columns.length + (actions && actions.length > 0 ? 1 : 0)} align="center" sx={{ py: 4 }}>
+              <TableCell 
+                colSpan={columns.length + (actions && actions.length > 0 ? 1 : 0)} 
+                align="center" 
+                sx={{ 
+                  py: 4,
+                  color: theme.palette.text.secondary,
+                  transition: 'color 0.3s ease-in-out'
+                }}
+              >
                 <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
                   {loading ? (
                     <CircularProgress color="primary" />
                   ) : (
                     <>
-                      <span role="img" aria-label="empty">😕</span>
-                      <span style={{ color: theme.palette.text.secondary }}>{emptyMessage}</span>
+                      <span>{emptyMessage}</span>
                     </>
                   )}
                 </Box>
