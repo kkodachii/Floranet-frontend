@@ -1,11 +1,10 @@
 import * as React from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Link,
-} from "@mui/material";
+import { Box, TextField, Button, Typography, Link } from "@mui/material";
+
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function FullForm() {
   const [view, setView] = React.useState("login");
@@ -83,7 +82,7 @@ export default function FullForm() {
       <Box
         sx={{
           width: 500,
-          maxWidth: "100%",
+          minHeight: 400,
           display: "flex",
           flexDirection: "column",
           gap: 1.5,
@@ -120,6 +119,20 @@ export default function FullForm() {
               error={!!errorMsg.password}
               helperText={errorMsg.password}
               sx={{ width: "350px", alignSelf: "center" }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
 
             <Box
@@ -127,16 +140,9 @@ export default function FullForm() {
                 width: "350px",
                 alignSelf: "center",
                 display: "flex",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
               }}
             >
-              <Typography
-                variant="body2"
-                component="span"
-                sx={{ color: "gray", fontSize: "0.85rem" }}
-              >
-                Remember Me
-              </Typography>
               <Link
                 component="button"
                 variant="body2"
@@ -175,14 +181,23 @@ export default function FullForm() {
               sx={{ width: "350px", alignSelf: "center" }}
             />
 
-            <Link
-              component="button"
-              variant="body2"
-              onClick={() => setView("login")}
-              sx={{ fontSize: "0.85rem" }}
+            <Box
+              sx={{
+                width: "350px",
+                alignSelf: "center",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
             >
-              Back to Login
-            </Link>
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => setView("login")}
+                sx={{ fontSize: "0.85rem" }}
+              >
+                Back to Login
+              </Link>
+            </Box>
 
             <Button
               variant="contained"
@@ -224,8 +239,8 @@ export default function FullForm() {
                     style: {
                       textAlign: "center",
                       fontSize: "20px",
-                      width: "35px",
-                      height: "45px",
+                      width: "25px",
+                      height: "35px",
                     },
                   }}
                   error={!!errorMsg.otp}
@@ -243,14 +258,23 @@ export default function FullForm() {
               </Typography>
             )}
 
-            <Link
-              component="button"
-              variant="body2"
-              onClick={() => setView("forgot")}
-              sx={{ fontSize: "0.85rem" }}
+            <Box
+              sx={{
+                width: "350px",
+                alignSelf: "center",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
             >
-              Resend OTP
-            </Link>
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => setView("forgot")}
+                sx={{ fontSize: "0.85rem" }}
+              >
+                Resend OTP
+              </Link>
+            </Box>
 
             <Button
               variant="contained"
