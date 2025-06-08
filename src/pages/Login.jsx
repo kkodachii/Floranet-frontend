@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Box, TextField, Button, Typography, Link } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -7,6 +8,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function FullForm() {
+  const navigate = useNavigate();
   const [view, setView] = React.useState("login");
   const [showPassword, setShowPassword] = React.useState(false);
   const [username, setUsername] = React.useState("");
@@ -25,7 +27,7 @@ export default function FullForm() {
     if (!password) errors.password = "Password is required.";
     setErrorMsg(errors);
     if (!errors.username && !errors.password) {
-      alert("Signed in!");
+      navigate("/user-management/residents");
     }
   };
 
