@@ -18,8 +18,8 @@ const getTheme = (mode) => createTheme({
       paper: mode === 'light' ? '#ffffff' : '#132f4c',
     },
     text: {
-      primary: mode === 'light' ? 'rgba(0, 0, 0, 0.87)' : '#fff',
-      secondary: mode === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.7)',
+      primary: mode === 'light' ? '#424242' : '#fff',
+      secondary: mode === 'light' ? '#424242' : 'rgba(255, 255, 255, 0.7)',
     },
   },
   shape: {
@@ -31,6 +31,20 @@ const getTheme = (mode) => createTheme({
         body: {
           transition: 'background-color 0.3s ease-in-out',
         },
+        '*': {
+          '&:focus': {
+            outline: 'none !important',
+          },
+          '&:focus-visible': {
+            outline: 'none !important',
+          },
+          '&:focus-within': {
+            outline: 'none !important',
+          },
+          '&:active': {
+            outline: 'none !important',
+          }
+        }
       },
     },
     MuiSwitch: {
@@ -81,6 +95,20 @@ const getTheme = (mode) => createTheme({
             backgroundColor: "#1b5e20",
             boxShadow: '0 6px 15px rgba(0, 0, 0, 0.3)',
           },
+          '&:focus': {
+            outline: 'none !important',
+            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15)",
+          },
+          '&:focus-visible': {
+            outline: 'none !important',
+            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15)",
+          },
+          '&:focus-within': {
+            outline: 'none !important',
+          },
+          '&:active': {
+            outline: 'none !important',
+          }
         },
       },
     },
