@@ -39,7 +39,7 @@ export default function Header({ children }) {
         <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode} color="inherit">
           {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
         </IconButton>
-        <MenuButton showBadge aria-label="Open notifications">
+        <MenuButton showBadge aria-label="Open notifications" color="inherit">
           <NotificationsRoundedIcon />
         </MenuButton>
         <Box sx={{ display: "flex", alignItems: "center" }}>
