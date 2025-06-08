@@ -1,5 +1,7 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "./Login";
 import MainLayout from './MainLayout'
 import CommunityHub from './pages/CommunityHub'
 
@@ -21,6 +23,7 @@ function App() {
     <Router>
       <MainLayout>
         <Routes>
+           <Route path="/login" element={<Login />} />
           <Route path="/user-management/residents" element={<Residents />} />
           <Route path="/user-management/vendors" element={<Vendors />} />
           <Route path="/alerts-security/alerts" element={<Alerts />} />
@@ -37,7 +40,7 @@ function App() {
         </Routes>
       </MainLayout>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
