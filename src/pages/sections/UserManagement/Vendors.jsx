@@ -446,11 +446,19 @@ function Vendors() {
                   mx: 0.5,
                   bgcolor: 'background.paper',
                   color: page === 1 ? 'text.disabled' : 'primary.main',
-                  transition: 'border-color 0.2s, color 0.2s',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: 'primary.main',
+                    color: '#fff',
+                    borderColor: 'primary.main',
+                    '& .MuiSvgIcon-root': {
+                      color: '#fff'
+                    }
+                  }
                 }}
                 size="small"
               >
-                <ChevronLeftIcon color={page === 1 ? 'disabled' : 'primary'} />
+                <ChevronLeftIcon sx={{ color: page === 1 ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
               <IconButton
                 onClick={() => setPage(page + 1)}
@@ -462,11 +470,19 @@ function Vendors() {
                   mx: 0.5,
                   bgcolor: 'background.paper',
                   color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main',
-                  transition: 'border-color 0.2s, color 0.2s',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: 'primary.main',
+                    color: '#fff',
+                    borderColor: 'primary.main',
+                    '& .MuiSvgIcon-root': {
+                      color: '#fff'
+                    }
+                  }
                 }}
                 size="small"
               >
-                <ChevronRightIcon color={page * rowsPerPage >= total ? 'disabled' : 'primary'} />
+                <ChevronRightIcon sx={{ color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
             </Box>
           </Box>
