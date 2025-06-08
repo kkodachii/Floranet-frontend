@@ -5,6 +5,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useTheme } from "@mui/material/styles";
 
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -13,6 +14,7 @@ import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 
 export default function FullForm() {
+  const theme = useTheme();
   const [showPassword, setShowPassword] = React.useState(false);
 
   const handleClickShowPassword = () => setShowPassword((prev) => !prev);
@@ -25,7 +27,8 @@ export default function FullForm() {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: theme.palette.background.default,
+        transition: 'background-color 0.3s ease-in-out',
       }}
     >
       <Box
@@ -36,10 +39,11 @@ export default function FullForm() {
           flexDirection: "column",
           gap: 2,
           padding: 4,
-          border: "1px solid #ccc",
+          border: `1px solid ${theme.palette.mode === 'light' ? '#ccc' : 'rgba(255, 255, 255, 0.12)'}`,
           borderRadius: 1,
           boxShadow: 3,
-          backgroundColor: "white",
+          backgroundColor: theme.palette.background.paper,
+          transition: 'background-color 0.3s ease-in-out, border-color 0.3s ease-in-out',
         }}
       >
         <Typography
@@ -47,6 +51,7 @@ export default function FullForm() {
           fontWeight="bold"
           align="center"
           sx={{ mb: 3 }}
+          color="text.primary"
         >
           Forgot your password?
         </Typography>
@@ -84,9 +89,9 @@ export default function FullForm() {
             alignSelf: "center",
             fontWeight: "bold",
             borderRadius: 0.5,
-            backgroundColor: "#1976d2",
+            backgroundColor: theme.palette.primary.main,
             "&:hover": {
-              backgroundColor: "#1565c0",
+              backgroundColor: theme.palette.primary.dark,
             },
             "&:focus": {
               outline: "none",
