@@ -7,10 +7,9 @@ const theme = createTheme({
       main: "#23922c",
     },
     secondary: {
-      main: "#341abd",
+      main: "#0d19f1",
     },
   },
-
   shape: {
     borderRadius: 15,
   },
