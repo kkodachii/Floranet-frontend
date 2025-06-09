@@ -5,6 +5,8 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import CommunityPost from "../../../../src/components/CommunityPost";
 
+const PLACEHOLDER_IMAGE = "https://placehold.co/600x400";
+
 function VendorHub() {
   const theme = useTheme();
 
@@ -28,7 +30,7 @@ function VendorHub() {
       title: "Special Offer: Landscaping Services",
       content: "Hello Floranet residents! We are offering a 15% discount on all landscaping services booked this month. Get your gardens ready for summer!",
       images: [
-        "https://via.placeholder.com/164x100?text=Landscaping+Offer",
+        PLACEHOLDER_IMAGE,
       ],
       onBanUser: () => handleBanUser("Vendor A"),
       onVisitUser: () => handleVisitUser("Vendor A"),
@@ -38,7 +40,6 @@ function VendorHub() {
       avatarSrc: "https://via.placeholder.com/40", 
       userName: "User3",
       timestamp: "07/05/2025 04:00 PM",
-      // title: "Review for Vendor B",
       content: "Vendor B did an excellent job fixing our plumbing issue. Highly recommend their services!",
       images: [],
       onBanUser: () => handleBanUser("User3"),
@@ -49,7 +50,6 @@ function VendorHub() {
       avatarSrc: "https://via.placeholder.com/40", 
       userName: "Vendor B",
       timestamp: "07/04/2025 09:30 AM",
-      // title: "Emergency Plumbing Available 24/7",
       content: "Facing a plumbing emergency? Our team is available round the clock to assist you. Fast and reliable service guaranteed.",
       images: [],
       onBanUser: () => handleBanUser("Vendor B"),

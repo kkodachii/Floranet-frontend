@@ -8,6 +8,8 @@ import AddIcon from "@mui/icons-material/Add";
 import CreatePostModal from "../../../../src/components/CreatePostModal";
 import CommunityPost from "../../../../src/components/CommunityPost";
 
+const PLACEHOLDER_IMAGE = "https://placehold.co/600x400";
+
 function AdminHub() {
   const theme = useTheme();
   const [openModal, setOpenModal] = React.useState(false);
@@ -17,42 +19,39 @@ function AdminHub() {
 
   const samplePosts = [
     {
-      avatarSrc: "https://via.placeholder.com/40", 
+      avatarSrc: PLACEHOLDER_IMAGE, 
       userName: "ADMIN",
       timestamp: "07/04/2025 2:00 PM",
       title: "BASKETBALL TOURNAMENT",
       content: "Join us for our annual basketball tournament! Sign up now and show off your skills on the court. All community members are welcome to participate or cheer on their favorite teams.",
       images: [
-        "https://via.placeholder.com/164x100?text=Image+1",
-        "https://via.placeholder.com/164x100?text=Image+2",
-        "https://via.placeholder.com/164x100?text=Image+3",
-        "https://via.placeholder.com/164x100?text=Image+4",
-        "https://via.placeholder.com/164x100?text=Image+5",
+        PLACEHOLDER_IMAGE,
+        PLACEHOLDER_IMAGE,
+        PLACEHOLDER_IMAGE,
+        PLACEHOLDER_IMAGE,
+        PLACEHOLDER_IMAGE,
       ],
     },
     {
-      avatarSrc: "https://via.placeholder.com/40", 
+      avatarSrc: PLACEHOLDER_IMAGE, 
       userName: "Announcement",
       timestamp: "07/03/2025 10:30 AM",
-      // title: "Community Meeting Reminder",
       content: "A friendly reminder that our monthly community meeting will be held tomorrow at 7 PM in the main hall. We will be discussing upcoming events and community improvements. Your input is valuable!",
       images: [], 
     },
     {
-      avatarSrc: "https://via.placeholder.com/40", 
+      avatarSrc: PLACEHOLDER_IMAGE, 
       userName: "ADMIN",
       timestamp: "07/02/2025 04:45 PM",
-      // title: "New Park Hours",
       content: "Please note that the park hours have been updated. The park will now be open from 6 AM to 9 PM daily. We appreciate your cooperation in keeping our park clean and safe for everyone.",
       images: [
-        "https://via.placeholder.com/164x100?text=Park+Image",
+        PLACEHOLDER_IMAGE,
       ],
     },
     {
-      avatarSrc: "https://via.placeholder.com/40", 
+      avatarSrc: PLACEHOLDER_IMAGE, 
       userName: "Announcement",
       timestamp: "07/01/2025 09:00 AM",
-      // title: "Trash Collection Schedule Change",
       content: "Due to the upcoming holiday, trash collection for this week will be shifted by one day. Please refer to the updated schedule on the community board for specific details. Thank you for your understanding.",
       images: [], 
     },

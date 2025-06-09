@@ -6,6 +6,8 @@ import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useTheme, useMediaQuery } from "@mui/material";
 
+const PLACEHOLDER_IMAGE = "https://placehold.co/600x400";
+
 function CommunityPost({
   avatarSrc,
   userName,
@@ -170,7 +172,6 @@ function CommunityPost({
           sx={{
             width: '100%', 
             height: 'auto', 
-            // Adjust columns based on screen size
             gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr)) !important',
             [theme.breakpoints.up('sm')]: {
               gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr)) !important',
@@ -186,11 +187,14 @@ function CommunityPost({
           {images.map((item, index) => (
             <ImageListItem key={index}>
               <img
-                srcSet={`${item}?w=164&h=164&fit=crop&auto=format 1x, ${item}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
-                src={`${item}?w=164&h=164&fit=crop&auto=format`}
+                srcSet={`${item || PLACEHOLDER_IMAGE}?w=164&h=164&fit=crop&auto=format 1x, ${item || PLACEHOLDER_IMAGE}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
+                src={`${item || PLACEHOLDER_IMAGE}?w=164&h=164&fit=crop&auto=format`}
                 alt={`Post image ${index + 1}`}
                 loading="lazy"
                 style={{ borderRadius: 8, objectFit: 'cover', width: '100%', height: '100%' }}
+                onError={(e) => {
+                  e.target.src = PLACEHOLDER_IMAGE;
+                }}
               />
             </ImageListItem>
           ))}
