@@ -338,7 +338,7 @@ export default function FullForm() {
             justifyContent: "center",
             padding: 4,
             backgroundColor:
-              theme.palette.mode === "light" ? "#f8f9fa" : "#1e1e1e",
+              theme.palette.mode === "light" ? "#1a237e" : "#ffffff",
             borderLeft: `1px solid ${
               theme.palette.mode === "light"
                 ? "#e0e0e0"
@@ -365,10 +365,13 @@ export default function FullForm() {
               sx={{
                 fontWeight: 900,
                 "& .flora": {
-                  color: theme.palette.mode === "dark" ? "#fff" : "#424242",
+                  color: theme.palette.mode === "light" ? "#ffffff" : "#424242",
                 },
                 "& .net": {
-                  color: theme.palette.primary.main,
+                  color:
+                    theme.palette.mode === "light"
+                      ? "#4caf50"
+                      : theme.palette.primary.main,
                 },
               }}
             >
@@ -377,7 +380,16 @@ export default function FullForm() {
             </Typography>
 
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  mb: 1,
+                  color:
+                    theme.palette.mode === "light"
+                      ? "rgba(255, 255, 255, 0.8)"
+                      : "text.secondary",
+                }}
+              >
                 Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos
                 blanditiis tenetur unde suscipit, quam beatae rerum inventore
                 consectetur, neque doloribus, cupiditate numquam dignissimos
