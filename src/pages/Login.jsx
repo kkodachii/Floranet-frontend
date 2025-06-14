@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import floranetLogo from "../assets/floranet_logo.svg";
+import backgroundSvg from "../assets/svg.svg";
 
 export default function FullForm() {
   const theme = useTheme();
@@ -90,6 +91,31 @@ export default function FullForm() {
         backgroundColor: theme.palette.background.default,
         transition: "background-color 0.3s ease-in-out",
         padding: 2,
+        position: "relative",
+
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `url("${backgroundSvg}")`,
+          backgroundPosition: "center center",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          opacity: theme.palette.mode === "light" ? 0.15 : 0.15,
+          filter:
+            theme.palette.mode === "light"
+              ? "brightness(0.7) sepia(1) hue-rotate(90deg) saturate(3) contrast(1.2)"
+              : "grayscale(40%) brightness(1.2) contrast(1.1)",
+          zIndex: 0,
+          pointerEvents: "none",
+        },
+        "& > *": {
+          position: "relative",
+          zIndex: 1,
+        },
       }}
     >
       <Box
@@ -102,6 +128,7 @@ export default function FullForm() {
           borderRadius: 2,
           overflow: "hidden",
           backgroundColor: theme.palette.background.paper,
+          backdropFilter: "blur(10px)",
         }}
       >
         <Box
@@ -338,7 +365,7 @@ export default function FullForm() {
             justifyContent: "center",
             padding: 4,
             backgroundColor:
-              theme.palette.mode === "light" ? "#f8f9fa" : "#1e1e1e",
+              theme.palette.mode === "light" ? "#1a237e" : "#ffffff",
             borderLeft: `1px solid ${
               theme.palette.mode === "light"
                 ? "#e0e0e0"
@@ -365,10 +392,13 @@ export default function FullForm() {
               sx={{
                 fontWeight: 900,
                 "& .flora": {
-                  color: theme.palette.mode === "dark" ? "#fff" : "#424242",
+                  color: theme.palette.mode === "light" ? "#ffffff" : "#424242",
                 },
                 "& .net": {
-                  color: theme.palette.primary.main,
+                  color:
+                    theme.palette.mode === "light"
+                      ? "#4caf50"
+                      : theme.palette.primary.main,
                 },
               }}
             >
@@ -377,7 +407,16 @@ export default function FullForm() {
             </Typography>
 
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  mb: 1,
+                  color:
+                    theme.palette.mode === "light"
+                      ? "rgba(255, 255, 255, 0.8)"
+                      : "#424242",
+                }}
+              >
                 Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos
                 blanditiis tenetur unde suscipit, quam beatae rerum inventore
                 consectetur, neque doloribus, cupiditate numquam dignissimos
