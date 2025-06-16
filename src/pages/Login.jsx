@@ -136,7 +136,7 @@ export default function FullForm() {
             flex: 1,
             display: "flex",
             flexDirection: "column",
-            gap: 1.5,
+            gap: 2,
             padding: 4,
             justifyContent: "center",
           }}
@@ -147,52 +147,75 @@ export default function FullForm() {
                 variant="h3"
                 fontWeight="bold"
                 align="center"
-                sx={{ color: "green", fontSize: "2.5rem" }}
+                sx={{ color: "green", fontSize: "3rem", fontWeight: 800 }}
               >
                 Welcome
               </Typography>
-              <Typography variant="body2" align="center" color="text.secondary">
+              <Typography
+                variant="body2"
+                align="center"
+                color="text.secondary"
+                sx={{ mt: -1, mb: 2 }}
+              >
                 Sign in to your account
               </Typography>
-              <TextField
-                label="User Name"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                error={!!errorMsg.username}
-                helperText={errorMsg.username}
-                sx={{ width: "350px", alignSelf: "center" }}
-              />
-              <TextField
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => setIsPasswordFocused(false)}
-                error={!!errorMsg.password}
-                helperText={errorMsg.password}
-                sx={{ width: "350px", alignSelf: "center" }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                        sx={{
-                          color: errorMsg.password
-                            ? "error.main"
-                            : isPasswordFocused
-                            ? "green"
-                            : "inherit",
-                        }}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+              <Box
+                sx={{
+                  minHeight: "76px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
-              />
+              >
+                <TextField
+                  label="User Name"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  error={!!errorMsg.username}
+                  helperText={errorMsg.username || " "}
+                  sx={{ width: "350px" }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  minHeight: "76px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <TextField
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setIsPasswordFocused(true)}
+                  onBlur={() => setIsPasswordFocused(false)}
+                  error={!!errorMsg.password}
+                  helperText={errorMsg.password || " "}
+                  sx={{ width: "350px" }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowPassword}
+                          onMouseDown={handleMouseDownPassword}
+                          edge="end"
+                          sx={{
+                            color: errorMsg.password
+                              ? "error.main"
+                              : isPasswordFocused
+                              ? "green"
+                              : "inherit",
+                          }}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
               <Box
                 sx={{
                   width: "350px",
@@ -216,7 +239,11 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleLoginSubmit}
-                sx={{ width: "350px", alignSelf: "center" }}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  height: "56px",
+                }}
               >
                 Sign In
               </Button>
@@ -229,21 +256,35 @@ export default function FullForm() {
                 variant="h3"
                 fontWeight="bold"
                 align="center"
-                sx={{ color: "green", fontSize: "2.5rem" }}
+                sx={{ color: "green", fontSize: "3rem", fontWeight: 800 }}
               >
                 Forgot Password
               </Typography>
-              <Typography variant="body2" align="center" color="text.secondary">
+              <Typography
+                variant="body2"
+                align="center"
+                color="text.secondary"
+                sx={{ mt: -1, mb: 2 }}
+              >
                 Enter your email to receive an OTP
               </Typography>
-              <TextField
-                label="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={!!errorMsg.email}
-                helperText={errorMsg.email}
-                sx={{ width: "350px", alignSelf: "center" }}
-              />
+              <Box
+                sx={{
+                  minHeight: "76px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <TextField
+                  label="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  error={!!errorMsg.email}
+                  helperText={errorMsg.email || " "}
+                  sx={{ width: "350px" }}
+                />
+              </Box>
               <Box
                 sx={{
                   width: "350px",
@@ -267,7 +308,11 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleForgotSubmit}
-                sx={{ width: "350px", alignSelf: "center" }}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  height: "56px",
+                }}
               >
                 Send OTP
               </Button>
@@ -280,51 +325,60 @@ export default function FullForm() {
                 variant="h3"
                 fontWeight="bold"
                 align="center"
-                sx={{ color: "green", fontSize: "2.5rem" }}
+                sx={{ color: "green", fontSize: "3rem", fontWeight: 800 }}
               >
                 Verify OTP
               </Typography>
-              <Typography variant="body2" align="center" color="text.secondary">
+              <Typography
+                variant="body2"
+                align="center"
+                color="text.secondary"
+                sx={{ mt: -1, mb: 2 }}
+              >
                 Enter the 6-digit code sent to your email
               </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 1,
-                  justifyContent: "center",
-                  mt: 2,
-                  mb: 1,
-                }}
-              >
-                {[0, 1, 2, 3, 4, 5].map((_, index) => (
-                  <TextField
-                    key={index}
-                    inputRef={(ref) => (inputRefs.current[index] = ref)}
-                    value={otpDigits[index] || ""}
-                    onChange={(e) => handleOtpChange(e, index)}
-                    onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                    inputProps={{
-                      maxLength: 1,
-                      style: {
-                        textAlign: "center",
-                        fontSize: "20px",
-                        width: "25px",
-                        height: "35px",
-                      },
-                    }}
-                    error={!!errorMsg.otp}
-                  />
-                ))}
-              </Box>
-              {errorMsg.otp && (
-                <Typography
-                  variant="caption"
-                  color="error"
-                  sx={{ textAlign: "center", display: "block" }}
+              <Box sx={{ minHeight: "76px" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    justifyContent: "center",
+                    mt: 2,
+                    mb: 1,
+                  }}
                 >
-                  {errorMsg.otp}
-                </Typography>
-              )}
+                  {[0, 1, 2, 3, 4, 5].map((_, index) => (
+                    <TextField
+                      key={index}
+                      inputRef={(ref) => (inputRefs.current[index] = ref)}
+                      value={otpDigits[index] || ""}
+                      onChange={(e) => handleOtpChange(e, index)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                      inputProps={{
+                        maxLength: 1,
+                        style: {
+                          textAlign: "center",
+                          fontSize: "20px",
+                          width: "25px",
+                          height: "35px",
+                        },
+                      }}
+                      error={!!errorMsg.otp}
+                    />
+                  ))}
+                </Box>
+                <Box sx={{ minHeight: "20px", textAlign: "center" }}>
+                  {errorMsg.otp && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ display: "block" }}
+                    >
+                      {errorMsg.otp}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
               <Box
                 sx={{
                   width: "350px",
@@ -348,7 +402,12 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleOtpSubmit}
-                sx={{ width: "350px", alignSelf: "center", mt: 1 }}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  mt: 1,
+                  height: "56px",
+                }}
               >
                 Verify
               </Button>
@@ -388,9 +447,10 @@ export default function FullForm() {
               style={{ height: "150px" }}
             />
             <Typography
-              variant="h5"
+              variant="h4"
               sx={{
                 fontWeight: 900,
+                fontSize: "2rem",
                 "& .flora": {
                   color: theme.palette.mode === "light" ? "#ffffff" : "#424242",
                 },
@@ -406,7 +466,7 @@ export default function FullForm() {
               <span className="net">NET</span>
             </Typography>
 
-            <Box sx={{ textAlign: "center" }}>
+            <Box sx={{ textAlign: "center", maxWidth: "400px", px: 2 }}>
               <Typography
                 variant="body2"
                 sx={{
@@ -415,12 +475,14 @@ export default function FullForm() {
                     theme.palette.mode === "light"
                       ? "rgba(255, 255, 255, 0.8)"
                       : "#424242",
+                  lineHeight: 1.6,
+                  textAlign: "justify",
                 }}
               >
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos
-                blanditiis tenetur unde suscipit, quam beatae rerum inventore
-                consectetur, neque doloribus, cupiditate numquam dignissimos
-                laborum fugiat deleniti? Eum quasi quidem quibusdam.
+                FloraNet is a smart city system made for communities like
+                MiFlora Homes Subdivision. It's built to make everyday life
+                easier for residents by offering simple, digital ways to handle
+                community tasks.
               </Typography>
             </Box>
           </Box>
