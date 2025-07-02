@@ -81,6 +81,44 @@ export default function FullForm() {
     }
   };
 
+  // Custom styles for transparent autofill
+  const autofillTransparentStyles = {
+    "& input": {
+      "&:-webkit-autofill": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-webkit-autofill:hover": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-webkit-autofill:focus": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-webkit-autofill:active": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-moz-autofill": {
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+      },
+    },
+  };
+
   return (
     <Box
       sx={{
@@ -160,7 +198,11 @@ export default function FullForm() {
                 onChange={(e) => setUsername(e.target.value)}
                 error={!!errorMsg.username}
                 helperText={errorMsg.username}
-                sx={{ width: "350px", alignSelf: "center" }}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  ...autofillTransparentStyles,
+                }}
               />
               <TextField
                 label="Password"
@@ -171,7 +213,11 @@ export default function FullForm() {
                 onBlur={() => setIsPasswordFocused(false)}
                 error={!!errorMsg.password}
                 helperText={errorMsg.password}
-                sx={{ width: "350px", alignSelf: "center" }}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  ...autofillTransparentStyles,
+                }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -242,7 +288,11 @@ export default function FullForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 error={!!errorMsg.email}
                 helperText={errorMsg.email}
-                sx={{ width: "350px", alignSelf: "center" }}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  ...autofillTransparentStyles,
+                }}
               />
               <Box
                 sx={{
@@ -313,6 +363,7 @@ export default function FullForm() {
                       },
                     }}
                     error={!!errorMsg.otp}
+                    sx={autofillTransparentStyles}
                   />
                 ))}
               </Box>
