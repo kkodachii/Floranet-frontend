@@ -107,7 +107,7 @@ export default function FullForm() {
           opacity: theme.palette.mode === "light" ? 0.15 : 0.15,
           filter:
             theme.palette.mode === "light"
-              ? "brightness(0.7) sepia(1) hue-rotate(90deg) saturate(3) contrast(1.2)"
+              ? "brightness(0.9) grayscale(100%) contrast(0.8)"
               : "grayscale(40%) brightness(1.2) contrast(1.1)",
           zIndex: 0,
           pointerEvents: "none",

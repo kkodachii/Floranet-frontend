@@ -1,33 +1,31 @@
 import React from "react";
 
 export default function WasteCollection() {
-  // Mock data - in a real app this would come from props or API
+
   const collectionTime = "7:30am";
   const collectionDate = "04/07/2025";
 
-  // Add styles to body to prevent scrolling
   React.useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    
-    // Cleanup on unmount
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
     return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, []);
 
   return (
     <div
       style={{
-        height: "100vh",
-        maxHeight: "100vh",
-        overflow: "hidden",
+        flex: 1,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        margin: 0,
-        fontFamily: "Roboto, Arial, sans-serif",
+        height: "100%",
+        minHeight: "calc(100vh - 64px)",
+        padding: "16px",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -95,8 +93,12 @@ export default function WasteCollection() {
             fontFamily: "Roboto, Arial, sans-serif",
             letterSpacing: "0.02857em",
           }}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#b71c1c")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#d32f2f")}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.backgroundColor = "#b71c1c")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.backgroundColor = "#d32f2f")
+          }
         >
           ALERT
         </button>
