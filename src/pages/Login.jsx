@@ -81,7 +81,6 @@ export default function FullForm() {
     }
   };
 
-  // Custom styles for transparent autofill
   const autofillTransparentStyles = {
     "& input": {
       "&:-webkit-autofill": {

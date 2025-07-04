@@ -10,7 +10,7 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useTheme } from "@mui/material/styles";
 import { ThemeContext } from "../ThemeContext";
 import Search from "./Search";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 export default function Header({ children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -26,10 +26,10 @@ export default function Header({ children }) {
     setAnchorEl(null);
   };
 
-   const handleLogout = () => {
+  const handleLogout = () => {
     handleClose();
-    localStorage.removeItem('token');
-    navigate('/login');
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   return (

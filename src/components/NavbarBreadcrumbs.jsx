@@ -16,6 +16,20 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   },
 }));
 
+const toTitleCase = (str) => {
+  const acronyms = ['cctv'];
+  
+  return str
+    .replace(/-/g, ' ')
+    .replace(/\w\S*/g, (txt) => {
+      const lower = txt.toLowerCase();
+      if (acronyms.includes(lower)) {
+        return txt.toUpperCase();
+      }
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+};
+
 export default function NavbarBreadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter(x => x);
@@ -31,11 +45,11 @@ export default function NavbarBreadcrumbs() {
         const to = `/${pathnames.slice(0, index + 1).join('/')}`;
         return last ? (
           <Typography key={to} variant="body1" sx={{ color: "text.primary", fontWeight: 600 }}>
-            {value}
+            {toTitleCase(value)}
           </Typography>
         ) : (
           <Typography key={to} variant="body1">
-            {value}
+            {toTitleCase(value)}
           </Typography>
         );
       })}

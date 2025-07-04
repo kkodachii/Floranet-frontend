@@ -100,7 +100,7 @@ export default function WasteCollection() {
             (e.currentTarget.style.backgroundColor = "#d32f2f")
           }
         >
-          ALERT
+          SEND ALERT
         </button>
       </div>
     </div>

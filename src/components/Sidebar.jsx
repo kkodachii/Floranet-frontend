@@ -21,9 +21,9 @@ import {
   ExpandLess,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useTheme } from '@mui/material/styles';
-import { lighten, darken } from '@mui/system';
-import floranetLogo from '../assets/floranet_logo.svg';
+import { useTheme } from "@mui/material/styles";
+import { lighten, darken } from "@mui/system";
+import floranetLogo from "../assets/floranet_logo.svg";
 
 const sidebarItems = [
   {
@@ -84,29 +84,42 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
   const location = useLocation();
   const theme = useTheme();
 
-  const getHoverColor = () => theme.palette.mode === 'dark'
-    ? darken(theme.palette.primary.main, 0.4)
-    : lighten(theme.palette.primary.main, 0.85);
+  const getHoverColor = () =>
+    theme.palette.mode === "dark"
+      ? darken(theme.palette.primary.main, 0.4)
+      : lighten(theme.palette.primary.main, 0.85);
 
   // Returns true if the current path matches the given path
   const isActive = (to) => location.pathname === to;
   // Returns true if any child matches the current path
-  const isAnyChildActive = (children) => children.some(child => isActive(child.to));
+  const isAnyChildActive = (children) =>
+    children.some((child) => isActive(child.to));
 
   return (
     <div>
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexGrow: 1, mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: 64,
+          px: 3,
+          py: 1,
+          mb: 2,
+        }}
+      >
         <img className="h-24" src={floranetLogo} alt="floranet logo" />
-        <Typography 
-          variant="h5" 
-          sx={{ 
+        <Typography
+          variant="h5"
+          sx={{
             fontWeight: 900,
-            '& .flora': {
-              color: theme.palette.mode === 'dark' ? '#fff' : '#424242',
+            "& .flora": {
+              color: theme.palette.mode === "dark" ? "#fff" : "#424242",
             },
-            '& .net': {
+            "& .net": {
               color: theme.palette.primary.main,
-            }
+            },
           }}
         >
           <span className="flora">FLORA</span>
@@ -120,52 +133,79 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
               <React.Fragment key={item.label}>
                 <ListItem
                   sx={{
-                    width: 'calc(100% - 16px)',
-                    mx: 'auto',
+                    width: "calc(100% - 16px)",
+                    mx: "auto",
                     my: 0.5,
-                    cursor: 'pointer',
+                    cursor: "pointer",
                     borderRadius: theme.shape.borderRadius,
-                    '&:hover': !isActive(item.to) ? { bgcolor: getHoverColor(), borderRadius: theme.shape.borderRadius } : {},
+                    "&:hover": !isActive(item.to)
+                      ? {
+                          bgcolor: getHoverColor(),
+                          borderRadius: theme.shape.borderRadius,
+                        }
+                      : {},
                   }}
                   onClick={() => handleSectionClick(item.section)}
                 >
-                  <ListItemIcon sx={{ 
-                    color: theme.palette.mode === 'dark' 
-                      ? theme.palette.primary.light 
-                      : theme.palette.secondary.main 
-                  }}>{item.icon}</ListItemIcon>
-                  <ListItemText 
-                    primary={item.label} 
+                  <ListItemIcon
+                    sx={{
+                      color:
+                        theme.palette.mode === "dark"
+                          ? theme.palette.primary.light
+                          : theme.palette.secondary.main,
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
                     primaryTypographyProps={{
                       fontWeight: 600,
-                      fontSize: '0.9rem'
+                      fontSize: "0.9rem",
                     }}
                   />
-                  {openSection === item.section ? <ExpandLess /> : <ExpandMore />}
+                  {openSection === item.section ? (
+                    <ExpandLess />
+                  ) : (
+                    <ExpandMore />
+                  )}
                 </ListItem>
-                <Collapse in={openSection === item.section} timeout="auto" unmountOnExit>
+                <Collapse
+                  in={openSection === item.section}
+                  timeout="auto"
+                  unmountOnExit
+                >
                   <List component="div" disablePadding>
                     {item.children.map((child) => (
                       <ListItem
                         key={child.label}
                         sx={{
-                          width: 'calc(100% - 16px)',
-                          mx: 'auto',
+                          width: "calc(100% - 16px)",
+                          mx: "auto",
                           my: 0.5,
                           pl: 4,
-                          cursor: 'pointer',
-                          bgcolor: isActive(child.to) ? theme.palette.primary.main : undefined,
-                          color: isActive(child.to) ? theme.palette.primary.contrastText : undefined,
+                          cursor: "pointer",
+                          bgcolor: isActive(child.to)
+                            ? theme.palette.primary.main
+                            : undefined,
+                          color: isActive(child.to)
+                            ? theme.palette.primary.contrastText
+                            : undefined,
                           borderRadius: theme.shape.borderRadius,
-                          '&:hover': !isActive(child.to) ? { bgcolor: getHoverColor(), borderRadius: theme.shape.borderRadius } : {},
+                          "&:hover": !isActive(child.to)
+                            ? {
+                                bgcolor: getHoverColor(),
+                                borderRadius: theme.shape.borderRadius,
+                              }
+                            : {},
                         }}
                         onClick={() => navigate(child.to)}
                       >
-                        <ListItemText 
-                          primary={child.label} 
+                        <ListItemText
+                          primary={child.label}
                           primaryTypographyProps={{
                             fontWeight: 600,
-                            fontSize: '0.85rem'
+                            fontSize: "0.85rem",
                           }}
                         />
                       </ListItem>
@@ -179,31 +219,42 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
               <ListItem
                 key={item.label}
                 sx={{
-                  width: 'calc(100% - 16px)',
-                  mx: 'auto',
+                  width: "calc(100% - 16px)",
+                  mx: "auto",
                   my: 0.5,
-                  cursor: 'pointer',
-                  bgcolor: isActive(item.to) ? theme.palette.primary.main : undefined,
-                  color: isActive(item.to) ? theme.palette.primary.contrastText : undefined,
+                  cursor: "pointer",
+                  bgcolor: isActive(item.to)
+                    ? theme.palette.primary.main
+                    : undefined,
+                  color: isActive(item.to)
+                    ? theme.palette.primary.contrastText
+                    : undefined,
                   borderRadius: theme.shape.borderRadius,
-                  '&:hover': !isActive(item.to) ? { bgcolor: getHoverColor(), borderRadius: theme.shape.borderRadius } : {},
+                  "&:hover": !isActive(item.to)
+                    ? {
+                        bgcolor: getHoverColor(),
+                        borderRadius: theme.shape.borderRadius,
+                      }
+                    : {},
                 }}
                 onClick={() => navigate(item.to)}
               >
                 <ListItemIcon
-                  sx={{ 
-                    color: isActive(item.to) 
-                      ? theme.palette.primary.contrastText 
-                      : theme.palette.mode === 'dark'
-                        ? theme.palette.primary.light
-                        : theme.palette.secondary.main
+                  sx={{
+                    color: isActive(item.to)
+                      ? theme.palette.primary.contrastText
+                      : theme.palette.mode === "dark"
+                      ? theme.palette.primary.light
+                      : theme.palette.secondary.main,
                   }}
-                >{item.icon}</ListItemIcon>
-                <ListItemText 
-                  primary={item.label} 
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
                   primaryTypographyProps={{
                     fontWeight: 600,
-                    fontSize: '0.9rem'
+                    fontSize: "0.9rem",
                   }}
                 />
               </ListItem>
@@ -217,31 +268,42 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
           <ListItem
             key={item.label}
             sx={{
-              width: 'calc(100% - 16px)',
-              mx: 'auto',
+              width: "calc(100% - 16px)",
+              mx: "auto",
               my: 0.5,
-              cursor: 'pointer',
-              bgcolor: isActive(item.to) ? theme.palette.primary.main : undefined,
-              color: isActive(item.to) ? theme.palette.primary.contrastText : undefined,
+              cursor: "pointer",
+              bgcolor: isActive(item.to)
+                ? theme.palette.primary.main
+                : undefined,
+              color: isActive(item.to)
+                ? theme.palette.primary.contrastText
+                : undefined,
               borderRadius: theme.shape.borderRadius,
-              '&:hover': !isActive(item.to) ? { bgcolor: getHoverColor(), borderRadius: theme.shape.borderRadius } : {},
+              "&:hover": !isActive(item.to)
+                ? {
+                    bgcolor: getHoverColor(),
+                    borderRadius: theme.shape.borderRadius,
+                  }
+                : {},
             }}
             onClick={() => navigate(item.to)}
           >
             <ListItemIcon
-              sx={{ 
-                color: isActive(item.to) 
-                  ? theme.palette.primary.contrastText 
-                  : theme.palette.mode === 'dark'
-                    ? theme.palette.primary.light
-                    : theme.palette.secondary.main
+              sx={{
+                color: isActive(item.to)
+                  ? theme.palette.primary.contrastText
+                  : theme.palette.mode === "dark"
+                  ? theme.palette.primary.light
+                  : theme.palette.secondary.main,
               }}
-            >{item.icon}</ListItemIcon>
-            <ListItemText 
-              primary={item.label} 
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText
+              primary={item.label}
               primaryTypographyProps={{
                 fontWeight: 600,
-                fontSize: '0.9rem'
+                fontSize: "0.9rem",
               }}
             />
           </ListItem>
@@ -254,4 +316,4 @@ const Sidebar = ({ openSection, handleSectionClick }) => {
   );
 };
 
-export default Sidebar; 
+export default Sidebar;
