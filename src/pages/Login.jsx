@@ -10,6 +10,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import floranetLogo from "../assets/floranet_logo.svg";
@@ -18,6 +19,7 @@ import backgroundSvg from "../assets/svg.svg";
 export default function FullForm() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [view, setView] = React.useState("login");
   const [showPassword, setShowPassword] = React.useState(false);
   const [username, setUsername] = React.useState("");
@@ -37,6 +39,10 @@ export default function FullForm() {
     if (!password) errors.password = "Password is required.";
     setErrorMsg(errors);
     if (!errors.username && !errors.password) {
+      // Allow login with any username and password
+      const userData = { username, email: username + "@example.com" };
+      const authToken = "mock-token-" + Date.now();
+      login(userData, authToken);
       navigate("/user-management/residents");
     }
   };
