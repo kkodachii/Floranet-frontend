@@ -194,6 +194,44 @@ export default function FullForm() {
     }
   };
 
+  // Custom styles for transparent autofill
+  const autofillTransparentStyles = {
+    "& input": {
+      "&:-webkit-autofill": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-webkit-autofill:hover": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-webkit-autofill:focus": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-webkit-autofill:active": {
+        WebkitBoxShadow: `0 0 0 30px ${theme.palette.background.paper} inset !important`,
+        WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+        transition: "background-color 5000s ease-in-out 0s !important",
+      },
+      "&:-moz-autofill": {
+        backgroundColor: "transparent !important",
+        backgroundImage: "none !important",
+      },
+    },
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       if (view === "login") {
@@ -266,7 +304,7 @@ export default function FullForm() {
             flex: 1,
             display: "flex",
             flexDirection: "column",
-            gap: 2,
+            gap: 1.5,
             padding: 4,
             justifyContent: "center",
           }}
@@ -283,18 +321,19 @@ export default function FullForm() {
                 variant="h3"
                 fontWeight="bold"
                 align="center"
-                sx={{ color: "green", fontSize: "3rem", fontWeight: 800 }}
+                sx={{ color: "green", fontSize: "2.5rem" }}
               >
                 Welcome
               </Typography>
-              <Typography
-                variant="body2"
-                align="center"
-                color="text.secondary"
-                sx={{ mt: -1, mb: 2 }}
-              >
+              <Typography variant="body2" align="center" color="text.secondary">
                 Sign in to your account
               </Typography>
+              <TextField
+                label="User Name"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                error={!!errorMsg.username}
+                helperText={errorMsg.username}
               <Box
                 sx={{
                   minHeight: "76px",
@@ -319,11 +358,46 @@ export default function FullForm() {
               </Box>
               <Box
                 sx={{
-                  minHeight: "76px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
+                  width: "350px",
+                  alignSelf: "center",
+                  ...autofillTransparentStyles,
                 }}
+              />
+              <TextField
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setIsPasswordFocused(true)}
+                onBlur={() => setIsPasswordFocused(false)}
+                error={!!errorMsg.password}
+                helperText={errorMsg.password}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  ...autofillTransparentStyles,
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                        sx={{
+                          color: errorMsg.password
+                            ? "error.main"
+                            : isPasswordFocused
+                            ? "green"
+                            : "inherit",
+                        }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
               >
                 <TextField
                   label="Password"
@@ -390,6 +464,7 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleLoginSubmit}
+                sx={{ width: "350px", alignSelf: "center" }}
                 disabled={isLoading}
                 sx={{
                   width: "350px",
@@ -420,18 +495,25 @@ export default function FullForm() {
                 variant="h3"
                 fontWeight="bold"
                 align="center"
-                sx={{ color: "green", fontSize: "3rem", fontWeight: 800 }}
+                sx={{ color: "green", fontSize: "2.5rem" }}
               >
                 Forgot Password
               </Typography>
-              <Typography
-                variant="body2"
-                align="center"
-                color="text.secondary"
-                sx={{ mt: -1, mb: 2 }}
-              >
+              <Typography variant="body2" align="center" color="text.secondary">
                 Enter your email to receive an OTP
               </Typography>
+              <TextField
+                label="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                error={!!errorMsg.email}
+                helperText={errorMsg.email}
+                sx={{
+                  width: "350px",
+                  alignSelf: "center",
+                  ...autofillTransparentStyles,
+                }}
+              />
               <Box
                 sx={{
                   minHeight: "76px",
@@ -481,6 +563,7 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleForgotSubmit}
+                sx={{ width: "350px", alignSelf: "center" }}
                 disabled={isLoading}
                 sx={{
                   width: "350px",
@@ -503,18 +586,52 @@ export default function FullForm() {
                 variant="h3"
                 fontWeight="bold"
                 align="center"
-                sx={{ color: "green", fontSize: "3rem", fontWeight: 800 }}
+                sx={{ color: "green", fontSize: "2.5rem" }}
               >
                 Verify OTP
               </Typography>
-              <Typography
-                variant="body2"
-                align="center"
-                color="text.secondary"
-                sx={{ mt: -1, mb: 2 }}
-              >
+              <Typography variant="body2" align="center" color="text.secondary">
                 Enter the 6-digit code sent to your email
               </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  justifyContent: "center",
+                  mt: 2,
+                  mb: 1,
+                }}
+              >
+                {[0, 1, 2, 3, 4, 5].map((_, index) => (
+                  <TextField
+                    key={index}
+                    inputRef={(ref) => (inputRefs.current[index] = ref)}
+                    value={otpDigits[index] || ""}
+                    onChange={(e) => handleOtpChange(e, index)}
+                    onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                    inputProps={{
+                      maxLength: 1,
+                      style: {
+                        textAlign: "center",
+                        fontSize: "20px",
+                        width: "25px",
+                        height: "35px",
+                      },
+                    }}
+                    error={!!errorMsg.otp}
+                    sx={autofillTransparentStyles}
+                  />
+                ))}
+              </Box>
+              {errorMsg.otp && (
+                <Typography
+                  variant="caption"
+                  color="error"
+                  sx={{ textAlign: "center", display: "block" }}
+                >
+                  {errorMsg.otp}
+                </Typography>
+              )}
               <Box sx={{ minHeight: "76px" }}>
                 <Box
                   sx={{
@@ -586,6 +703,7 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleOtpSubmit}
+                sx={{ width: "350px", alignSelf: "center", mt: 1 }}
                 disabled={isLoading}
                 sx={{
                   width: "350px",
@@ -636,10 +754,9 @@ export default function FullForm() {
               style={{ height: "150px" }}
             />
             <Typography
-              variant="h4"
+              variant="h5"
               sx={{
                 fontWeight: 900,
-                fontSize: "2rem",
                 "& .flora": {
                   color: theme.palette.mode === "light" ? "#ffffff" : "#424242",
                 },
@@ -655,7 +772,7 @@ export default function FullForm() {
               <span className="net">NET</span>
             </Typography>
 
-            <Box sx={{ textAlign: "center", maxWidth: "400px", px: 2 }}>
+            <Box sx={{ textAlign: "center" }}>
               <Typography
                 variant="body2"
                 sx={{
@@ -664,14 +781,12 @@ export default function FullForm() {
                     theme.palette.mode === "light"
                       ? "rgba(255, 255, 255, 0.8)"
                       : "#424242",
-                  lineHeight: 1.6,
-                  textAlign: "justify",
                 }}
               >
-                FloraNet is a smart city system made for communities like
-                MiFlora Homes Subdivision. It's built to make everyday life
-                easier for residents by offering simple, digital ways to handle
-                community tasks.
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos
+                blanditiis tenetur unde suscipit, quam beatae rerum inventore
+                consectetur, neque doloribus, cupiditate numquam dignissimos
+                laborum fugiat deleniti? Eum quasi quidem quibusdam.
               </Typography>
             </Box>
           </Box>
