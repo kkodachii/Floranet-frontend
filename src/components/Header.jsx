@@ -11,15 +11,12 @@ import { useTheme } from "@mui/material/styles";
 import { ThemeContext } from "../ThemeContext";
 import Search from "./Search";
 import { useNavigate } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
 
 export default function Header({ children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const colorMode = React.useContext(ThemeContext);
   const navigate = useNavigate();
-  const { logout } = useAuth();
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -33,8 +30,6 @@ export default function Header({ children }) {
     handleClose();
     localStorage.removeItem("token");
     navigate("/login");
-    logout();
-    navigate('/login');
   };
 
   return (
