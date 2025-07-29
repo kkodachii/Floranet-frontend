@@ -8,16 +8,21 @@ import {
   useTheme,
   IconButton,
   InputAdornment,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import floranetLogo from "../assets/floranet_logo.svg";
 import backgroundSvg from "../assets/svg.svg";
+import { useAuth } from "../AuthContext";
+// import apiService from "../services/api"; // Uncomment when ready to use real API
 
 export default function FullForm() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [view, setView] = React.useState("login");
   const [showPassword, setShowPassword] = React.useState(false);
   const [username, setUsername] = React.useState("");
@@ -25,41 +30,149 @@ export default function FullForm() {
   const [email, setEmail] = React.useState("");
   const [otpDigits, setOtpDigits] = React.useState(["", "", "", "", "", ""]);
   const [errorMsg, setErrorMsg] = React.useState({});
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [apiError, setApiError] = React.useState("");
   const inputRefs = React.useRef([]);
   const [isPasswordFocused, setIsPasswordFocused] = React.useState(false);
 
   const handleClickShowPassword = () => setShowPassword((prev) => !prev);
   const handleMouseDownPassword = (event) => event.preventDefault();
 
-  const handleLoginSubmit = () => {
+  // Mock authentication function - replace with actual API call
+  const authenticateUser = async (username, password) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Mock validation - replace with actual API call
+    if (username === "admin" && password === "password") {
+      return {
+        success: true,
+        token: "mock-jwt-token-" + Date.now(),
+        user: {
+          id: 1,
+          username: username,
+          role: "admin"
+        }
+      };
+    } else {
+      throw new Error("Invalid username or password");
+    }
+    
+    // Uncomment the following lines when ready to use real API:
+    // try {
+    //   const response = await apiService.login(username, password);
+    //   return response;
+    // } catch (error) {
+    //   throw new Error(error.message || "Login failed");
+    // }
+  };
+
+  // Mock OTP sending function - replace with actual API call
+  const sendOTP = async (email) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Mock validation
+    if (email && email.includes("@")) {
+      return { success: true };
+    } else {
+      throw new Error("Invalid email address");
+    }
+    
+    // Uncomment the following lines when ready to use real API:
+    // try {
+    //   const response = await apiService.sendOTP(email);
+    //   return response;
+    // } catch (error) {
+    //   throw new Error(error.message || "Failed to send OTP");
+    // }
+  };
+
+  // Mock OTP verification function - replace with actual API call
+  const verifyOTP = async (otp) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Mock validation - any 6-digit OTP works
+    if (otp.length === 6 && /^\d{6}$/.test(otp)) {
+      return {
+        success: true,
+        token: "mock-jwt-token-" + Date.now(),
+        user: {
+          id: 1,
+          email: email,
+          role: "user"
+        }
+      };
+    } else {
+      throw new Error("Invalid OTP");
+    }
+    
+    // Uncomment the following lines when ready to use real API:
+    // try {
+    //   const response = await apiService.verifyOTP(email, otp);
+    //   return response;
+    // } catch (error) {
+    //   throw new Error(error.message || "Invalid OTP");
+    // }
+  };
+
+  const handleLoginSubmit = async () => {
     let errors = {};
     if (!username) errors.username = "Username is required.";
     if (!password) errors.password = "Password is required.";
     setErrorMsg(errors);
+    setApiError("");
+
     if (!errors.username && !errors.password) {
-      navigate("/user-management/residents");
+      setIsLoading(true);
+      try {
+        const result = await authenticateUser(username, password);
+        login(result.user, result.token);
+        navigate("/user-management/residents");
+      } catch (error) {
+        setApiError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleForgotSubmit = () => {
+  const handleForgotSubmit = async () => {
     let errors = {};
     if (!email) errors.email = "Email is required.";
     setErrorMsg(errors);
+    setApiError("");
+
     if (!errors.email) {
-      alert("OTP sent to email!");
-      setView("otp");
+      setIsLoading(true);
+      try {
+        await sendOTP(email);
+        setView("otp");
+      } catch (error) {
+        setApiError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleOtpSubmit = () => {
+  const handleOtpSubmit = async () => {
     const otpValue = otpDigits.join("");
     let errors = {};
     if (otpValue.length !== 6 || otpDigits.includes("")) {
       errors.otp = "Enter a valid 6-digit OTP.";
     }
     setErrorMsg(errors);
+    setApiError("");
+
     if (!errors.otp) {
-      alert("OTP verified: " + otpValue);
+      setIsLoading(true);
+      try {
+        const result = await verifyOTP(otpValue);
+        login(result.user, result.token);
+        navigate("/user-management/residents");
+      } catch (error) {
+        setApiError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -79,6 +192,23 @@ export default function FullForm() {
     if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      if (view === "login") {
+        handleLoginSubmit();
+      } else if (view === "forgot") {
+        handleForgotSubmit();
+      } else if (view === "otp") {
+        handleOtpSubmit();
+      }
+    }
+  };
+
+  const clearErrors = () => {
+    setErrorMsg({});
+    setApiError("");
   };
 
   return (
@@ -141,6 +271,12 @@ export default function FullForm() {
             justifyContent: "center",
           }}
         >
+          {apiError && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setApiError("")}>
+              {apiError}
+            </Alert>
+          )}
+
           {view === "login" && (
             <>
               <Typography
@@ -170,10 +306,15 @@ export default function FullForm() {
                 <TextField
                   label="User Name"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    clearErrors();
+                  }}
+                  onKeyPress={handleKeyPress}
                   error={!!errorMsg.username}
                   helperText={errorMsg.username || " "}
                   sx={{ width: "350px" }}
+                  disabled={isLoading}
                 />
               </Box>
               <Box
@@ -188,12 +329,17 @@ export default function FullForm() {
                   label="Password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    clearErrors();
+                  }}
+                  onKeyPress={handleKeyPress}
                   onFocus={() => setIsPasswordFocused(true)}
                   onBlur={() => setIsPasswordFocused(false)}
                   error={!!errorMsg.password}
                   helperText={errorMsg.password || " "}
                   sx={{ width: "350px" }}
+                  disabled={isLoading}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -201,6 +347,7 @@ export default function FullForm() {
                           onClick={handleClickShowPassword}
                           onMouseDown={handleMouseDownPassword}
                           edge="end"
+                          disabled={isLoading}
                           sx={{
                             color: errorMsg.password
                               ? "error.main"
@@ -227,11 +374,15 @@ export default function FullForm() {
                 <Link
                   component="button"
                   variant="body2"
-                  onClick={() => setView("forgot")}
+                  onClick={() => {
+                    setView("forgot");
+                    clearErrors();
+                  }}
                   sx={{
                     fontSize: "0.85rem",
                     color: theme.palette.primary.main,
                   }}
+                  disabled={isLoading}
                 >
                   Forgot Password?
                 </Link>
@@ -239,14 +390,27 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleLoginSubmit}
+                disabled={isLoading}
                 sx={{
                   width: "350px",
                   alignSelf: "center",
                   height: "56px",
                 }}
               >
-                Sign In
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Sign In"
+                )}
               </Button>
+              <Typography
+                variant="caption"
+                align="center"
+                color="text.secondary"
+                sx={{ mt: 1 }}
+              >
+                Demo credentials: admin / password
+              </Typography>
             </>
           )}
 
@@ -279,10 +443,15 @@ export default function FullForm() {
                 <TextField
                   label="Email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    clearErrors();
+                  }}
+                  onKeyPress={handleKeyPress}
                   error={!!errorMsg.email}
                   helperText={errorMsg.email || " "}
                   sx={{ width: "350px" }}
+                  disabled={isLoading}
                 />
               </Box>
               <Box
@@ -296,11 +465,15 @@ export default function FullForm() {
                 <Link
                   component="button"
                   variant="body2"
-                  onClick={() => setView("login")}
+                  onClick={() => {
+                    setView("login");
+                    clearErrors();
+                  }}
                   sx={{
                     fontSize: "0.85rem",
                     color: theme.palette.primary.main,
                   }}
+                  disabled={isLoading}
                 >
                   Back to Login
                 </Link>
@@ -308,13 +481,18 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleForgotSubmit}
+                disabled={isLoading}
                 sx={{
                   width: "350px",
                   alignSelf: "center",
                   height: "56px",
                 }}
               >
-                Send OTP
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Send OTP"
+                )}
               </Button>
             </>
           )}
@@ -354,6 +532,7 @@ export default function FullForm() {
                       value={otpDigits[index] || ""}
                       onChange={(e) => handleOtpChange(e, index)}
                       onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                      onKeyPress={handleKeyPress}
                       inputProps={{
                         maxLength: 1,
                         style: {
@@ -364,6 +543,7 @@ export default function FullForm() {
                         },
                       }}
                       error={!!errorMsg.otp}
+                      disabled={isLoading}
                     />
                   ))}
                 </Box>
@@ -390,11 +570,15 @@ export default function FullForm() {
                 <Link
                   component="button"
                   variant="body2"
-                  onClick={() => setView("forgot")}
+                  onClick={() => {
+                    setView("forgot");
+                    clearErrors();
+                  }}
                   sx={{
                     fontSize: "0.85rem",
                     color: theme.palette.primary.main,
                   }}
+                  disabled={isLoading}
                 >
                   Resend OTP
                 </Link>
@@ -402,6 +586,7 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleOtpSubmit}
+                disabled={isLoading}
                 sx={{
                   width: "350px",
                   alignSelf: "center",
@@ -409,7 +594,11 @@ export default function FullForm() {
                   height: "56px",
                 }}
               >
-                Verify
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Verify"
+                )}
               </Button>
             </>
           )}

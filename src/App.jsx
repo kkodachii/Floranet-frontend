@@ -14,33 +14,79 @@ import GeneralComplaints from './pages/sections/Complaints/GeneralComplaints'
 import ServiceComplaints from './pages/sections/Complaints/ServiceComplaints'
 import Residents from './pages/sections/UserManagement/Residents'
 import Vendors from './pages/sections/UserManagement/Vendors'
+import { AuthProvider, useAuth } from './AuthContext'
+import LoadingSpinner from './components/LoadingSpinner'
 
-function App() {
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <LoadingSpinner message="Checking authentication..." />;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
+// Public Route component (redirects to dashboard if already authenticated)
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <LoadingSpinner message="Checking authentication..." />;
+  }
+  
+  if (isAuthenticated) {
+    return <Navigate to="/user-management/residents" replace />;
+  }
+  
+  return children;
+};
+
+function AppRoutes() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/*" element={
-          <MainLayout>
-            <Routes>
-              <Route path="/user-management/residents" element={<Residents />} />
-              <Route path="/user-management/vendors" element={<Vendors />} />
-              <Route path="/alerts-security/alerts" element={<Alerts />} />
-              <Route path="/alerts-security/cctv" element={<CCTV />} />
-              <Route path="/alerts-security/waste-collection" element={<WasteCollection />} />
-              <Route path="/billing-payment/personal-payment" element={<PersonalPayment />} />
-              <Route path="/billing-payment/payment-status" element={<PaymentStatus />} />
-              <Route path="/billing-payment/collection-report" element={<CollectionReport />} />
-              <Route path="/community-hub" element={<CommunityHub />} />
-              <Route path="/complaints/general-complaints" element={<GeneralComplaints />} />
-              <Route path="/complaints/service-complaints" element={<ServiceComplaints />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Routes>
+                <Route path="/user-management/residents" element={<Residents />} />
+                <Route path="/user-management/vendors" element={<Vendors />} />
+                <Route path="/alerts-security/alerts" element={<Alerts />} />
+                <Route path="/alerts-security/cctv" element={<CCTV />} />
+                <Route path="/alerts-security/waste-collection" element={<WasteCollection />} />
+                <Route path="/billing-payment/personal-payment" element={<PersonalPayment />} />
+                <Route path="/billing-payment/payment-status" element={<PaymentStatus />} />
+                <Route path="/billing-payment/collection-report" element={<CollectionReport />} />
+                <Route path="/community-hub" element={<CommunityHub />} />
+                <Route path="/complaints/general-complaints" element={<GeneralComplaints />} />
+                <Route path="/complaints/service-complaints" element={<ServiceComplaints />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </MainLayout>
+          </ProtectedRoute>
         } />
       </Routes>
     </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 
