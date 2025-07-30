@@ -14,6 +14,7 @@ import GeneralComplaints from './pages/sections/Complaints/GeneralComplaints'
 import ServiceComplaints from './pages/sections/Complaints/ServiceComplaints'
 import Residents from './pages/sections/UserManagement/Residents'
 import Vendors from './pages/sections/UserManagement/Vendors'
+import AddResidents from './pages/sections/UserManagement/AddResidents'
 import { AuthProvider, useAuth } from './AuthContext'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -63,6 +64,7 @@ function AppRoutes() {
               <Routes>
                 <Route path="/user-management/residents" element={<Residents />} />
                 <Route path="/user-management/vendors" element={<Vendors />} />
+                <Route path="/user-management/add-resident" element={<AddResidents />} />
                 <Route path="/alerts-security/alerts" element={<Alerts />} />
                 <Route path="/alerts-security/cctv" element={<CCTV />} />
                 <Route path="/alerts-security/waste-collection" element={<WasteCollection />} />

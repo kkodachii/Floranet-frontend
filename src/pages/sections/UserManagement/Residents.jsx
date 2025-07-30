@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -235,6 +236,7 @@ function Residents() {
   const rowsPerPage = 9;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([fetchUsers(), fetchRequests()]).then(([usersData, requestsData]) => {
@@ -372,7 +374,12 @@ function Residents() {
             <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
               {!showRequests && (
                 <Tooltip title="Add User">
-                  <IconButton color="primary" size="small" sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}>
+                  <IconButton 
+                    color="primary" 
+                    size="small" 
+                    onClick={() => navigate('/user-management/add-resident')}
+                    sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
+                  >
                     <AddIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
