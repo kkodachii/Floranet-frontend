@@ -8,12 +8,16 @@ import {
   InputAdornment,
   IconButton,
   Typography,
-  useMediaQuery
+  useMediaQuery,
+  Menu,
+  MenuItem,
+  ListItemText
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useTheme } from '@mui/material/styles';
 import FloraTable from '../../../components/FloraTable';
 import StatusBadge from '../../../components/StatusBadge';
@@ -26,9 +30,10 @@ const columns = [
   { id: 'triggerType', label: 'Trigger Type' },
   { id: 'status', label: 'Status' },
   { id: 'remarks', label: 'Remarks' },
+  { id: 'actions', label: 'Actions' },
 ];
 
-const allRows = [
+const initialRows = [
   { logId: '001', dateTime: '2025-04-07 09:24 AM', residentName: 'Juan Dela Cruz', serviceType: 'Emergency Alert', triggerType: 'Accidental Tap', status: 'Resolved', remarks: 'User reported misclick' },
   { logId: '002', dateTime: '2025-04-07 11:03 AM', residentName: 'Carlos Reyes', serviceType: 'Maintenance Request', triggerType: 'Accidental Tap', status: 'Cancelled', remarks: 'User contacted support to cancel' },
   { logId: '003', dateTime: '2025-04-06 05:30 PM', residentName: 'Rico Fernandez', serviceType: 'Visitor Pass Request', triggerType: 'Accidental Tap', status: 'Resolved', remarks: 'Visitor request deleted by user' },
@@ -43,14 +48,39 @@ const allRows = [
   { logId: '012', dateTime: '2025-03-28 03:45 PM', residentName: 'Rita Fernandez', serviceType: 'Visitor Pass Request', triggerType: 'Accidental Tap', status: 'Cancelled', remarks: 'User cancelled' },
 ];
 
+const statusOptions = ['Resolved', 'Cancelled', 'Miscall', 'Pending', 'In Progress'];
+
 export default function GeneralComplaints() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [allRows, setAllRows] = useState(initialRows);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedRowId, setSelectedRowId] = useState(null);
   const rowsPerPage = 7;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleSearch = (e) => setSearch(e.target.value);
+
+  const handleStatusChange = (logId, newStatus) => {
+    setAllRows(prevRows => 
+      prevRows.map(row => 
+        row.logId === logId ? { ...row, status: newStatus } : row
+      )
+    );
+    setAnchorEl(null);
+    setSelectedRowId(null);
+  };
+
+  const handleMenuOpen = (event, logId) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedRowId(logId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedRowId(null);
+  };
 
   // Filter rows by search
   const filteredRows = allRows.filter(row =>
@@ -63,7 +93,16 @@ export default function GeneralComplaints() {
   const to = Math.min(page * rowsPerPage, total);
   const paginatedRows = filteredRows.slice((page - 1) * rowsPerPage, page * rowsPerPage).map(row => ({
     ...row,
-    status: <StatusBadge status={row.status} />
+    status: <StatusBadge status={row.status} />,
+    actions: (
+      <IconButton
+        size="small"
+        onClick={(e) => handleMenuOpen(e, row.logId)}
+        sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
+      >
+        <MoreVertIcon fontSize="small" />
+      </IconButton>
+    )
   }));
 
   const tableMaxHeight = isMobile ? '40vh' : '60vh';
@@ -135,6 +174,34 @@ export default function GeneralComplaints() {
             emptyMessage="No complaints found."
             loading={false}
           />
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            PaperProps={{
+              sx: {
+                minWidth: 150,
+                boxShadow: 3,
+                '& .MuiMenuItem-root': {
+                  py: 1,
+                  px: 2,
+                  '&:hover': {
+                    bgcolor: 'primary.main',
+                    color: '#fff',
+                  }
+                }
+              }
+            }}
+          >
+            {statusOptions.map((status) => (
+              <MenuItem
+                key={status}
+                onClick={() => handleStatusChange(selectedRowId, status)}
+              >
+                <ListItemText primary={status} />
+              </MenuItem>
+            ))}
+          </Menu>
           <Box
             sx={{
               display: 'flex',

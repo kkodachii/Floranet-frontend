@@ -5,6 +5,7 @@ import MainLayout from './MainLayout'
 import CommunityHub from './pages/CommunityHub'
 import Settings from './pages/Settings'
 import Alerts from './pages/sections/Alert/Alerts'
+import EditAlerts from './pages/sections/Alert/EditAlerts'
 import CCTV from './pages/sections/Alert/CCTV'
 import WasteCollection from './pages/sections/Alert/WasteCollection'
 import PersonalPayment from './pages/sections/Billing/PersonalPayment'
@@ -15,6 +16,9 @@ import ServiceComplaints from './pages/sections/Complaints/ServiceComplaints'
 import Residents from './pages/sections/UserManagement/Residents'
 import Vendors from './pages/sections/UserManagement/Vendors'
 import AddResidents from './pages/sections/UserManagement/AddResidents'
+import EditResidents from './pages/sections/UserManagement/EditResidents'
+import AddVendors from './pages/sections/UserManagement/AddVendors'
+import EditVendors from './pages/sections/UserManagement/EditVendors'
 import { AuthProvider, useAuth } from './AuthContext'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -65,7 +69,11 @@ function AppRoutes() {
                 <Route path="/user-management/residents" element={<Residents />} />
                 <Route path="/user-management/vendors" element={<Vendors />} />
                 <Route path="/user-management/add-resident" element={<AddResidents />} />
+                <Route path="/user-management/edit-resident/:id" element={<EditResidents />} />
+                <Route path="/user-management/add-vendors" element={<AddVendors />} />
+                <Route path="/user-management/edit-vendor/:id" element={<EditVendors />} />
                 <Route path="/alerts-security/alerts" element={<Alerts />} />
+                <Route path="/alerts-security/edit-alert/:id" element={<EditAlerts />} />
                 <Route path="/alerts-security/cctv" element={<CCTV />} />
                 <Route path="/alerts-security/waste-collection" element={<WasteCollection />} />
                 <Route path="/billing-payment/personal-payment" element={<PersonalPayment />} />

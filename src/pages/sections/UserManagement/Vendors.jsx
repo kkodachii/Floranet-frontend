@@ -290,7 +290,7 @@ function Vendors() {
       icon: <EditIcon fontSize="small" />,
       color: 'default',
       sx: { '&:hover': { bgcolor: 'primary.main', color: '#fff' } },
-      onClick: (row) => {/* handle edit */},
+      onClick: (row) => navigate(`/user-management/edit-vendor/${row.residentId}`),
     },
     {
       label: 'Delete',

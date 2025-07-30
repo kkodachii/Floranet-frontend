@@ -21,15 +21,15 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CheckIcon from '@mui/icons-material/Check';
-import { useNavigate } from 'react-router-dom';
+import SaveIcon from '@mui/icons-material/Save';
+import { useParams, useNavigate } from 'react-router-dom';
 import FloraTable from '../../../components/FloraTable';
 
 const steps = [
   'Basic Information',
   'Residence Details',
   'Business Information',
-  'Review & Submit'
+  'Review & Save'
 ];
 
 const streets = [
@@ -47,58 +47,7 @@ const streets = [
   'Kalachuchi'
 ];
 
-// Mock API fetch for existing vendors
-const fetchExistingVendors = () =>
-  Promise.resolve([
-    {
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Andrea Dela Cruz',
-      residentId: 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      businessName: 'Cruz Sari-Sari Store',
-      contactNumber: '09171234567',
-    },
-    {
-      homeownerName: 'Maria Santos',
-      residentName: 'Luis Santos',
-      residentId: 'MHH0002',
-      houseNumber: 'B1B - L17',
-      street: 'Bouganvilla',
-      businessName: "Maria's Laundry Hub",
-      contactNumber: '09281234567',
-    },
-    {
-      homeownerName: 'Jose Rizal',
-      residentName: 'Lea Rizal',
-      residentId: 'MHH0003',
-      houseNumber: 'B4C - L09',
-      street: 'Dahlia',
-      businessName: 'Rizal Tailoring',
-      contactNumber: '09171234568',
-    },
-    {
-      homeownerName: 'Ana Mendoza',
-      residentName: 'Marco Mendoza',
-      residentId: 'MHH0004',
-      houseNumber: 'B2A - L12',
-      street: 'Champaca',
-      businessName: "Ana's Flower Shop",
-      contactNumber: '09351234567',
-    },
-    {
-      homeownerName: 'Lito Garcia',
-      residentName: 'Nina Garcia',
-      residentId: 'MHH0005',
-      houseNumber: 'B5D - L02',
-      street: 'Sampaguita',
-      businessName: 'Garcia Car Wash',
-      contactNumber: '09291234567',
-    },
-    // ... more mock data as needed
-  ]);
-
-function AddVendors() {
+function EditVendors() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     homeownerName: '',
@@ -112,39 +61,38 @@ function AddVendors() {
   const [errors, setErrors] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(true);
-
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  // Generate next available Resident ID
-  const generateNextResidentId = (existingVendors) => {
-    if (!existingVendors || existingVendors.length === 0) {
-      return 'MHH0001';
-    }
-    const maxId = Math.max(...existingVendors.map(vendor => {
-      const idNumber = parseInt(vendor.residentId.replace('MHH', ''));
-      return idNumber;
-    }));
-    const nextId = maxId + 1;
-    return `MHH${nextId.toString().padStart(4, '0')}`;
-  };
+  // Mock API fetch for vendor data
+  const fetchVendorData = (residentId) =>
+    Promise.resolve({
+      homeownerName: 'Juan Dela Cruz',
+      residentName: 'Andrea Dela Cruz',
+      residentId: residentId || 'MHH0001',
+      houseNumber: 'B3A - L23',
+      street: 'Camia',
+      businessName: 'Cruz Sari-Sari Store',
+      contactNumber: '09171234567',
+    });
 
   useEffect(() => {
-    const loadExistingVendors = async () => {
+    const loadVendorData = async () => {
       try {
-        const existingVendors = await fetchExistingVendors();
-        const nextResidentId = generateNextResidentId(existingVendors);
-        setFormData(prev => ({ ...prev, residentId: nextResidentId }));
+        const vendorData = await fetchVendorData(id);
+        setFormData(vendorData);
         setLoading(false);
       } catch (error) {
-        console.error('Error loading existing vendors:', error);
-        setFormData(prev => ({ ...prev, residentId: 'MHH0001' }));
+        console.error('Error loading vendor data:', error);
         setLoading(false);
       }
     };
-    loadExistingVendors();
-  }, []);
+    
+    loadVendorData();
+  }, [id]);
 
   const handleNext = () => {
     if (validateStep()) {
@@ -158,6 +106,7 @@ function AddVendors() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -165,6 +114,7 @@ function AddVendors() {
 
   const validateStep = () => {
     const newErrors = {};
+
     switch (activeStep) {
       case 0: // Basic Information
         if (!formData.homeownerName.trim()) {
@@ -174,6 +124,7 @@ function AddVendors() {
           newErrors.residentName = 'Resident name is required';
         }
         break;
+
       case 1: // Residence Details
         if (!formData.houseNumber.trim()) {
           newErrors.houseNumber = 'House number is required';
@@ -182,6 +133,7 @@ function AddVendors() {
           newErrors.street = 'Street is required';
         }
         break;
+
       case 2: // Business Information
         if (!formData.businessName.trim()) {
           newErrors.businessName = 'Business name is required';
@@ -190,28 +142,34 @@ function AddVendors() {
           newErrors.contactNumber = 'Please enter a valid Philippine mobile number';
         }
         break;
+
       default:
         break;
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleSave = async () => {
     try {
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
       setSnackbar({
         open: true,
-        message: 'Vendor added successfully!',
+        message: 'Vendor updated successfully!',
         severity: 'success'
       });
+      
+      // Navigate back to vendors page after a short delay
       setTimeout(() => {
         navigate('/user-management/vendors');
       }, 1500);
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to add vendor. Please try again.',
+        message: 'Failed to update vendor. Please try again.',
         severity: 'error'
       });
     }
@@ -257,8 +215,10 @@ function AddVendors() {
                 fullWidth
                 label="Resident ID"
                 value={formData.residentId}
-                InputProps={{ readOnly: true }}
-                helperText="Auto-generated Resident ID"
+                InputProps={{
+                  readOnly: true,
+                }}
+                helperText="Resident ID cannot be changed"
                 required
                 sx={{
                   minWidth: 300,
@@ -270,6 +230,7 @@ function AddVendors() {
             </Grid>
           </Grid>
         );
+
       case 1:
         return (
           <Grid container spacing={3}>
@@ -311,6 +272,7 @@ function AddVendors() {
             </Grid>
           </Grid>
         );
+
       case 2:
         return (
           <Grid container spacing={3}>
@@ -342,6 +304,7 @@ function AddVendors() {
             </Grid>
           </Grid>
         );
+
       case 3:
         return (
           <Box>
@@ -381,6 +344,7 @@ function AddVendors() {
             </Paper>
           </Box>
         );
+
       default:
         return null;
     }
@@ -403,13 +367,13 @@ function AddVendors() {
   return (
     <Box sx={{ p: { xs: 0.5, sm: 1 }, width: '100%', height: '100%' }}>
       <Box maxWidth="100%" mx="auto">
-        <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3, width: '100%', minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3, width: '100%', maxHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" gutterBottom>
-              Add New Vendor
+              Edit Vendor
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Fill in the required information to register a new vendor
+              Update vendor information step by step
             </Typography>
           </Box>
 
@@ -433,11 +397,11 @@ function AddVendors() {
             ))}
           </Stepper>
 
-          <Box sx={{ mb: 3, flex: 1 }}>
+          <Box sx={{ mb: 3 }}>
             {renderStepContent(activeStep)}
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 'auto' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button
               disabled={activeStep === 0}
               onClick={handleBack}
@@ -450,11 +414,11 @@ function AddVendors() {
               {activeStep === steps.length - 1 ? (
                 <Button
                   variant="contained"
-                  onClick={handleSubmit}
-                  endIcon={<CheckIcon />}
+                  onClick={handleSave}
+                  endIcon={<SaveIcon />}
                   sx={{ minWidth: 120 }}
                 >
-                  Submit
+                  Save Changes
                 </Button>
               ) : (
                 <Button
@@ -485,4 +449,4 @@ function AddVendors() {
   );
 }
 
-export default AddVendors; 
+export default EditVendors; 
