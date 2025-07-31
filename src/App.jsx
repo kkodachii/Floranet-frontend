@@ -10,6 +10,7 @@ import CCTV from './pages/sections/Alert/CCTV'
 import WasteCollection from './pages/sections/Alert/WasteCollection'
 import PersonalPayment from './pages/sections/Billing/PersonalPayment'
 import PaymentStatus from './pages/sections/Billing/PaymentStatus'
+import PaymentDetails from './pages/sections/Billing/PaymentDetails'
 import CollectionReport from './pages/sections/Billing/CollectionReport'
 import GeneralComplaints from './pages/sections/Complaints/GeneralComplaints'
 import ServiceComplaints from './pages/sections/Complaints/ServiceComplaints'
@@ -78,6 +79,7 @@ function AppRoutes() {
                 <Route path="/alerts-security/waste-collection" element={<WasteCollection />} />
                 <Route path="/billing-payment/personal-payment" element={<PersonalPayment />} />
                 <Route path="/billing-payment/payment-status" element={<PaymentStatus />} />
+                <Route path="/billing-payment/payment-details/:residentId" element={<PaymentDetails />} />
                 <Route path="/billing-payment/collection-report" element={<CollectionReport />} />
                 <Route path="/community-hub" element={<CommunityHub />} />
                 <Route path="/complaints/general-complaints" element={<GeneralComplaints />} />

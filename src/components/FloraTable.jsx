@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 
-// columns: [{ id, label }], rows: array of objects, actions: [{ icon, label, onClick, color }]
+// columns: [{ id, label, render }], rows: array of objects, actions: [{ icon, label, onClick, color }]
 const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, maxHeight = '60vh', emptyMessage = 'No data found.', loading = false }) => {
   const theme = useTheme();
   const paginatedRows = rows.slice((page - 1) * rowsPerPage, page * rowsPerPage);
@@ -37,6 +37,7 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
             {columns.map((col) => (
               <TableCell
                 key={col.id}
+                align={col.align || 'left'}
                 sx={{
                   fontWeight: 700,
                   fontSize: 13,
@@ -80,6 +81,7 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
               {columns.map((col) => (
                 <TableCell
                   key={col.id}
+                  align={col.align || 'left'}
                   sx={{
                     maxWidth: 120,
                     overflow: 'hidden',
@@ -93,7 +95,9 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
                   }}
                 >
                   <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
-                    <span>{row[col.id]}</span>
+                    <span>
+                      {col.render ? col.render(row[col.id], row) : row[col.id]}
+                    </span>
                   </Tooltip>
                 </TableCell>
               ))}
