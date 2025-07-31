@@ -27,6 +27,7 @@ import { useTheme } from '@mui/material/styles';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FloraTable from '../../../components/FloraTable';
+import FilterPopover from '../../../components/FilterPopover';
 
 // Mock alerts data based on the image
 const mockAlerts = [
@@ -242,6 +243,22 @@ const mockAlerts = [
   }
 ];
 
+const getStatusHoverColor = (status, theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  switch (status) {
+    case 'Resolved':
+      return isDark ? '#145317' : '#d4edda';
+    case 'Responded':
+      return isDark ? '#08306b' : '#bbdefb';
+    case 'Investigation Ongoing':
+      return isDark ? '#c66900' : '#ffe0b2';
+    case 'Escalated':
+      return isDark ? '#7f1313' : '#ffcdd2';
+    default:
+      return isDark ? theme.palette.grey[900] : '#eeeeee';
+  }
+};
+
 function Alerts() {
   const [alerts, setAlerts] = useState(mockAlerts);
   const [search, setSearch] = useState('');
@@ -250,41 +267,66 @@ function Alerts() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [filterValues, setFilterValues] = useState({ status: '', street: '' });
+
   const handleSearch = (e) => setSearch(e.target.value);
 
   const handleStatusChange = (alertId, newStatus) => {
-    setAlerts(prevAlerts => 
-      prevAlerts.map(alert => 
-        alert.id === alertId 
+    setAlerts(prevAlerts =>
+      prevAlerts.map(alert =>
+        alert.id === alertId
           ? { ...alert, status: newStatus }
           : alert
       )
     );
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status, theme) => {
+    const isDark = theme.palette.mode === 'dark';
     switch (status) {
-      case 'Resolved': return 'success';
-      case 'Responded': return 'info';
-      case 'Investigation Ongoing': return 'warning';
-      case 'Escalated': return 'error';
-      default: return 'default';
+      case 'Resolved':
+        return isDark ? '#1b5e20' : '#e8f5e8';
+      case 'Responded':
+        return isDark ? '#0d47a1' : '#e3f2fd';
+      case 'Investigation Ongoing':
+        return isDark ? '#ff9800' : '#fff3e0';
+      case 'Escalated':
+        return isDark ? '#b71c1c' : '#ffebee';
+      default:
+        return isDark ? theme.palette.grey[800] : '#f5f5f5';
     }
   };
 
-  const statusOptions = [
-    'Resolved',
-    'Responded', 
-    'Investigation Ongoing',
-    'Escalated'
-  ];
+  const statusOptions = ['Resolved', 'Responded', 'Investigation Ongoing', 'Escalated'];
+  const streetOptions = Array.from(new Set(alerts.map(a => a.street))).filter(Boolean);
+  const homeownerOptions = Array.from(new Set(alerts.map(a => a.homeownerName))).filter(Boolean);
+  const residentOptions = Array.from(new Set(alerts.map(a => a.residentName))).filter(Boolean);
+  const blockLotOptions = Array.from(new Set(alerts.map(a => a.blockLot))).filter(Boolean);
+  const dateOptions = Array.from(new Set(alerts.map(a => a.date))).filter(Boolean);
+  // Reason is text, so just add as a text field
+
+  const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
+  const handleFilterClose = () => setFilterAnchorEl(null);
+  const handleFilterChange = (name, value) => setFilterValues(f => ({ ...f, [name]: value }));
+  const handleFilterReset = () => setFilterValues({ status: '', street: '' });
+  const handleFilterApply = () => handleFilterClose();
 
   const filteredAlerts = alerts.filter(
-    (alert) =>
-      Object.values(alert)
+    (alert) => {
+      const matchesSearch = Object.values(alert)
         .join(' ')
         .toLowerCase()
-        .includes(search.toLowerCase())
+        .includes(search.toLowerCase());
+      const matchesStatus = !filterValues.status || (alert.status === filterValues.status);
+      const matchesStreet = !filterValues.street || (alert.street === filterValues.street);
+      const matchesHomeowner = !filterValues.homeownerName || (alert.homeownerName === filterValues.homeownerName);
+      const matchesResident = !filterValues.residentName || (alert.residentName === filterValues.residentName);
+      const matchesBlockLot = !filterValues.blockLot || (alert.blockLot === filterValues.blockLot);
+      const matchesDate = !filterValues.date || (alert.date === filterValues.date);
+      const matchesReason = !filterValues.reason || (alert.reason.toLowerCase().includes(filterValues.reason.toLowerCase()));
+      return matchesSearch && matchesStatus && matchesStreet && matchesHomeowner && matchesResident && matchesBlockLot && matchesDate && matchesReason;
+    }
   );
 
   // Actions for each row
@@ -299,8 +341,8 @@ function Alerts() {
 
   const columns = [
     { id: 'residentName', label: 'Resident Name' },
-    { 
-      id: 'reason', 
+    {
+      id: 'reason',
       label: 'Reason',
       render: (value, row) => (
         <Box sx={{ color: row.isAlert ? 'error.main' : 'text.primary', fontWeight: row.isAlert ? 600 : 400 }}>
@@ -310,17 +352,21 @@ function Alerts() {
     },
     { id: 'date', label: 'Date' },
     { id: 'time', label: 'Time' },
-    { 
-      id: 'status', 
+    {
+      id: 'status',
       label: 'Status',
       render: (value) => {
         return (
-          <Chip 
-            label={value} 
-            size="small" 
-            color={getStatusColor(value)}
+          <Chip
+            label={value}
+            size="small"
+            sx={{
+              fontSize: '0.75rem',
+              bgcolor: getStatusColor(value, theme),
+              color: theme.palette.mode === 'dark' ? '#fff' : undefined,
+              border: 'none',
+            }}
             variant="outlined"
-            sx={{ fontSize: '0.75rem' }}
           />
         );
       }
@@ -330,14 +376,14 @@ function Alerts() {
 
 
   return (
-   
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          borderRadius: 3, 
-          overflow: 'hidden', 
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)', 
-          backgroundColor: '#fff'
+
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          overflow: 'hidden',
+          boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.25)' : '0 4px 20px rgba(0,0,0,0.08)',
+          backgroundColor: theme.palette.background.paper,
         }}
       >
         {/* Header Section */}
@@ -345,7 +391,8 @@ function Alerts() {
           sx={{
             p: { xs: 1.5, sm: 2 },
             borderBottom: '1px solid',
-            borderColor: 'divider'
+            borderColor: 'divider',
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -362,7 +409,7 @@ function Alerts() {
             p: { xs: 1.5, sm: 2 },
             borderBottom: '1px solid',
             borderColor: 'divider',
-            backgroundColor: '#fafafa'
+            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa',
           }}
         >
           <Box
@@ -384,7 +431,7 @@ function Alerts() {
                 width: { xs: '100%', sm: 400 },
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  backgroundColor: '#fff',
+                  backgroundColor: theme.palette.background.paper,
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'primary.main',
                   },
@@ -404,31 +451,50 @@ function Alerts() {
             />
             <Stack direction="row" spacing={1}>
               <Tooltip title="Filter Alerts">
-                <IconButton 
-                  sx={{ 
-                    backgroundColor: '#fff',
+                <IconButton
+                  sx={{
+                    backgroundColor: theme.palette.background.paper,
                     border: '1px solid',
                     borderColor: 'divider',
-                    '&:hover': { 
-                      backgroundColor: 'primary.main', 
+                    '&:hover': {
+                      backgroundColor: 'primary.main',
                       color: '#fff',
-                      borderColor: 'primary.main'
-                    } 
+                      borderColor: 'primary.main',
+                    },
                   }}
+                  onClick={handleFilterOpen}
                 >
                   <FilterListIcon />
                 </IconButton>
               </Tooltip>
+              <FilterPopover
+                open={Boolean(filterAnchorEl)}
+                anchorEl={filterAnchorEl}
+                onClose={handleFilterClose}
+                fields={[
+                  { name: 'status', label: 'Status', type: 'select', options: statusOptions },
+                  { name: 'street', label: 'Street', type: 'select', options: streetOptions },
+                  { name: 'homeownerName', label: 'Homeowner Name', type: 'select', options: homeownerOptions },
+                  { name: 'residentName', label: 'Resident Name', type: 'select', options: residentOptions },
+                  { name: 'blockLot', label: 'Block & Lot', type: 'select', options: blockLotOptions },
+                  { name: 'date', label: 'Date', type: 'select', options: dateOptions },
+                  { name: 'reason', label: 'Reason', type: 'text' },
+                ]}
+                values={filterValues}
+                onChange={handleFilterChange}
+                onApply={handleFilterApply}
+                onReset={handleFilterReset}
+              />
             </Stack>
           </Box>
         </Box>
         <Box sx={{ height: 'calc(100vh - 200px)', overflow: 'auto', p: 1.5 }}>
           {filteredAlerts.length === 0 ? (
-            <Box 
-              display="flex" 
+            <Box
+              display="flex"
               flexDirection="column"
-              justifyContent="center" 
-              alignItems="center" 
+              justifyContent="center"
+              alignItems="center"
               py={6}
               textAlign="center"
             >
@@ -437,14 +503,14 @@ function Alerts() {
                   width: 80,
                   height: 80,
                   borderRadius: '50%',
-                  backgroundColor: '#f0f0f0',
+                  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#f0f0f0',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  mb: 2
+                  mb: 2,
                 }}
               >
-                <WarningIcon sx={{ fontSize: 32, color: '#999' }} />
+                <WarningIcon sx={{ fontSize: 32, color: theme.palette.mode === 'dark' ? theme.palette.grey[500] : '#999' }} />
               </Box>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 {loading ? 'Loading alerts...' : 'No alerts found'}
@@ -455,21 +521,22 @@ function Alerts() {
             </Box>
           ) : (
             filteredAlerts.map((alert, index) => (
-              <Accordion 
-                key={alert.id} 
-                sx={{ 
-                  mb: 1.5, 
+              <Accordion
+                key={alert.id}
+                sx={{
+                  mb: 1.5,
                   '&:before': { display: 'none' },
                   borderRadius: 2,
                   overflow: 'hidden',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.06)',
                   border: '1px solid',
                   borderColor: 'divider',
                   '&:hover': {
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                    boxShadow: theme.palette.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.25)' : '0 4px 16px rgba(0,0,0,0.1)',
                     transform: 'translateY(-1px)',
-                    transition: 'all 0.2s ease-in-out'
-                  }
+                    transition: 'all 0.2s ease-in-out',
+                  },
+                  backgroundColor: theme.palette.background.paper,
                 }}
               >
                 <AccordionSummary
@@ -490,9 +557,9 @@ function Alerts() {
                     </Box>
                   }
                   sx={{
-                    backgroundColor: '#fff',
+                    backgroundColor: theme.palette.background.paper,
                     p: 1.5,
-                    '&:hover': { backgroundColor: '#fafafa' },
+                    '&:hover': { backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa' },
                     '& .MuiAccordionSummary-content': {
                       m: 0
                     }
@@ -511,10 +578,10 @@ function Alerts() {
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                         Alert Reason
                       </Typography>
-                      <Typography 
-                        variant="body1" 
-                        sx={{ 
-                          color: '#d32f2f', 
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: '#d32f2f',
                           fontWeight: 600,
                           display: 'flex',
                           alignItems: 'center',
@@ -568,17 +635,11 @@ function Alerts() {
                             '& .MuiOutlinedInput-notchedOutline': {
                               border: 'none'
                             },
-                            backgroundColor: getStatusColor(alert.status) === 'success' ? '#e8f5e8' :
-                                           getStatusColor(alert.status) === 'info' ? '#e3f2fd' :
-                                           getStatusColor(alert.status) === 'warning' ? '#fff3e0' :
-                                           getStatusColor(alert.status) === 'error' ? '#ffebee' : '#f5f5f5',
+                            backgroundColor: getStatusColor(alert.status, theme),
                             borderRadius: 1.5,
                             '&:hover': {
-                              backgroundColor: getStatusColor(alert.status) === 'success' ? '#d4edda' :
-                                           getStatusColor(alert.status) === 'info' ? '#bbdefb' :
-                                           getStatusColor(alert.status) === 'warning' ? '#ffe0b2' :
-                                           getStatusColor(alert.status) === 'error' ? '#ffcdd2' : '#eeeeee'
-                            }
+                              backgroundColor: getStatusHoverColor(alert.status, theme),
+                            },
                           }}
                         >
                           {statusOptions.map((status) => (
@@ -591,18 +652,18 @@ function Alerts() {
                     </Box>
                   </Box>
                 </AccordionSummary>
-                <AccordionDetails sx={{ backgroundColor: '#fafafa', py: 2, px: 0 }}>
+                <AccordionDetails sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa', py: 2, px: 0 }}>
                   <Grid container spacing={2} justifyContent="center">
                     <Grid item xs={12} sm={4}>
-                      <Paper 
-                        elevation={0} 
-                        sx={{ 
-                          p: 2.5, 
-                          backgroundColor: '#fff', 
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2.5,
+                          backgroundColor: theme.palette.background.paper,
                           borderRadius: 2,
                           border: '1px solid',
                           borderColor: 'divider',
-                          minHeight: '200px'
+                          minHeight: '200px',
                         }}
                       >
                         <Typography variant="h6" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
@@ -629,15 +690,15 @@ function Alerts() {
                       </Paper>
                     </Grid>
                     <Grid item xs={12} sm={4}>
-                      <Paper 
-                        elevation={0} 
-                        sx={{ 
-                          p: 2.5, 
-                          backgroundColor: '#fff', 
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2.5,
+                          backgroundColor: theme.palette.background.paper,
                           borderRadius: 2,
                           border: '1px solid',
                           borderColor: 'divider',
-                          minHeight: '200px'
+                          minHeight: '200px',
                         }}
                       >
                         <Typography variant="h6" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
@@ -664,15 +725,15 @@ function Alerts() {
                       </Paper>
                     </Grid>
                     <Grid item xs={12} sm={4}>
-                      <Paper 
-                        elevation={0} 
-                        sx={{ 
-                          p: 2.5, 
-                          backgroundColor: '#fff', 
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2.5,
+                          backgroundColor: theme.palette.background.paper,
                           borderRadius: 2,
                           border: '1px solid',
                           borderColor: 'divider',
-                          minHeight: '200px'
+                          minHeight: '200px',
                         }}
                       >
                         <Typography variant="h6" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
@@ -727,7 +788,7 @@ function Alerts() {
             p: 2,
             borderTop: '1px solid',
             borderColor: 'divider',
-            backgroundColor: '#fafafa'
+            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

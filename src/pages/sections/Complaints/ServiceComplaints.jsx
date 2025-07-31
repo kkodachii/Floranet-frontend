@@ -21,6 +21,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useTheme } from '@mui/material/styles';
 import FloraTable from '../../../components/FloraTable';
 import StatusBadge from '../../../components/StatusBadge';
+import FilterPopover from '../../../components/FilterPopover';
 
 const columns = [
   { id: 'logId', label: 'Log ID' },
@@ -49,6 +50,9 @@ const initialRows = [
 ];
 
 const statusOptions = ['Resolved', 'Cancelled', 'Miscall', 'Pending', 'In Progress'];
+const residentOptions = Array.from(new Set(initialRows.map(r => r.residentName))).filter(Boolean);
+const serviceTypeOptions = Array.from(new Set(initialRows.map(r => r.serviceType))).filter(Boolean);
+const triggerTypeOptions = Array.from(new Set(initialRows.map(r => r.triggerType))).filter(Boolean);
 
 export default function ServiceComplaints() {
   const [search, setSearch] = useState('');
@@ -56,6 +60,8 @@ export default function ServiceComplaints() {
   const [allRows, setAllRows] = useState(initialRows);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRowId, setSelectedRowId] = useState(null);
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [filterValues, setFilterValues] = useState({ status: '', residentName: '' });
   const rowsPerPage = 7;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -82,10 +88,22 @@ export default function ServiceComplaints() {
     setSelectedRowId(null);
   };
 
+  const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
+  const handleFilterClose = () => setFilterAnchorEl(null);
+  const handleFilterChange = (name, value) => setFilterValues(f => ({ ...f, [name]: value }));
+  const handleFilterReset = () => setFilterValues({ status: '', residentName: '' });
+  const handleFilterApply = () => handleFilterClose();
+
   // Filter rows by search
-  const filteredRows = allRows.filter(row =>
-    Object.values(row).join(' ').toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredRows = allRows.filter(row => {
+    const matchesSearch = Object.values(row).join(' ').toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = !filterValues.status || row.status === filterValues.status;
+    const matchesResident = !filterValues.residentName || row.residentName === filterValues.residentName;
+    const matchesService = !filterValues.serviceType || row.serviceType === filterValues.serviceType;
+    const matchesTrigger = !filterValues.triggerType || row.triggerType === filterValues.triggerType;
+    const matchesRemarks = !filterValues.remarks || row.remarks.toLowerCase().includes(filterValues.remarks.toLowerCase());
+    return matchesSearch && matchesStatus && matchesResident && matchesService && matchesTrigger && matchesRemarks;
+  });
 
   // Pagination
   const total = filteredRows.length;
@@ -158,10 +176,26 @@ export default function ServiceComplaints() {
             />
             <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
               <Tooltip title="Filter">
-                <IconButton color="default" size="small" sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}>
+                <IconButton color="default" size="small" sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }} onClick={handleFilterOpen}>
                   <FilterListIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+              <FilterPopover
+                open={Boolean(filterAnchorEl)}
+                anchorEl={filterAnchorEl}
+                onClose={handleFilterClose}
+                fields={[
+                  { name: 'status', label: 'Status', type: 'select', options: statusOptions },
+                  { name: 'residentName', label: 'Resident Name', type: 'select', options: residentOptions },
+                  { name: 'serviceType', label: 'Service Type', type: 'select', options: serviceTypeOptions },
+                  { name: 'triggerType', label: 'Trigger Type', type: 'select', options: triggerTypeOptions },
+                  { name: 'remarks', label: 'Remarks', type: 'text' },
+                ]}
+                values={filterValues}
+                onChange={handleFilterChange}
+                onApply={handleFilterApply}
+                onReset={handleFilterReset}
+              />
             </Stack>
           </Box>
           <FloraTable

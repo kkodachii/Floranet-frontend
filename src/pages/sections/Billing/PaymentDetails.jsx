@@ -10,6 +10,10 @@ import {
   useTheme,
   useMediaQuery,
   IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import FloraTable from '../../../components/FloraTable';
@@ -156,6 +160,33 @@ function PaymentDetails() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const [selectedYear, setSelectedYear] = useState('all');
+
+  // Extract unique years from paymentHistory
+  const years = React.useMemo(() => {
+    if (!paymentDetails) return [];
+    const yearSet = new Set();
+    paymentDetails.paymentHistory.forEach((p) => {
+      if (p.paymentDate && p.paymentDate !== '—') {
+        const match = p.paymentDate.match(/\d{4}$/);
+        if (match) yearSet.add(match[0]);
+      }
+    });
+    return Array.from(yearSet).sort((a, b) => b - a); // Descending order
+  }, [paymentDetails]);
+
+  // Filter paymentHistory by selected year
+  const filteredPaymentHistory = React.useMemo(() => {
+    if (!paymentDetails) return [];
+    if (selectedYear === 'all') return paymentDetails.paymentHistory;
+    return paymentDetails.paymentHistory.filter((p) => {
+      if (p.paymentDate && p.paymentDate !== '—') {
+        const match = p.paymentDate.match(/\d{4}$/);
+        return match && match[0] === selectedYear;
+      }
+      return false;
+    });
+  }, [paymentDetails, selectedYear]);
 
   useEffect(() => {
     fetchPaymentDetails(residentId).then((data) => {
@@ -350,20 +381,35 @@ function PaymentDetails() {
 
         {/* Payment History Table */}
         <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 0.5, sm: 1 }, boxShadow: 3 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              mb: 2,
-              fontWeight: 700,
-              px: 1,
-              fontFamily: 'monospace',
-            }}
-          >
-            Payment History
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                px: 1,
+                fontFamily: 'monospace',
+              }}
+            >
+              Payment History
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel id="year-select-label">Year</InputLabel>
+              <Select
+                labelId="year-select-label"
+                value={selectedYear}
+                label="Year"
+                onChange={(e) => setSelectedYear(e.target.value)}
+              >
+                <MenuItem value="all">All Years</MenuItem>
+                {years.map((year) => (
+                  <MenuItem key={year} value={year}>{year}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
           <FloraTable
             columns={columns}
-            rows={paymentDetails.paymentHistory}
+            rows={filteredPaymentHistory}
             actions={actions}
             page={1}
             rowsPerPage={13}
