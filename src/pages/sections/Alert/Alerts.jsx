@@ -15,7 +15,10 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
-  Divider
+  Divider,
+  Select,
+  MenuItem,
+  FormControl
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -249,6 +252,33 @@ function Alerts() {
 
   const handleSearch = (e) => setSearch(e.target.value);
 
+  const handleStatusChange = (alertId, newStatus) => {
+    setAlerts(prevAlerts => 
+      prevAlerts.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, status: newStatus }
+          : alert
+      )
+    );
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Resolved': return 'success';
+      case 'Responded': return 'info';
+      case 'Investigation Ongoing': return 'warning';
+      case 'Escalated': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const statusOptions = [
+    'Resolved',
+    'Responded', 
+    'Investigation Ongoing',
+    'Escalated'
+  ];
+
   const filteredAlerts = alerts.filter(
     (alert) =>
       Object.values(alert)
@@ -284,15 +314,6 @@ function Alerts() {
       id: 'status', 
       label: 'Status',
       render: (value) => {
-        const getStatusColor = (status) => {
-          switch (status) {
-            case 'Resolved': return 'success';
-            case 'Responded': return 'info';
-            case 'Investigation Ongoing': return 'warning';
-            case 'Escalated': return 'error';
-            default: return 'default';
-          }
-        };
         return (
           <Chip 
             label={value} 
@@ -532,18 +553,41 @@ function Alerts() {
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                         Status
                       </Typography>
-                                              <Chip 
-                          label={alert.status === 'Investigation Ongoing' ? 'Ongoing' : alert.status} 
-                          size="small" 
-                          color={alert.status === 'Resolved' ? 'success' : 
-                                 alert.status === 'Responded' ? 'info' : 
-                                 alert.status === 'Investigation Ongoing' ? 'warning' : 'error'}
-                          sx={{ 
+                      <FormControl size="small" sx={{ minWidth: 100 }}>
+                        <Select
+                          value={alert.status}
+                          onChange={(e) => handleStatusChange(alert.id, e.target.value)}
+                          sx={{
+                            height: 32,
                             fontSize: '0.75rem',
                             fontWeight: 600,
-                            borderRadius: 1.5
+                            '& .MuiSelect-select': {
+                              py: 0.5,
+                              px: 1
+                            },
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              border: 'none'
+                            },
+                            backgroundColor: getStatusColor(alert.status) === 'success' ? '#e8f5e8' :
+                                           getStatusColor(alert.status) === 'info' ? '#e3f2fd' :
+                                           getStatusColor(alert.status) === 'warning' ? '#fff3e0' :
+                                           getStatusColor(alert.status) === 'error' ? '#ffebee' : '#f5f5f5',
+                            borderRadius: 1.5,
+                            '&:hover': {
+                              backgroundColor: getStatusColor(alert.status) === 'success' ? '#d4edda' :
+                                           getStatusColor(alert.status) === 'info' ? '#bbdefb' :
+                                           getStatusColor(alert.status) === 'warning' ? '#ffe0b2' :
+                                           getStatusColor(alert.status) === 'error' ? '#ffcdd2' : '#eeeeee'
+                            }
                           }}
-                        />
+                        >
+                          {statusOptions.map((status) => (
+                            <MenuItem key={status} value={status} sx={{ fontSize: '0.75rem' }}>
+                              {status === 'Investigation Ongoing' ? 'Ongoing' : status}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
                     </Box>
                   </Box>
                 </AccordionSummary>
