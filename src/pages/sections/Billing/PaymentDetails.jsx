@@ -24,7 +24,7 @@ const fetchPaymentDetails = (residentId) =>
     residentName: 'MENDOZA, RAVEN',
     contactNumber: '09617060676',
     email: 'MENDOZA@GMAIL.COM',
-    profileImage: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg',
+    profileImage: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg', 
     paymentHistory: [
       {
         id: 'PAY001',
