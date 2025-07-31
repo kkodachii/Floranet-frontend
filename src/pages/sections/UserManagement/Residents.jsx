@@ -25,6 +25,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FloraTable from '../../../components/FloraTable';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import FilterPopover from '../../../components/FilterPopover';
 
 // Mock API fetch
 const fetchUsers = () =>
@@ -233,6 +234,8 @@ function Residents() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showRequests, setShowRequests] = useState(false);
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [filterValues, setFilterValues] = useState({ status: '', street: '' });
   const rowsPerPage = 9;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -248,13 +251,37 @@ function Residents() {
 
   const handleSearch = (e) => setSearch(e.target.value);
 
+  // Demo: status options for requests only
+  const statusOptions = ['pending'];
+  const streetOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.street))).filter(Boolean);
+  const homeownerOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.homeownerName))).filter(Boolean);
+  const residentOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.residentName))).filter(Boolean);
+  const houseNumberOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.houseNumber))).filter(Boolean);
+  const contactOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.contactNumber))).filter(Boolean);
+  const emailOptions = Array.from(new Set(users.map(u => u.email))).filter(Boolean);
+
+  const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
+  const handleFilterClose = () => setFilterAnchorEl(null);
+  const handleFilterChange = (name, value) => setFilterValues(f => ({ ...f, [name]: value }));
+  const handleFilterReset = () => setFilterValues({ status: '', street: '' });
+  const handleFilterApply = () => handleFilterClose();
+
   const filteredData = showRequests ? requests : users;
   const filteredItems = filteredData.filter(
-    (item) =>
-      Object.values(item)
+    (item) => {
+      const matchesSearch = Object.values(item)
         .join(' ')
         .toLowerCase()
-        .includes(search.toLowerCase())
+        .includes(search.toLowerCase());
+      const matchesStatus = !showRequests || !filterValues.status || (item.status === filterValues.status);
+      const matchesStreet = !filterValues.street || (item.street === filterValues.street);
+      const matchesHomeowner = !filterValues.homeownerName || (item.homeownerName === filterValues.homeownerName);
+      const matchesResident = !filterValues.residentName || (item.residentName === filterValues.residentName);
+      const matchesHouseNumber = !filterValues.houseNumber || (item.houseNumber === filterValues.houseNumber);
+      const matchesContact = !filterValues.contactNumber || (item.contactNumber === filterValues.contactNumber);
+      const matchesEmail = !filterValues.email || (item.email === filterValues.email);
+      return matchesSearch && matchesStatus && matchesStreet && matchesHomeowner && matchesResident && matchesHouseNumber && matchesContact && matchesEmail;
+    }
   );
 
   // Actions for each row
@@ -385,10 +412,28 @@ function Residents() {
                 </Tooltip>
               )}
               <Tooltip title="Filter">
-                <IconButton color="default" size="small" sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}>
+                <IconButton color="default" size="small" sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }} onClick={handleFilterOpen}>
                   <FilterListIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+              <FilterPopover
+                open={Boolean(filterAnchorEl)}
+                anchorEl={filterAnchorEl}
+                onClose={handleFilterClose}
+                fields={[
+                  ...(showRequests ? [{ name: 'status', label: 'Status', type: 'select', options: statusOptions }] : []),
+                  { name: 'street', label: 'Street', type: 'select', options: streetOptions },
+                  { name: 'homeownerName', label: 'Homeowner Name', type: 'select', options: homeownerOptions },
+                  { name: 'residentName', label: 'Resident Name', type: 'select', options: residentOptions },
+                  { name: 'houseNumber', label: 'House Number', type: 'select', options: houseNumberOptions },
+                  { name: 'contactNumber', label: 'Contact Number', type: 'select', options: contactOptions },
+                  ...(!showRequests ? [{ name: 'email', label: 'Email', type: 'select', options: emailOptions }] : []),
+                ]}
+                values={filterValues}
+                onChange={handleFilterChange}
+                onApply={handleFilterApply}
+                onReset={handleFilterReset}
+              />
               <Tooltip title={showRequests ? "Show Users" : "Show Requests"}>
                 <Badge 
                   color="error" 

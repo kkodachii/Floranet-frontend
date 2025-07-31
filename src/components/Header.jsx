@@ -29,7 +29,7 @@ export default function Header({ children }) {
   const handleLogout = () => {
     handleClose();
     localStorage.removeItem("token");
-    navigate("/login");
+    window.location.replace("/login");
   };
 
   return (
