@@ -108,7 +108,7 @@ function EditResidents() {
     };
     
     if (id) {
-      loadResidentData();
+    loadResidentData();
     }
   }, [id]);
 
