@@ -11,6 +11,8 @@ import { useTheme } from "@mui/material/styles";
 import { ThemeContext } from "../ThemeContext";
 import Search from "./Search";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import config from "../config/env";
 
 export default function Header({ children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -26,10 +28,39 @@ export default function Header({ children }) {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleClose();
-    localStorage.removeItem("token");
-    window.location.replace("/login");
+    
+    try {
+      const token = localStorage.getItem("token");
+      
+      if (token) {
+        console.log('📡 Making logout API call...');
+        await axios.post(config.ENDPOINTS.LOGOUT, {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log('✅ Logout API call successful:', response.data);
+      } else {
+        console.log('⚠️ No token found, skipping API call');
+      }
+    } catch (error) {
+      console.error('❌ Logout API error:', error);
+      console.log('📋 Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data
+      });
+      // Continue with logout even if API call fails
+    } finally {
+      console.log('🧹 Clearing local storage...');
+      // Clear local storage and redirect regardless of API call success
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.replace("/login");
+    }
   };
 
   return (
