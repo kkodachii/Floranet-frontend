@@ -15,6 +15,7 @@ class ApiService {
     const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
@@ -118,6 +119,10 @@ class ApiService {
     return this.request(`/admin/residents/${residentId}`);
   }
 
+  async getNextResidentId() {
+    return this.request(`/admin/residents-next-id`);
+  }
+
   async updateResident(residentId, residentData) {
     return this.request(`/admin/residents/${residentId}`, {
       method: 'PUT',
@@ -125,6 +130,13 @@ class ApiService {
     });
   }
 
+  async createResident(residentData) {
+    return this.request(`/admin/residents`, {
+      method: 'POST',
+      body: JSON.stringify(residentData),
+    });
+  }
+  
   // Other API methods can be added here...
 }
 

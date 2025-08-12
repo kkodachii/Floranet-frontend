@@ -24,6 +24,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate } from 'react-router-dom';
 import FloraTable from '../../../components/FloraTable';
+import apiService from '../../../services/api';
 
 const steps = [
   'Basic Information',
@@ -47,143 +48,173 @@ const streets = [
   'Kalachuchi'
 ];
 
-// Mock API fetch for existing users
+// Deprecated mock. Fetch next ID from API instead.
 const fetchExistingUsers = () =>
   Promise.resolve([
     {
       homeownerName: 'Juan Dela Cruz',
-      residentName: 'Carlos Dela Cruz',
+      residentFirstName: 'Carlos',
+      residentLastName: 'Dela Cruz',
       residentId: 'MHH0001',
-      houseNumber: 'B3A - L23',
+      block: 'B3A',
+      lot: 'L23',
       street: 'Camia',
       contactNumber: '09171234567',
-      email: 'juan.cruz@email.com',
+      email: 'carlos@gmail.com',
     },
     {
       homeownerName: 'Maria Santos',
-      residentName: 'Anna Santos',
+      residentFirstName: 'Anna',
+      residentLastName: 'Santos',
       residentId: 'MHH0002',
-      houseNumber: 'B1B - L17',
+      block: 'B1B',
+      lot: 'L17',
       street: 'Bouganvilla',
       contactNumber: '09281234567',
-      email: 'maria.santos@email.com',
+      email: 'anna@gmail.com',
     },
     {
       homeownerName: 'Jose Rizal',
-      residentName: 'Emilio Rizal',
+      residentFirstName: 'Emilio',
+      residentLastName: 'Rizal',
       residentId: 'MHH0003',
-      houseNumber: 'B4C - L09',
+      block: 'B4C',
+      lot: 'L09',
       street: 'Dahlia',
       contactNumber: '+639171234568',
-      email: 'jose.rizal@email.com',
+      email: 'emilio@gmail.com',
     },
     {
       homeownerName: 'Ana Mendoza',
-      residentName: 'Patricia Mendoza',
+      residentFirstName: 'Patricia',
+      residentLastName: 'Mendoza',
       residentId: 'MHH0004',
-      houseNumber: 'B2A - L12',
+      block: 'B2A',
+      lot: 'L12',
       street: 'Champaca',
       contactNumber: '09351234567',
-      email: 'ana.mendoza@email.com',
+      email: 'patricia@gmail.com',
     },
     {
       homeownerName: 'Lito Garcia',
-      residentName: 'Michael Garcia',
+      residentFirstName: 'Michael',
+      residentLastName: 'Garcia',
       residentId: 'MHH0005',
-      houseNumber: 'B5D - L02',
+      block: 'B5D',
+      lot: 'L02',
       street: 'Sampaguita',
       contactNumber: '+639291234567',
-      email: 'lito.garcia@email.com',
+      email: 'michael@gmail.com',
     },
     {
       homeownerName: 'Elena Reyes',
-      residentName: 'Jessica Reyes',
+      residentFirstName: 'Jessica',
+      residentLastName: 'Reyes',
       residentId: 'MHH0006',
-      houseNumber: 'B4C - L08',
+      block: 'B4C',
+      lot: 'L08',
       street: 'Adelfa',
       contactNumber: '09181234567',
-      email: 'elena.reyes@email.com',
+      email: 'jessica@gmail.com',
     },
     {
       homeownerName: 'Mario Aquino',
-      residentName: 'Leo Aquino',
+      residentFirstName: 'Leo',
+      residentLastName: 'Aquino',
       residentId: 'MHH0007',
-      houseNumber: 'B3B - L33',
+      block: 'B3B',
+      lot: 'L33',
       street: 'Dahlia',
       contactNumber: '09081234567',
-      email: 'mario.aquino@email.com',
+      email: 'leo@gmail.com',
     },
     {
       homeownerName: 'Cristina Lopez',
-      residentName: 'Daniel Lopez',
+      residentFirstName: 'Daniel',
+      residentLastName: 'Lopez',
       residentId: 'MHH0008',
-      houseNumber: 'B2D - L16',
+      block: 'B2D',
+      lot: 'L16',
       street: 'Gumamela',
       contactNumber: '+639061234567',
-      email: 'cristina.lopez@email.com',
+      email: 'daniel@gmail.com',
     },
     {
       homeownerName: 'Andres Bonifacio',
-      residentName: 'Teresa Bonifacio',
+      residentFirstName: 'Teresa',
+      residentLastName: 'Bonifacio',
       residentId: 'MHH0009',
-      houseNumber: 'B4C - L01',
+      block: 'B4C',
+      lot: 'L01',
       street: 'Santan',
       contactNumber: '09191234567',
-      email: 'andres.bonifacio@email.com',
+      email: 'teresa@gmail.com',
     },
     {
       homeownerName: 'Jenny Lim',
-      residentName: 'Allan Lim',
+      residentFirstName: 'Allan',
+      residentLastName: 'Lim',
       residentId: 'MHH0010',
-      houseNumber: 'B5B - L05',
+      block: 'B5B',
+      lot: 'L05',
       street: 'Jasmine',
       contactNumber: '09209234567',
-      email: 'jenny.lim@email.com',
+      email: 'allan@gmail.com',
     },
     {
       homeownerName: 'Ramon Torres',
-      residentName: 'Edwin Torres',
+      residentFirstName: 'Edwin',
+      residentLastName: 'Torres',
       residentId: 'MHH0011',
-      houseNumber: 'B1A - L11',
+      block: 'B1A',
+      lot: 'L11',
       street: 'Ilang-ilang',
       contactNumber: '09300234567',
-      email: 'ramon.torres@email.com',
+      email: 'edwin@gmail.com',
     },
     {
       homeownerName: 'Grace David',
-      residentName: 'Melanie David',
+      residentFirstName: 'Melanie',
+      residentLastName: 'David',
       residentId: 'MHH0012',
-      houseNumber: 'B2C - L19',
+      block: 'B2C',
+      lot: 'L19',
       street: 'Rosal',
       contactNumber: '+639331234567',
-      email: 'grace.david@email.com',
+      email: 'melanie@gmail.com',
     },
     {
       homeownerName: 'Fernando Cruz',
-      residentName: 'Robyn Cruz',
+      residentFirstName: 'Robyn',
+      residentLastName: 'Cruz',
       residentId: 'MHH0013',
-      houseNumber: 'B3B - L29',
+      block: 'B3B',
+      lot: 'L29',
       street: 'Kalachuchi',
       contactNumber: '09101122334',
-      email: 'fernando.cruz@email.com',
+      email: 'robyn@gmail.com',
     },
     {
       homeownerName: 'Isabel Navarro',
-      residentName: 'Francis Navarro',
+      residentFirstName: 'Francis',
+      residentLastName: 'Navarro',
       residentId: 'MHH0014',
-      houseNumber: 'B4B - L13',
+      block: 'B4B',
+      lot: 'L13',
       street: 'Camia',
       contactNumber: '09221122334',
-      email: 'isabel.navarro@email.com',
+      email: 'francis@gmail.com',
     },
     {
       homeownerName: 'Roberto Ramos',
-      residentName: 'Vincent Ramos',
+      residentFirstName: 'Vincent',
+      residentLastName: 'Ramos',
       residentId: 'MHH0015',
-      houseNumber: 'B5C - L07',
+      block: 'B5C',
+      lot: 'L07',
       street: 'Bouganvilla',
       contactNumber: '09351122334',
-      email: 'roberto.ramos@email.com',
+      email: 'vincent@gmail.com',
     },
   ]);
 
@@ -191,9 +222,11 @@ function AddResidents() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     homeownerName: '',
-    residentName: '',
+    residentFirstName: '',
+    residentLastName: '',
     residentId: '',
-    houseNumber: '',
+    block: '',
+    lot: '',
     street: '',
     contactNumber: '',
     email: ''
@@ -221,21 +254,28 @@ function AddResidents() {
     return `MHH${nextId.toString().padStart(4, '0')}`;
   };
 
+  // Auto-generate email when firstname changes
   useEffect(() => {
-    const loadExistingUsers = async () => {
+    if (formData.residentFirstName.trim()) {
+      const email = `${formData.residentFirstName.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
+      setFormData(prev => ({ ...prev, email }));
+    }
+  }, [formData.residentFirstName]);
+
+  useEffect(() => {
+    const loadNextId = async () => {
       try {
-        const existingUsers = await fetchExistingUsers();
-        const nextResidentId = generateNextResidentId(existingUsers);
+        const res = await apiService.getNextResidentId();
+        const nextResidentId = res.next_resident_id || 'MHH0001';
         setFormData(prev => ({ ...prev, residentId: nextResidentId }));
-        setLoading(false);
       } catch (error) {
-        console.error('Error loading existing users:', error);
+        console.error('Error fetching next resident ID:', error);
         setFormData(prev => ({ ...prev, residentId: 'MHH0001' }));
+      } finally {
         setLoading(false);
       }
     };
-    
-    loadExistingUsers();
+    loadNextId();
   }, []);
 
   const handleNext = () => {
@@ -264,15 +304,21 @@ function AddResidents() {
         if (!formData.homeownerName.trim()) {
           newErrors.homeownerName = 'Homeowner name is required';
         }
-        if (!formData.residentName.trim()) {
-          newErrors.residentName = 'Resident name is required';
+        if (!formData.residentFirstName.trim()) {
+          newErrors.residentFirstName = 'Resident first name is required';
+        }
+        if (!formData.residentLastName.trim()) {
+          newErrors.residentLastName = 'Resident last name is required';
         }
         // Resident ID is auto-generated, no validation needed
         break;
 
       case 1: // Residence Details
-        if (!formData.houseNumber.trim()) {
-          newErrors.houseNumber = 'House number is required';
+        if (!formData.block.trim()) {
+          newErrors.block = 'Block is required';
+        }
+        if (!formData.lot.trim()) {
+          newErrors.lot = 'Lot is required';
         }
         if (!formData.street) {
           newErrors.street = 'Street is required';
@@ -298,25 +344,39 @@ function AddResidents() {
 
   const handleSubmit = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoading(true);
+
+      const payload = {
+        resident_id: formData.residentId,
+        house_owner_name: formData.homeownerName,
+        first_name: formData.residentFirstName,
+        last_name: formData.residentLastName,
+        email: formData.email || null,
+        contact_no: formData.contactNumber || null,
+        block: formData.block,
+        lot: formData.lot,
+        street: formData.street,
+      };
+
+      await apiService.createResident(payload);
       
       setSnackbar({
         open: true,
-        message: 'User added successfully!',
+        message: 'Resident added successfully!',
         severity: 'success'
       });
       
-      // Navigate back to residents page after a short delay
       setTimeout(() => {
         navigate('/user-management/residents');
-      }, 1500);
+      }, 1200);
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to add user. Please try again.',
+        message: error.message || 'Failed to add resident. Please try again.',
         severity: 'error'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -329,7 +389,31 @@ function AddResidents() {
       case 0:
         return (
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+              <TextField
+                fullWidth
+                label="Resident First Name"
+                value={formData.residentFirstName}
+                onChange={(e) => handleInputChange('residentFirstName', e.target.value)}
+                error={!!errors.residentFirstName}
+                helperText={errors.residentFirstName}
+                required
+                inputProps={{ maxLength: 25 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+              <TextField
+                fullWidth
+                label="Resident Last Name"
+                value={formData.residentLastName}
+                onChange={(e) => handleInputChange('residentLastName', e.target.value)}
+                error={!!errors.residentLastName}
+                helperText={errors.residentLastName}
+                required
+                inputProps={{ maxLength: 25 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
               <TextField
                 fullWidth
                 label="Homeowner Name"
@@ -339,23 +423,9 @@ function AddResidents() {
                 helperText={errors.homeownerName}
                 required
                 inputProps={{ maxLength: 50 }}
-                sx={{ minWidth: 300 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Resident Name"
-                value={formData.residentName}
-                onChange={(e) => handleInputChange('residentName', e.target.value)}
-                error={!!errors.residentName}
-                helperText={errors.residentName}
-                required
-                inputProps={{ maxLength: 50 }}
-                sx={{ minWidth: 300 }}
-              />
-            </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
               <TextField
                 fullWidth
                 label="Resident ID"
@@ -366,7 +436,6 @@ function AddResidents() {
                 helperText="Auto-generated Resident ID"
                 required
                 sx={{
-                  minWidth: 300,
                   '& .MuiInputBase-root': {
                     backgroundColor: 'action.hover',
                   },
@@ -382,18 +451,32 @@ function AddResidents() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="House Number"
-                value={formData.houseNumber}
-                onChange={(e) => handleInputChange('houseNumber', e.target.value)}
-                error={!!errors.houseNumber}
-                helperText={errors.houseNumber || 'Format: B#A - L## (e.g., B3A - L23)'}
+                label="Block"
+                value={formData.block}
+                onChange={(e) => handleInputChange('block', e.target.value)}
+                error={!!errors.block}
+                helperText={errors.block || 'Format: B#A (e.g., B3A)'}
                 required
-                placeholder="B3A - L23"
-                inputProps={{ maxLength: 20 }}
-                sx={{ minWidth: 350, maxWidth: 500 }}
+                placeholder="B3A"
+                inputProps={{ maxLength: 10 }}
+                sx={{ minWidth: 200, maxWidth: 300 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Lot"
+                value={formData.lot}
+                onChange={(e) => handleInputChange('lot', e.target.value)}
+                error={!!errors.lot}
+                helperText={errors.lot || 'Format: L## (e.g., L23)'}
+                required
+                placeholder="L23"
+                inputProps={{ maxLength: 10 }}
+                sx={{ minWidth: 200, maxWidth: 300 }}
+              />
+            </Grid>
+            <Grid item xs={12}>
               <FormControl fullWidth error={!!errors.street} required sx={{ minWidth: 350, maxWidth: 500 }}>
                 <InputLabel shrink={Boolean(formData.street) || formData.street === ''}>Street</InputLabel>
                 <Select
@@ -442,8 +525,8 @@ function AddResidents() {
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 error={!!errors.email}
-                helperText={errors.email || 'Optional: Valid email address'}
-                placeholder="user@email.com"
+                helperText={errors.email || 'Auto-generated from first name'}
+                placeholder="firstname@gmail.com"
                 inputProps={{ maxLength: 50 }}
                 sx={{ minWidth: 350, maxWidth: 500 }}
               />
@@ -471,9 +554,9 @@ function AddResidents() {
                 rows={[
                   {
                     homeownerName: formData.homeownerName,
-                    residentName: formData.residentName,
+                    residentName: `${formData.residentFirstName} ${formData.residentLastName}`,
                     residentId: formData.residentId,
-                    houseNumber: formData.houseNumber,
+                    houseNumber: `${formData.block}-${formData.lot}`,
                     street: formData.street,
                     contactNumber: formData.contactNumber || 'Not provided',
                     email: formData.email || 'Not provided',
@@ -562,15 +645,17 @@ function AddResidents() {
                   variant="contained"
                   onClick={handleSubmit}
                   endIcon={<CheckIcon />}
+                  disabled={loading}
                   sx={{ minWidth: 120 }}
                 >
-                  Submit
+                  {loading ? 'Submitting...' : 'Submit'}
                 </Button>
               ) : (
                 <Button
                   variant="contained"
                   onClick={handleNext}
                   endIcon={<ArrowForwardIcon />}
+                  disabled={loading}
                   sx={{ minWidth: 100 }}
                 >
                   Next
