@@ -24,6 +24,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SaveIcon from '@mui/icons-material/Save';
 import { useParams, useNavigate } from 'react-router-dom';
 import FloraTable from '../../../components/FloraTable';
+import apiService from '../../../services/api';
 
 const steps = [
   'Basic Information',
@@ -67,31 +68,48 @@ function EditResidents() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Mock API fetch for resident data
-  const fetchResidentData = (residentId) =>
-    Promise.resolve({
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Carlos Dela Cruz',
-      residentId: residentId || 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      contactNumber: '09171234567',
-      email: 'juan.cruz@email.com',
-    });
+  // Fetch resident data from API
+  const fetchResidentData = async (residentId) => {
+    try {
+      const response = await apiService.getResidentById(residentId);
+      const resident = response.data;
+      
+      return {
+        homeownerName: resident.house_owner_name || '',
+        residentName: resident.name || '',
+        residentId: resident.resident_id || '',
+        houseNumber: resident.house?.house_number || '',
+        street: resident.house?.street || '',
+        contactNumber: resident.contact_no || '',
+        email: resident.email || ''
+      };
+    } catch (error) {
+      console.error('Error fetching resident data:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const loadResidentData = async () => {
       try {
+        setLoading(true);
         const residentData = await fetchResidentData(id);
         setFormData(residentData);
-        setLoading(false);
       } catch (error) {
         console.error('Error loading resident data:', error);
+        setSnackbar({
+          open: true,
+          message: 'Failed to load resident data. Please try again.',
+          severity: 'error'
+        });
+      } finally {
         setLoading(false);
       }
     };
     
-    loadResidentData();
+    if (id) {
+      loadResidentData();
+    }
   }, [id]);
 
   const handleNext = () => {
@@ -153,8 +171,20 @@ function EditResidents() {
 
   const handleSave = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoading(true);
+      
+      // Prepare data for API
+      const updateData = {
+        name: formData.residentName,
+        email: formData.email,
+        contact_no: formData.contactNumber,
+        house_owner_name: formData.homeownerName,
+        house_number: formData.houseNumber,
+        street: formData.street
+      };
+
+      // Call API to update resident
+      await apiService.updateResident(id, updateData);
       
       setSnackbar({
         open: true,
@@ -167,11 +197,14 @@ function EditResidents() {
         navigate('/user-management/residents');
       }, 1500);
     } catch (error) {
+      console.error('Error updating resident:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to update resident. Please try again.',
+        message: error.message || 'Failed to update resident. Please try again.',
         severity: 'error'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -404,7 +437,7 @@ function EditResidents() {
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button
-              disabled={activeStep === 0}
+              disabled={activeStep === 0 || loading}
               onClick={handleBack}
               startIcon={<ArrowBackIcon />}
               sx={{ minWidth: 100, backgroundColor: activeStep === 0 ? '#e0e0e0' : undefined, color: activeStep === 0 ? '#888' : undefined, '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#888' } }}
@@ -417,15 +450,17 @@ function EditResidents() {
                   variant="contained"
                   onClick={handleSave}
                   endIcon={<SaveIcon />}
+                  disabled={loading}
                   sx={{ minWidth: 120 }}
                 >
-                  Save Changes
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </Button>
               ) : (
                 <Button
                   variant="contained"
                   onClick={handleNext}
                   endIcon={<ArrowForwardIcon />}
+                  disabled={loading}
                   sx={{ minWidth: 100 }}
                 >
                   Next

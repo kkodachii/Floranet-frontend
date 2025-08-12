@@ -114,6 +114,17 @@ class ApiService {
     return this.request(`/admin/resident-requests?page=${page}`);
   }
 
+  async getResidentById(residentId) {
+    return this.request(`/admin/residents/${residentId}`);
+  }
+
+  async updateResident(residentId, residentData) {
+    return this.request(`/admin/residents/${residentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(residentData),
+    });
+  }
+
   // Other API methods can be added here...
 }
 
