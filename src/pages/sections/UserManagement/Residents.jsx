@@ -26,206 +26,7 @@ import FloraTable from '../../../components/FloraTable';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterPopover from '../../../components/FilterPopover';
-
-// Mock API fetch
-const fetchUsers = () =>
-  Promise.resolve([
-    {
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Carlos Dela Cruz',
-      residentId: 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      contactNumber: '09171234567',
-      email: 'juan.cruz@email.com',
-    },
-    {
-      homeownerName: 'Maria Santos',
-      residentName: 'Anna Santos',
-      residentId: 'MHH0002',
-      houseNumber: 'B1B - L17',
-      street: 'Bouganvilla',
-      contactNumber: '09281234567',
-      email: 'maria.santos@email.com',
-    },
-    {
-      homeownerName: 'Jose Rizal',
-      residentName: 'Emilio Rizal',
-      residentId: 'MHH0003',
-      houseNumber: 'B4C - L09',
-      street: 'Dahlia',
-      contactNumber: '+639171234568',
-      email: 'jose.rizal@email.com',
-    },
-    {
-      homeownerName: 'Ana Mendoza',
-      residentName: 'Patricia Mendoza',
-      residentId: 'MHH0004',
-      houseNumber: 'B2A - L12',
-      street: 'Champaca',
-      contactNumber: '09351234567',
-      email: 'ana.mendoza@email.com',
-    },
-    {
-      homeownerName: 'Lito Garcia',
-      residentName: 'Michael Garcia',
-      residentId: 'MHH0005',
-      houseNumber: 'B5D - L02',
-      street: 'Sampaguita',
-      contactNumber: '+639291234567',
-      email: 'lito.garcia@email.com',
-    },
-    {
-      homeownerName: 'Elena Reyes',
-      residentName: 'Jessica Reyes',
-      residentId: 'MHH0006',
-      houseNumber: 'B4C - L08',
-      street: 'Adelfa',
-      contactNumber: '09181234567',
-      email: 'elena.reyes@email.com',
-    },
-    {
-      homeownerName: 'Mario Aquino',
-      residentName: 'Leo Aquino',
-      residentId: 'MHH0007',
-      houseNumber: 'B3B - L33',
-      street: 'Dahlia',
-      contactNumber: '09081234567',
-      email: 'mario.aquino@email.com',
-    },
-    {
-      homeownerName: 'Cristina Lopez',
-      residentName: 'Daniel Lopez',
-      residentId: 'MHH0008',
-      houseNumber: 'B2D - L16',
-      street: 'Gumamela',
-      contactNumber: '+639061234567',
-      email: 'cristina.lopez@email.com',
-    },
-    {
-      homeownerName: 'Andres Bonifacio',
-      residentName: 'Teresa Bonifacio',
-      residentId: 'MHH0009',
-      houseNumber: 'B4C - L01',
-      street: 'Santan',
-      contactNumber: '09191234567',
-      email: 'andres.bonifacio@email.com',
-    },
-    {
-      homeownerName: 'Jenny Lim',
-      residentName: 'Allan Lim',
-      residentId: 'MHH0010',
-      houseNumber: 'B5B - L05',
-      street: 'Jasmine',
-      contactNumber: '09209234567',
-      email: 'jenny.lim@email.com',
-    },
-    {
-      homeownerName: 'Ramon Torres',
-      residentName: 'Edwin Torres',
-      residentId: 'MHH0011',
-      houseNumber: 'B1A - L11',
-      street: 'Ilang-ilang',
-      contactNumber: '09300234567',
-      email: 'ramon.torres@email.com',
-    },
-    {
-      homeownerName: 'Grace David',
-      residentName: 'Melanie David',
-      residentId: 'MHH0012',
-      houseNumber: 'B2C - L19',
-      street: 'Rosal',
-      contactNumber: '+639331234567',
-      email: 'grace.david@email.com',
-    },
-    {
-      homeownerName: 'Fernando Cruz',
-      residentName: 'Robyn Cruz',
-      residentId: 'MHH0013',
-      houseNumber: 'B3B - L29',
-      street: 'Kalachuchi',
-      contactNumber: '09101122334',
-      email: 'fernando.cruz@email.com',
-    },
-    {
-      homeownerName: 'Isabel Navarro',
-      residentName: 'Francis Navarro',
-      residentId: 'MHH0014',
-      houseNumber: 'B4B - L13',
-      street: 'Camia',
-      contactNumber: '09221122334',
-      email: 'isabel.navarro@email.com',
-    },
-    {
-      homeownerName: 'Roberto Ramos',
-      residentName: 'Vincent Ramos',
-      residentId: 'MHH0015',
-      houseNumber: 'B5C - L07',
-      street: 'Bouganvilla',
-      contactNumber: '09351122334',
-      email: 'roberto.ramos@email.com',
-    },
-  ]);
-
-// Mock request data
-const fetchRequests = () =>
-  Promise.resolve([
-    {
-      id: 'REQ001',
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Carlos Dela Cruz',
-      residentId: 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      requestType: 'New Resident Registration',
-      status: 'pending',
-      dateSubmitted: '2024-03-15',
-    },
-    {
-      id: 'REQ002',
-      homeownerName: 'Maria Santos',
-      residentName: 'Anna Santos',
-      residentId: 'MHH0002',
-      houseNumber: 'B1B - L17',
-      street: 'Bouganvilla',
-      requestType: 'Update Contact Information',
-      status: 'pending',
-      dateSubmitted: '2024-03-14',
-    },
-    {
-      id: 'REQ003',
-      homeownerName: 'Jose Rizal',
-      residentName: 'Emilio Rizal',
-      residentId: 'MHH0003',
-      houseNumber: 'B4C - L09',
-      street: 'Dahlia',
-      requestType: 'New Resident Registration',
-      status: 'pending',
-      dateSubmitted: '2024-03-13',
-    },
-    {
-      id: 'REQ004',
-      homeownerName: 'Ana Mendoza',
-      residentName: 'Patricia Mendoza',
-      residentId: 'MHH0004',
-      houseNumber: 'B2A - L12',
-      street: 'Champaca',
-      requestType: 'Update Contact Information',
-      status: 'pending',
-      dateSubmitted: '2024-03-12',
-    },
-    {
-      id: 'REQ005',
-      homeownerName: 'Lito Garcia',
-      residentName: 'Michael Garcia',
-      residentId: 'MHH0005',
-      houseNumber: 'B5D - L02',
-      street: 'Sampaguita',
-      requestType: 'New Resident Registration',
-      status: 'pending',
-      dateSubmitted: '2024-03-11',
-    },
-  ]);
+import apiService from '../../../services/api';
 
 function Residents() {
   const [users, setUsers] = useState([]);
@@ -236,29 +37,63 @@ function Residents() {
   const [showRequests, setShowRequests] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [filterValues, setFilterValues] = useState({ status: '', street: '' });
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 9,
+    total: 0,
+    from: 0,
+    to: 0
+  });
   const rowsPerPage = 9;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
-  useEffect(() => {
-    Promise.all([fetchUsers(), fetchRequests()]).then(([usersData, requestsData]) => {
-      setUsers(usersData);
-      setRequests(requestsData);
+  const fetchData = async (pageNum = 1, isRequest = false) => {
+    try {
+      setLoading(true);
+      if (isRequest) {
+        const response = await apiService.getResidentRequests(pageNum);
+        setRequests(response.data || []);
+        setPagination(response.pagination || {});
+      } else {
+        const response = await apiService.getResidents(pageNum);
+        setUsers(response.data || []);
+        setPagination(response.pagination || {});
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Set empty data on error
+      if (isRequest) {
+        setRequests([]);
+      } else {
+        setUsers([]);
+      }
+    } finally {
       setLoading(false);
-    });
-  }, []);
+    }
+  };
+
+  useEffect(() => {
+    fetchData(1, showRequests);
+  }, [showRequests]);
+
+  useEffect(() => {
+    fetchData(page, showRequests);
+  }, [page, showRequests]);
 
   const handleSearch = (e) => setSearch(e.target.value);
 
-  // Demo: status options for requests only
+  // Get filter options from current data
+  const currentData = showRequests ? requests : users;
   const statusOptions = ['pending'];
-  const streetOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.street))).filter(Boolean);
-  const homeownerOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.homeownerName))).filter(Boolean);
-  const residentOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.residentName))).filter(Boolean);
-  const houseNumberOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.houseNumber))).filter(Boolean);
-  const contactOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.contactNumber))).filter(Boolean);
-  const emailOptions = Array.from(new Set(users.map(u => u.email))).filter(Boolean);
+  const streetOptions = Array.from(new Set(currentData.map(u => u.house?.street || u.street))).filter(Boolean);
+  const homeownerOptions = Array.from(new Set(currentData.map(u => u.house_owner_name || u.homeownerName))).filter(Boolean);
+  const residentOptions = Array.from(new Set(currentData.map(u => u.name || u.residentName))).filter(Boolean);
+  const houseNumberOptions = Array.from(new Set(currentData.map(u => u.house?.house_number || u.houseNumber))).filter(Boolean);
+  const contactOptions = Array.from(new Set(currentData.map(u => u.contact_no || u.contactNumber))).filter(Boolean);
+  const emailOptions = Array.from(new Set(currentData.map(u => u.email))).filter(Boolean);
 
   const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
   const handleFilterClose = () => setFilterAnchorEl(null);
@@ -266,23 +101,27 @@ function Residents() {
   const handleFilterReset = () => setFilterValues({ status: '', street: '' });
   const handleFilterApply = () => handleFilterClose();
 
+  // Transform backend data to match frontend expectations
+  const transformData = (data) => {
+    return data.map(item => ({
+      id: item.id,
+      homeownerName: item.house_owner_name || 'N/A',
+      residentName: item.name || 'N/A',
+      residentId: item.resident_id || 'N/A',
+      houseNumber: item.house?.house_number || 'N/A',
+      street: item.house?.street || 'N/A',
+      contactNumber: item.contact_no || 'N/A',
+      email: item.email || 'N/A',
+      requestType: item.request_type || 'New Resident Registration',
+      status: item.status || 'pending',
+      dateSubmitted: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+      // Keep original data for actions
+      originalData: item
+    }));
+  };
+
   const filteredData = showRequests ? requests : users;
-  const filteredItems = filteredData.filter(
-    (item) => {
-      const matchesSearch = Object.values(item)
-        .join(' ')
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesStatus = !showRequests || !filterValues.status || (item.status === filterValues.status);
-      const matchesStreet = !filterValues.street || (item.street === filterValues.street);
-      const matchesHomeowner = !filterValues.homeownerName || (item.homeownerName === filterValues.homeownerName);
-      const matchesResident = !filterValues.residentName || (item.residentName === filterValues.residentName);
-      const matchesHouseNumber = !filterValues.houseNumber || (item.houseNumber === filterValues.houseNumber);
-      const matchesContact = !filterValues.contactNumber || (item.contactNumber === filterValues.contactNumber);
-      const matchesEmail = !filterValues.email || (item.email === filterValues.email);
-      return matchesSearch && matchesStatus && matchesStreet && matchesHomeowner && matchesResident && matchesHouseNumber && matchesContact && matchesEmail;
-    }
-  );
+  const transformedData = transformData(filteredData);
 
   // Actions for each row
   const actions = showRequests ? [
@@ -293,7 +132,8 @@ function Residents() {
       sx: { '&:hover': { bgcolor: 'success.main', color: '#fff' } },
       onClick: (row) => {
         // Handle accept request
-        console.log('Accept request:', row);
+        console.log('Accept request:', row.originalData);
+        // TODO: Implement accept logic
       },
     },
     {
@@ -303,7 +143,8 @@ function Residents() {
       sx: { '&:hover': { bgcolor: 'error.main', color: '#fff' } },
       onClick: (row) => {
         // Handle reject request
-        console.log('Reject request:', row);
+        console.log('Reject request:', row.originalData);
+        // TODO: Implement reject logic
       },
     },
   ] : [
@@ -319,7 +160,11 @@ function Residents() {
       icon: <DeleteIcon fontSize="small" />,
       color: 'error',
       sx: { '&:hover': { bgcolor: 'error.main', color: '#fff' } },
-      onClick: (row) => {/* handle delete */},
+      onClick: (row) => {
+        // Handle delete
+        console.log('Delete user:', row.originalData);
+        // TODO: Implement delete logic
+      },
     },
   ];
 
@@ -341,10 +186,10 @@ function Residents() {
     { id: 'email', label: 'Email Address' },
   ];
 
-  // Pagination logic
-  const total = filteredItems.length;
-  const from = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
-  const to = Math.min(page * rowsPerPage, total);
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
 
   // Table max height
   const tableMaxHeight = isMobile ? '40vh' : '60vh';
@@ -445,7 +290,10 @@ function Residents() {
                   <IconButton 
                     color={showRequests ? "primary" : "default"} 
                     size="small" 
-                    onClick={() => setShowRequests(!showRequests)}
+                    onClick={() => {
+                      setShowRequests(!showRequests);
+                      setPage(1); // Reset to first page when switching views
+                    }}
                     sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
                   >
                     {showRequests ? <PeopleIcon fontSize="small" /> : <MarkEmailUnreadIcon fontSize="small" />}
@@ -456,13 +304,14 @@ function Residents() {
           </Box>
           <FloraTable
             columns={columns}
-            rows={filteredItems}
+            rows={transformedData}
             actions={actions}
             page={page}
             rowsPerPage={rowsPerPage}
             maxHeight={tableMaxHeight}
             emptyMessage={`No ${showRequests ? 'requests' : 'users'} found.`}
             loading={loading}
+            disableInternalPagination={true}
           />
           <Box
             sx={{
@@ -479,11 +328,11 @@ function Residents() {
               color="text.secondary"
               sx={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', minHeight: 32 }}
             >
-              {total === 0 ? '0 of 0' : `${from}–${to} of ${total}`}
+              {pagination.total === 0 ? '0 of 0' : `${pagination.from}–${pagination.to} of ${pagination.total}`}
             </Typography>
             <Box width="100%" display="flex" justifyContent={{ xs: 'center', md: 'flex-end' }}>
               <IconButton
-                onClick={() => setPage(page - 1)}
+                onClick={() => handlePageChange(page - 1)}
                 disabled={page === 1}
                 sx={{
                   border: '1.5px solid',
@@ -507,15 +356,15 @@ function Residents() {
                 <ChevronLeftIcon sx={{ color: page === 1 ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
               <IconButton
-                onClick={() => setPage(page + 1)}
-                disabled={page * rowsPerPage >= total}
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= pagination.last_page}
                 sx={{
                   border: '1.5px solid',
-                  borderColor: page * rowsPerPage >= total ? 'divider' : 'primary.main',
+                  borderColor: page >= pagination.last_page ? 'divider' : 'primary.main',
                   borderRadius: 2,
                   mx: 0.5,
                   bgcolor: 'background.paper',
-                  color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main',
+                  color: page >= pagination.last_page ? 'text.disabled' : 'primary.main',
                   transition: 'all 0.2s',
                   '&:hover': {
                     bgcolor: 'primary.main',
@@ -528,7 +377,7 @@ function Residents() {
                 }}
                 size="small"
               >
-                <ChevronRightIcon sx={{ color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main' }} />
+                <ChevronRightIcon sx={{ color: page >= pagination.last_page ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
             </Box>
           </Box>

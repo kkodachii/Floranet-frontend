@@ -15,6 +15,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import floranetLogo from "../assets/floranet_logo.svg";
 import backgroundSvg from "../assets/svg.svg";
+import axios from "axios";
+import config from "../config/env";
 
 export default function FullForm() {
   const theme = useTheme();
@@ -22,34 +24,59 @@ export default function FullForm() {
   const { login } = useAuth();
   const [view, setView] = React.useState("login");
   const [showPassword, setShowPassword] = React.useState(false);
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
   const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [otpEmail, setOtpEmail] = React.useState("");
   const [otpDigits, setOtpDigits] = React.useState(["", "", "", "", "", ""]);
   const [errorMsg, setErrorMsg] = React.useState({});
+  const [isLoading, setIsLoading] = React.useState(false);
   const inputRefs = React.useRef([]);
   const [isPasswordFocused, setIsPasswordFocused] = React.useState(false);
 
   const handleClickShowPassword = () => setShowPassword((prev) => !prev);
   const handleMouseDownPassword = (event) => event.preventDefault();
 
-  const handleLoginSubmit = () => {
+  const handleLoginSubmit = async () => {
     let errors = {};
-    if (!username) errors.username = "Username is required.";
+    if (!email) errors.email = "Email is required.";
     if (!password) errors.password = "Password is required.";
     setErrorMsg(errors);
-    if (!errors.username && !errors.password) {
-      // Allow login with any username and password
-      const userData = { username, email: username + "@example.com" };
-      const authToken = "mock-token-" + Date.now();
-      login(userData, authToken);
-      navigate("/user-management/residents");
+    
+    if (!errors.email && !errors.password) {
+      setIsLoading(true);
+      try {
+        const response = await axios.post(config.ENDPOINTS.LOGIN, {
+          email: email,
+          password: password
+        });
+        
+        if (response.data) {
+          const userData = { 
+            email: email, 
+            ...response.data.user 
+          };
+          const authToken = response.data.token || response.data.access_token;
+          login(userData, authToken);
+          navigate("/user-management/residents");
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        if (error.response?.data?.message) {
+          setErrorMsg({ general: error.response.data.message });
+        } else if (error.response?.status === 401) {
+          setErrorMsg({ general: "Invalid email or password" });
+        } else {
+          setErrorMsg({ general: "Login failed. Please try again." });
+        }
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleForgotSubmit = () => {
     let errors = {};
-    if (!email) errors.email = "Email is required.";
+    if (!otpEmail) errors.email = "Email is required.";
     setErrorMsg(errors);
     if (!errors.email) {
       alert("OTP sent to email!");
@@ -198,12 +225,22 @@ export default function FullForm() {
               <Typography variant="body2" align="center" color="text.secondary">
                 Sign in to your account
               </Typography>
+              {errorMsg.general && (
+                <Typography
+                  variant="body2"
+                  color="error"
+                  align="center"
+                  sx={{ mb: 1 }}
+                >
+                  {errorMsg.general}
+                </Typography>
+              )}
               <TextField
-                label="User Name"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                error={!!errorMsg.username}
-                helperText={errorMsg.username}
+                label="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                error={!!errorMsg.email}
+                helperText={errorMsg.email}
                 sx={{
                   width: "350px",
                   alignSelf: "center",
@@ -268,9 +305,10 @@ export default function FullForm() {
               <Button
                 variant="contained"
                 onClick={handleLoginSubmit}
+                disabled={isLoading}
                 sx={{ width: "350px", alignSelf: "center" }}
               >
-                Sign In
+                {isLoading ? "Signing In..." : "Sign In"}
               </Button>
             </>
           )}
@@ -290,8 +328,8 @@ export default function FullForm() {
               </Typography>
               <TextField
                 label="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={otpEmail}
+                onChange={(e) => setOtpEmail(e.target.value)}
                 error={!!errorMsg.email}
                 helperText={errorMsg.email}
                 sx={{

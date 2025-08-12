@@ -11,12 +11,16 @@ import { useTheme } from "@mui/material/styles";
 import { ThemeContext } from "../ThemeContext";
 import Search from "./Search";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
+import axios from "axios";
+import config from "../config/env";
 
 export default function Header({ children }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const theme = useTheme();
   const colorMode = React.useContext(ThemeContext);
   const navigate = useNavigate();
+  const { token, logout: authLogout, user } = useAuth();
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -26,10 +30,36 @@ export default function Header({ children }) {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     handleClose();
-    localStorage.removeItem("token");
-    window.location.replace("/login");
+    
+    try {
+      if (token) {
+        console.log('📡 Making logout API call...');
+        await axios.post(config.ENDPOINTS.LOGOUT, {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log('✅ Logout API call successful');
+      } else {
+        console.log('⚠️ No token found, skipping API call');
+      }
+    } catch (error) {
+      console.error('❌ Logout API error:', error);
+      console.log('📋 Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data
+      });
+      // Continue with logout even if API call fails
+    } finally {
+      console.log('🧹 Logging out...');
+      // Use AuthContext logout function
+      authLogout();
+      navigate("/login");
+    }
   };
 
   return (
@@ -60,7 +90,9 @@ export default function Header({ children }) {
         </MenuButton>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <IconButton color="inherit" onClick={handleMenu} sx={{ ml: 1 }}>
-            <Avatar src="https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg" />
+            <Avatar 
+              src={user?.profile_picture ? `${config.API_BASE_URL}/storage/${user.profile_picture}` : "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"} 
+            />
           </IconButton>
           <Menu
             anchorEl={anchorEl}
@@ -69,7 +101,14 @@ export default function Header({ children }) {
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             transformOrigin={{ vertical: "top", horizontal: "right" }}
           >
-            <MenuItem onClick={handleClose}>Profile</MenuItem>
+            <MenuItem 
+              onClick={() => {
+                handleClose();
+                navigate("/settings");
+              }}
+            >
+              Profile
+            </MenuItem>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </Box>

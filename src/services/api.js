@@ -1,7 +1,9 @@
 // API service for authentication and other API calls
 // Replace the base URL with your actual backend URL
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+import config from '../config/env';
+
+const API_BASE_URL = config.API_BASE_URL;
 
 class ApiService {
   constructor() {
@@ -19,7 +21,7 @@ class ApiService {
 
   // Generic request method
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
+    const url = `${this.baseURL}/api${endpoint}`;
     const config = {
       headers: this.getAuthHeaders(),
       ...options,
@@ -42,7 +44,7 @@ class ApiService {
 
   // Authentication methods
   async login(username, password) {
-    return this.request('/auth/login', {
+    return this.request('/admin/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     });
@@ -69,37 +71,57 @@ class ApiService {
   }
 
   async logout() {
-    return this.request('/auth/logout', {
+    return this.request('/admin/logout', {
       method: 'POST',
     });
   }
 
   // User management methods
   async getUsers() {
-    return this.request('/users');
+    return this.request('/admin/users');
   }
 
   async getUserById(id) {
-    return this.request(`/users/${id}`);
+    return this.request(`/admin/users/${id}`);
   }
 
   async createUser(userData) {
-    return this.request('/users', {
+    return this.request('/admin/users', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
   }
 
   async updateUser(id, userData) {
-    return this.request(`/users/${id}`, {
+    return this.request(`/admin/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(userData),
     });
   }
 
   async deleteUser(id) {
-    return this.request(`/users/${id}`, {
+    return this.request(`/admin/users/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  // Resident management methods
+  async getResidents(page = 1) {
+    return this.request(`/admin/residents?page=${page}`);
+  }
+
+  async getResidentRequests(page = 1) {
+    return this.request(`/admin/resident-requests?page=${page}`);
+  }
+
+  async getResidentById(residentId) {
+    return this.request(`/admin/residents/${residentId}`);
+  }
+
+  async updateResident(residentId, residentData) {
+    return this.request(`/admin/residents/${residentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(residentData),
     });
   }
 

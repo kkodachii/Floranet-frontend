@@ -15,9 +15,9 @@ import {
 import CircularProgress from '@mui/material/CircularProgress';
 
 // columns: [{ id, label, render }], rows: array of objects, actions: [{ icon, label, onClick, color }]
-const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, maxHeight = '60vh', emptyMessage = 'No data found.', loading = false }) => {
+const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, maxHeight = '60vh', emptyMessage = 'No data found.', loading = false, disableInternalPagination = false }) => {
   const theme = useTheme();
-  const paginatedRows = rows.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  const paginatedRows = disableInternalPagination ? rows : rows.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   return (
     <TableContainer 
