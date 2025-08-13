@@ -83,19 +83,24 @@ const FloraTable = ({ columns, rows, actions, page, rowsPerPage, zebra = true, m
                   key={col.id}
                   align={col.align || 'left'}
                   sx={{
-                    maxWidth: 120,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    maxWidth: col.id === 'businessName' ? 250 : 120,
+                    overflow: col.id === 'businessName' ? 'visible' : 'hidden',
+                    textOverflow: col.id === 'businessName' ? 'clip' : 'ellipsis',
+                    whiteSpace: col.id === 'businessName' ? 'normal' : 'nowrap',
                     fontSize: 13,
                     py: 0.5,
                     px: 1,
                     color: theme.palette.text.primary,
-                    transition: 'color 0.3s ease-in-out'
+                    transition: 'color 0.3s ease-in-out',
+                    wordBreak: col.id === 'businessName' ? 'break-word' : 'normal',
+                    minHeight: col.id === 'businessName' ? 'auto' : '32px'
                   }}
                 >
                   <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
-                    <span>
+                    <span style={{ 
+                      display: 'block',
+                      lineHeight: col.id === 'businessName' ? '1.4' : '1.2'
+                    }}>
                       {col.render ? col.render(row[col.id], row) : row[col.id]}
                     </span>
                   </Tooltip>

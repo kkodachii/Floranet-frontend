@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -8,285 +8,324 @@ import {
   Tooltip,
   InputAdornment,
   IconButton,
-  useMediaQuery
+  useMediaQuery,
+  Alert,
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 import PeopleIcon from '@mui/icons-material/People';
+import ArchiveIcon from '@mui/icons-material/Archive';
 import Badge from '@mui/material/Badge';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { useTheme } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import FloraTable from '../../../components/FloraTable';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import FilterPopover from '../../../components/FilterPopover';
+import apiService from '../../../services/api';
 
-// Mock API fetch
-const fetchUsers = () =>
-  Promise.resolve([
-    {
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Andrea Dela Cruz',
-      residentId: 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      businessName: 'Cruz Sari-Sari Store',
-      contactNumber: '09171234567',
-    },
-    {
-      homeownerName: 'Maria Santos',
-      residentName: 'Luis Santos',
-      residentId: 'MHH0002',
-      houseNumber: 'B1B - L17',
-      street: 'Bouganvilla',
-      businessName: "Maria's Laundry Hub",
-      contactNumber: '09281234567',
-    },
-    {
-      homeownerName: 'Jose Rizal',
-      residentName: 'Lea Rizal',
-      residentId: 'MHH0003',
-      houseNumber: 'B4C - L09',
-      street: 'Dahlia',
-      businessName: 'Rizal Tailoring',
-      contactNumber: '09171234568',
-    },
-    {
-      homeownerName: 'Ana Mendoza',
-      residentName: 'Marco Mendoza',
-      residentId: 'MHH0004',
-      houseNumber: 'B2A - L12',
-      street: 'Champaca',
-      businessName: "Ana's Flower Shop",
-      contactNumber: '09351234567',
-    },
-    {
-      homeownerName: 'Lito Garcia',
-      residentName: 'Nina Garcia',
-      residentId: 'MHH0005',
-      houseNumber: 'B5D - L02',
-      street: 'Sampaguita',
-      businessName: 'Garcia Car Wash',
-      contactNumber: '09291234567',
-    },
-    {
-      homeownerName: 'Elena Reyes',
-      residentName: 'Paolo Reyes',
-      residentId: 'MHH0006',
-      houseNumber: 'B4C - L08',
-      street: 'Adelfa',
-      businessName: 'Reyes Eatery',
-      contactNumber: '09181234567',
-    },
-    {
-      homeownerName: 'Mario Aquino',
-      residentName: 'Anna Aquino',
-      residentId: 'MHH0007',
-      houseNumber: 'B3B - L33',
-      street: 'Dahlia',
-      businessName: 'Aquino Hardware',
-      contactNumber: '09081234567',
-    },
-    {
-      homeownerName: 'Cristina Lopez',
-      residentName: 'Enzo Lopez',
-      residentId: 'MHH0008',
-      houseNumber: 'B2D - L16',
-      street: 'Gumamela',
-      businessName: 'Lopez Salon',
-      contactNumber: '09061234567',
-    },
-    {
-      homeownerName: 'Andres Bonifacio',
-      residentName: 'Lara Bonifacio',
-      residentId: 'MHH0009',
-      houseNumber: 'B4C - L01',
-      street: 'Santan',
-      businessName: 'Bonifacio Printing',
-      contactNumber: '09191234567',
-    },
-    {
-      homeownerName: 'Jenny Lim',
-      residentName: 'Kevin Lim',
-      residentId: 'MHH0010',
-      houseNumber: 'B5B - L05',
-      street: 'Jasmine',
-      businessName: "Lim's Milk Tea",
-      contactNumber: '09209234567',
-    },
-    {
-      homeownerName: 'Ramon Torres',
-      residentName: 'Julia Torres',
-      residentId: 'MHH0011',
-      houseNumber: 'B1A - L11',
-      street: 'Ilang-ilang',
-      businessName: 'Torres Motor Parts',
-      contactNumber: '09300234567',
-    },
-    {
-      homeownerName: 'Grace David',
-      residentName: 'Leo David',
-      residentId: 'MHH0012',
-      houseNumber: 'B2C - L19',
-      street: 'Rosal',
-      businessName: "Grace's Bakehouse",
-      contactNumber: '09331234567',
-    },
-    {
-      homeownerName: 'Fernando Cruz',
-      residentName: 'Jasmine Cruz',
-      residentId: 'MHH0013',
-      houseNumber: 'B3B - L29',
-      street: 'Kalachuchi',
-      businessName: 'Cruz Barbershop',
-      contactNumber: '09101122334',
-    },
-    {
-      homeownerName: 'Isabel Navarro',
-      residentName: 'Anton Navarro',
-      residentId: 'MHH0014',
-      houseNumber: 'B4B - L13',
-      street: 'Camia',
-      businessName: 'Navarro Internet Cafe',
-      contactNumber: '09221122334',
-    },
-    {
-      homeownerName: 'Roberto Ramos',
-      residentName: 'Bianca Ramos',
-      residentId: 'MHH0015',
-      houseNumber: 'B5C - L07',
-      street: 'Bouganvilla',
-      businessName: 'Ramos General Merchandise',
-      contactNumber: '09351122334',
-    },
-  ]);
+  // API functions
+  const fetchVendors = async (search = '', filters = {}) => {
+    try {
+      const response = await apiService.getVendorsWithDetails(search, filters);
+      return response;
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      throw error;
+    }
+  };
 
-// Mock request data
-const fetchRequests = () =>
-  Promise.resolve([
-    {
-      id: 'VREQ001',
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Andrea Dela Cruz',
-      residentId: 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      businessName: 'Cruz Sari-Sari Store',
-      requestType: 'New Vendor Registration',
-      status: 'pending',
-      dateSubmitted: '2024-03-15',
-    },
-    {
-      id: 'VREQ002',
-      homeownerName: 'Maria Santos',
-      residentName: 'Luis Santos',
-      residentId: 'MHH0002',
-      houseNumber: 'B1B - L17',
-      street: 'Bouganvilla',
-      businessName: "Maria's Laundry Hub",
-      requestType: 'Update Business Information',
-      status: 'pending',
-      dateSubmitted: '2024-03-14',
-    },
-    {
-      id: 'VREQ003',
-      homeownerName: 'Jose Rizal',
-      residentName: 'Lea Rizal',
-      residentId: 'MHH0003',
-      houseNumber: 'B4C - L09',
-      street: 'Dahlia',
-      businessName: 'Rizal Tailoring',
-      requestType: 'New Vendor Registration',
-      status: 'pending',
-      dateSubmitted: '2024-03-13',
-    },
-    {
-      id: 'VREQ004',
-      homeownerName: 'Ana Mendoza',
-      residentName: 'Marco Mendoza',
-      residentId: 'MHH0004',
-      houseNumber: 'B2A - L12',
-      street: 'Champaca',
-      businessName: "Ana's Flower Shop",
-      requestType: 'Update Business Information',
-      status: 'pending',
-      dateSubmitted: '2024-03-12',
-    },
-    {
-      id: 'VREQ005',
-      homeownerName: 'Lito Garcia',
-      residentName: 'Nina Garcia',
-      residentId: 'MHH0005',
-      houseNumber: 'B5D - L02',
-      street: 'Sampaguita',
-      businessName: 'Garcia Car Wash',
-      requestType: 'New Vendor Registration',
-      status: 'pending',
-      dateSubmitted: '2024-03-11',
-    },
-  ]);
+  const fetchVendorRequests = async (search = '', filters = {}) => {
+    try {
+      const response = await apiService.getVendorRequests(search, filters);
+      return response;
+    } catch (error) {
+      console.error('Error fetching vendor requests:', error);
+      throw error;
+    }
+  };
+
+  const fetchArchivedVendors = async (search = '', filters = {}) => {
+    try {
+      const response = await apiService.getArchivedVendors(search, filters);
+      return response;
+    } catch (error) {
+      console.error('Error fetching archived vendors:', error);
+      throw error;
+    }
+  };
 
 function Vendors() {
   const [users, setUsers] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [archivedVendors, setArchivedVendors] = useState([]);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [filterLoading, setFilterLoading] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const [filterValues, setFilterValues] = useState({ status: '', street: '' });
+  const [filterValues, setFilterValues] = useState({ 
+    status: '', 
+    street: '', 
+    residentName: '', 
+    houseNumber: '', 
+    businessName: '', 
+    contactNumber: '' 
+  });
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', data: null });
+  const [error, setError] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const rowsPerPage = 9;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.all([fetchUsers(), fetchRequests()]).then(([usersData, requestsData]) => {
-      setUsers(usersData);
-      setRequests(requestsData);
-      setLoading(false);
-    });
+    loadData();
   }, []);
 
-  const handleSearch = (e) => setSearch(e.target.value);
+  // Add effect to handle view changes
+  useEffect(() => {
+    loadData();
+  }, [showRequests, showArchived]);
+
+  // Add effect to handle search and filter changes
+  useEffect(() => {
+    setPage(1); // Reset to first page when search or filters change
+    loadData(search, filterValues);
+  }, [search, filterValues]);
+
+  // Add effect to reload data after successful actions
+  useEffect(() => {
+    if (snackbar.open && snackbar.severity === 'success') {
+      // Reload data after successful actions
+      const timer = setTimeout(() => {
+        loadData(search, filterValues);
+      }, 1000); // Wait 1 second for the snackbar to show
+      return () => clearTimeout(timer);
+    }
+  }, [snackbar.open, snackbar.severity]);
+
+  const loadData = async (searchTerm = '', filterValues = {}) => {
+    try {
+      if (searchTerm) {
+        setSearchLoading(true);
+      } else if (Object.values(filterValues).some(v => v !== '')) {
+        setFilterLoading(true);
+      } else {
+        setLoading(true);
+      }
+      setError('');
+      const [vendorsData, requestsData, archivedData] = await Promise.all([
+        fetchVendors(searchTerm, filterValues),
+        fetchVendorRequests(searchTerm, filterValues),
+        fetchArchivedVendors(searchTerm, filterValues)
+      ]);
+      setUsers(vendorsData);
+      setRequests(requestsData);
+      setArchivedVendors(archivedData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setError('Failed to load data. Please try again.');
+      // Set empty data on error
+      setUsers([]);
+      setRequests([]);
+      setArchivedVendors([]);
+    } finally {
+      setLoading(false);
+      setSearchLoading(false);
+      setFilterLoading(false);
+    }
+  };
+
+  const handleArchive = async (vendor) => {
+    try {
+      await apiService.archiveVendor(vendor.id);
+      setSnackbar({ open: true, message: 'Vendor archived successfully', severity: 'success' });
+      // loadData call removed - useEffect will handle it automatically
+    } catch (error) {
+      console.error('Error archiving vendor:', error);
+      setSnackbar({ open: true, message: 'Failed to archive vendor', severity: 'error' });
+    }
+  };
+
+  const handleUnarchive = async (vendor) => {
+    try {
+      await apiService.unarchiveVendor(vendor.id);
+      setSnackbar({ open: true, message: 'Vendor unarchived successfully', severity: 'success' });
+      // loadData call removed - useEffect will handle it automatically
+    } catch (error) {
+      console.error('Error unarchiving vendor:', error);
+      return;
+    }
+  };
+
+  const getCurrentViewType = () => {
+    if (showRequests) return 'requests';
+    if (showArchived) return 'archived';
+    return 'users';
+  };
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId;
+      return (value) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setSearch(value);
+          setError(''); // Clear any previous errors
+          // loadData call removed - useEffect will handle it automatically
+        }, 500); // 500ms delay
+      };
+    })(),
+    []
+  );
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedSearch(value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearch('');
+  };
+
+  const handleConfirmAction = async () => {
+    try {
+      if (confirmDialog.type === 'accept') {
+        await apiService.acceptVendor(confirmDialog.data.id);
+        setSnackbar({ open: true, message: 'Vendor accepted successfully', severity: 'success' });
+        // loadData call removed - useEffect will handle it automatically
+      } else if (confirmDialog.type === 'reject') {
+        await apiService.rejectVendor(confirmDialog.data.id);
+        setSnackbar({ open: true, message: 'Vendor request rejected', severity: 'success' });
+        // loadData call removed - useEffect will handle it automatically
+      } else if (confirmDialog.type === 'archive') {
+        handleArchive(confirmDialog.data);
+      } else if (confirmDialog.type === 'unarchive') {
+        handleUnarchive(confirmDialog.data);
+      }
+    } catch (error) {
+      console.error('Error performing action:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Failed to perform action. Please try again.', 
+        severity: 'error' 
+      });
+    } finally {
+      setConfirmDialog({ open: false, type: '', data: null });
+    }
+  };
 
   const statusOptions = ['pending'];
-  const streetOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.street))).filter(Boolean);
-  const homeownerOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.homeownerName))).filter(Boolean);
-  const residentOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.residentName))).filter(Boolean);
-  const houseNumberOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.houseNumber))).filter(Boolean);
-  const businessOptions = Array.from(new Set(users.map(u => u.businessName))).filter(Boolean);
-  const contactOptions = Array.from(new Set((showRequests ? requests : users).map(u => u.contactNumber))).filter(Boolean);
+  const currentData = showRequests ? requests : showArchived ? archivedVendors : users;
+  
+  // Generate filter options from current data, handling empty data gracefully
+  const streetOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(u => u.street || u.resident?.house?.street))).filter(Boolean) : [];
+  
+  const residentOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(u => u.residentName || u.resident?.name))).filter(Boolean) : [];
+  
+  const houseNumberOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(u => u.houseNumber || u.resident?.house?.house_number))).filter(Boolean) : [];
+  
+  const businessOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(u => u.businessName || u.business_name))).filter(Boolean) : [];
+  
+  const contactOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(u => u.contactNumber || u.resident?.contact_no))).filter(Boolean) : [];
 
   const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
   const handleFilterClose = () => setFilterAnchorEl(null);
-  const handleFilterChange = (name, value) => setFilterValues(f => ({ ...f, [name]: value }));
-  const handleFilterReset = () => setFilterValues({ status: '', street: '' });
-  const handleFilterApply = () => handleFilterClose();
+  const handleFilterChange = (name, value) => {
+    const newFilterValues = { ...filterValues, [name]: value };
+    setFilterValues(newFilterValues);
+    console.log('Applying filters:', newFilterValues); // Debug log
+    setError(''); // Clear any previous errors
+    // loadData call removed - useEffect will handle it automatically
+  };
 
-  const filteredData = showRequests ? requests : users;
-  const filteredItems = filteredData.filter(
-    (item) => {
-      const matchesSearch = Object.values(item)
-        .join(' ')
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesStatus = !showRequests || !filterValues.status || (item.status === filterValues.status);
-      const matchesStreet = !filterValues.street || (item.street === filterValues.street);
-      const matchesHomeowner = !filterValues.homeownerName || (item.homeownerName === filterValues.homeownerName);
-      const matchesResident = !filterValues.residentName || (item.residentName === filterValues.residentName);
-      const matchesHouseNumber = !filterValues.houseNumber || (item.houseNumber === filterValues.houseNumber);
-      const matchesBusiness = !filterValues.businessName || (item.businessName === filterValues.businessName);
-      const matchesContact = !filterValues.contactNumber || (item.contactNumber === filterValues.contactNumber);
-      return matchesSearch && matchesStatus && matchesStreet && matchesHomeowner && matchesResident && matchesHouseNumber && matchesBusiness && matchesContact;
+  const handleFilterReset = () => {
+    const resetFilters = { status: '', street: '', residentName: '', houseNumber: '', businessName: '', contactNumber: '' };
+    setFilterValues(resetFilters);
+    console.log('Resetting filters'); // Debug log
+    setError(''); // Clear any previous errors
+    // loadData call removed - useEffect will handle it automatically
+  };
+
+  const handleFilterApply = () => {
+    handleFilterClose();
+    // Filters are already applied in handleFilterChange
+  };
+
+  // Clear search when switching views
+  const handleViewSwitch = (viewType) => {
+    console.log('Switching to view:', viewType); // Debug log
+    if (viewType === 'requests') {
+      setShowRequests(true);
+      setShowArchived(false);
+    } else if (viewType === 'archived') {
+      setShowArchived(true);
+      setShowRequests(false);
+    } else if (viewType === 'vendors') {
+      setShowRequests(false);
+      setShowArchived(false);
     }
-  );
+    console.log('New state - showRequests:', !showRequests && viewType === 'requests', 'showArchived:', !showArchived && viewType === 'archived'); // Debug log
+    setPage(1); // Reset to first page when switching views
+    setSearch(''); // Clear search when switching views
+    setSearchInput(''); // Clear search input
+    setFilterValues({ status: '', street: '', residentName: '', houseNumber: '', businessName: '', contactNumber: '' }); // Reset filters
+    setError(''); // Clear any previous errors
+    // loadData() call removed - useEffect will handle it automatically
+  };
+
+  // Transform data to include additional fields
+  const transformData = (data) => {
+    return data.map(item => ({
+      ...item,
+      dateArchived: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'N/A',
+      // Keep original data for actions
+      originalData: item
+    }));
+  };
+
+  // Transform archived vendors to match the expected structure
+  const transformArchivedData = (data) => {
+    return data.map(item => ({
+      ...item,
+      dateArchived: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'N/A',
+      // Keep original data for actions
+      originalData: item
+    }));
+  };
+
+  const filteredData = showRequests ? requests : showArchived ? archivedVendors : users;
+  const transformedData = showArchived ? transformArchivedData(filteredData) : transformData(filteredData);
+  // Remove the old filtering logic since it's now handled by the backend
+  const filteredItems = transformedData;
 
   // Actions for each row
   const actions = showRequests ? [
@@ -296,18 +335,44 @@ function Vendors() {
       color: 'success',
       sx: { '&:hover': { bgcolor: 'success.main', color: '#fff' } },
       onClick: (row) => {
-        // Handle accept request
-        console.log('Accept request:', row);
+        setConfirmDialog({ 
+          open: true, 
+          type: 'accept', 
+          data: row 
+        });
       },
     },
     {
       label: 'Reject',
       icon: <CloseIcon fontSize="small" />,
       color: 'error',
-      sx: { '&:hover': { bgcolor: 'error.main', color: '#fff' } },
+      sx: { 
+        color: 'error.main',
+        '&:hover': { bgcolor: 'error.main', color: '#fff' } 
+      },
       onClick: (row) => {
-        // Handle reject request
-        console.log('Reject request:', row);
+        setConfirmDialog({ 
+          open: true, 
+          type: 'reject', 
+          data: row 
+        });
+      },
+    },
+  ] : showArchived ? [
+    {
+      label: 'Unarchive',
+      icon: <RestoreIcon fontSize="small" />,
+      color: 'success',
+      sx: { 
+        color: 'success.main',
+        '&:hover': { bgcolor: 'success.main', color: '#fff' } 
+      },
+      onClick: (row) => {
+        setConfirmDialog({ 
+          open: true, 
+          type: 'unarchive', 
+          data: row 
+        });
       },
     },
   ] : [
@@ -316,30 +381,42 @@ function Vendors() {
       icon: <EditIcon fontSize="small" />,
       color: 'default',
       sx: { '&:hover': { bgcolor: 'primary.main', color: '#fff' } },
-      onClick: (row) => navigate(`/user-management/edit-vendor/${row.residentId}`),
+      onClick: (row) => navigate(`/user-management/edit-vendor/${row.id}`),
     },
     {
-      label: 'Delete',
+      label: 'Archive',
       icon: <DeleteIcon fontSize="small" />,
       color: 'error',
-      sx: { '&:hover': { bgcolor: 'error.main', color: '#fff' } },
-      onClick: (row) => {/* handle delete */},
+      sx: { 
+        color: 'error.main',
+        '&:hover': { bgcolor: 'error.main', color: '#fff' } 
+      },
+      onClick: (row) => {
+        setConfirmDialog({ 
+          open: true, 
+          type: 'archive', 
+          data: row 
+        });
+      },
     },
   ];
 
   const columns = showRequests ? [
-    { id: 'homeownerName', label: 'Homeowner Name' },
     { id: 'residentName', label: 'Resident Name' },
-    { id: 'residentId', label: 'Resident ID' },
     { id: 'houseNumber', label: 'House Number' },
     { id: 'street', label: 'Street' },
     { id: 'businessName', label: 'Business Name' },
     { id: 'requestType', label: 'Request Type' },
     { id: 'dateSubmitted', label: 'Date Submitted' },
-  ] : [
-    { id: 'homeownerName', label: 'Homeowner Name' },
+  ] : showArchived ? [
     { id: 'residentName', label: 'Resident Name' },
-    { id: 'residentId', label: 'Resident ID' },
+    { id: 'houseNumber', label: 'House Number' },
+    { id: 'street', label: 'Street' },
+    { id: 'businessName', label: 'Business Name' },
+    { id: 'contactNumber', label: 'Contact Number' },
+    { id: 'dateArchived', label: 'Date Archived' },
+  ] : [
+    { id: 'residentName', label: 'Resident Name' },
     { id: 'houseNumber', label: 'House Number' },
     { id: 'street', label: 'Street' },
     { id: 'businessName', label: 'Business Name' },
@@ -354,9 +431,17 @@ function Vendors() {
   // Table max height
   const tableMaxHeight = isMobile ? '40vh' : '60vh';
 
+  // Check if any filters are active
+  const hasActiveFilters = Object.values(filterValues).some(value => value && value !== '');
+
   return (
     <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
       <Box maxWidth="xl" mx="auto">
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+            {error}
+          </Alert>
+        )}
         <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 0.5, sm: 1 }, boxShadow: 3, minHeight: 300 }}>
           <Box
             sx={{
@@ -373,8 +458,8 @@ function Vendors() {
             <TextField
               variant="outlined"
               size="small"
-              placeholder={`Search ${showRequests ? 'requests' : 'vendors'}...`}
-              value={search}
+              placeholder={`Search ${showRequests ? 'requests' : showArchived ? 'archived vendors' : 'vendors'}...`}
+              value={searchInput}
               onChange={handleSearch}
               sx={{
                 width: { xs: '100%', sm: 320 },
@@ -400,6 +485,17 @@ function Vendors() {
                     <SearchIcon color="action" fontSize="small" />
                   </InputAdornment>
                 ),
+                endAdornment: searchInput && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={handleClearSearch}
+                      sx={{ p: 0 }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
                 sx: { py: 0 }
               }}
             />
@@ -417,7 +513,15 @@ function Vendors() {
                 </Tooltip>
               )}
               <Tooltip title="Filter">
-                <IconButton color="default" size="small" sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }} onClick={handleFilterOpen}>
+                <IconButton 
+                  color={hasActiveFilters ? "primary" : "default"} 
+                  size="small" 
+                  sx={{ 
+                    '&:hover': { bgcolor: 'primary.main', color: '#fff' },
+                    ...(hasActiveFilters && { bgcolor: 'primary.main', color: '#fff' })
+                  }} 
+                  onClick={handleFilterOpen}
+                >
                   <FilterListIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -428,7 +532,6 @@ function Vendors() {
                 fields={[
                   ...(showRequests ? [{ name: 'status', label: 'Status', type: 'select', options: statusOptions }] : []),
                   { name: 'street', label: 'Street', type: 'select', options: streetOptions },
-                  { name: 'homeownerName', label: 'Homeowner Name', type: 'select', options: homeownerOptions },
                   { name: 'residentName', label: 'Resident Name', type: 'select', options: residentOptions },
                   { name: 'houseNumber', label: 'House Number', type: 'select', options: houseNumberOptions },
                   ...(!showRequests ? [{ name: 'businessName', label: 'Business Name', type: 'select', options: businessOptions }] : []),
@@ -450,15 +553,40 @@ function Vendors() {
                   <IconButton 
                     color={showRequests ? "primary" : "default"} 
                     size="small" 
-                    onClick={() => setShowRequests(!showRequests)}
+                    onClick={() => handleViewSwitch(showRequests ? 'vendors' : 'requests')}
                     sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
                   >
                     {showRequests ? <PeopleIcon fontSize="small" /> : <MarkEmailUnreadIcon fontSize="small" />}
                   </IconButton>
                 </Badge>
               </Tooltip>
+              <Tooltip title={showArchived ? "Show Vendors" : "Show Archived"}>
+                <IconButton 
+                  color={showArchived ? "primary" : "default"} 
+                  size="small" 
+                  onClick={() => handleViewSwitch(showArchived ? 'vendors' : 'archived')}
+                  sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
+                >
+                  <ArchiveIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Stack>
           </Box>
+          
+          {/* Active filters and search summary */}
+          {(search || Object.values(filterValues).some(v => v !== '')) && (
+            <Box sx={{ px: 1, py: 0.5, mb: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                {search && `Search: "${search}"`}
+                {search && Object.values(filterValues).some(v => v !== '') && ' | '}
+                {Object.values(filterValues).some(v => v !== '') && `Filters: ${Object.entries(filterValues)
+                  .filter(([key, value]) => value && value !== '')
+                  .map(([key, value]) => `${key}: ${value}`)
+                  .join(', ')}`}
+              </Typography>
+            </Box>
+          )}
+          
           <FloraTable
             columns={columns}
             rows={filteredItems}
@@ -466,8 +594,8 @@ function Vendors() {
             page={page}
             rowsPerPage={rowsPerPage}
             maxHeight={tableMaxHeight}
-            emptyMessage={`No ${showRequests ? 'requests' : 'vendors'} found.`}
-            loading={loading}
+            emptyMessage={`No ${showRequests ? 'requests' : showArchived ? 'archived vendors' : 'vendors'} found.`}
+            loading={loading || searchLoading || filterLoading}
           />
           <Box
             sx={{
@@ -539,6 +667,72 @@ function Vendors() {
           </Box>
         </Paper>
       </Box>
+      
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ open: false, type: '', data: null })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {confirmDialog.type === 'accept' ? 'Accept Vendor Request' : 
+           confirmDialog.type === 'reject' ? 'Reject Vendor Request' :
+           confirmDialog.type === 'archive' ? 'Archive Vendor' : 
+           confirmDialog.type === 'unarchive' ? 'Unarchive Vendor' : 'Confirm Action'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {confirmDialog.type === 'accept' 
+              ? `Are you sure you want to accept the vendor request for ${confirmDialog.data?.businessName || 'this vendor'}?`
+              : confirmDialog.type === 'reject'
+              ? `Are you sure you want to reject the vendor request for ${confirmDialog.data?.businessName || 'this vendor'}? This action cannot be undone.`
+              : confirmDialog.type === 'archive' 
+              ? `Are you sure you want to archive ${confirmDialog.data?.residentName || 'this vendor'}? This will remove them from the active vendors list.`
+              : confirmDialog.type === 'unarchive'
+              ? `Are you sure you want to unarchive ${confirmDialog.data?.residentName || 'this vendor'}? This will restore them to the active vendors list.`
+              : 'Are you sure you want to perform this action?'
+            }
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setConfirmDialog({ open: false, type: '', data: null })}
+            color="inherit"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmAction}
+            color={confirmDialog.type === 'accept' ? 'success' : 
+                   confirmDialog.type === 'reject' ? 'error' :
+                   confirmDialog.type === 'unarchive' ? 'success' : 
+                   confirmDialog.type === 'archive' ? 'error' : 'primary'}
+            variant="contained"
+          >
+            {confirmDialog.type === 'accept' ? 'Accept' : 
+             confirmDialog.type === 'reject' ? 'Reject' :
+             confirmDialog.type === 'archive' ? 'Archive' : 
+             confirmDialog.type === 'unarchive' ? 'Unarchive' : 'Confirm'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity} 
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

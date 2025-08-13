@@ -197,6 +197,101 @@ class ApiService {
       method: 'POST',
     });
   }
+
+  // Vendor management methods
+  async getVendors(queryParams = '') {
+    return this.request(`/admin/vendors${queryParams}`);
+  }
+
+  async getVendorsWithDetails(search = '', filters = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/vendors-with-details?${params.toString()}`);
+  }
+
+  async getVendorRequests(search = '', filters = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/vendor-requests?${params.toString()}`);
+  }
+
+  async getArchivedVendors(search = '', filters = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/archived-vendors?${params.toString()}`);
+  }
+
+  async getVendorById(id) {
+    return this.request(`/admin/vendors/${id}`);
+  }
+
+  async createVendor(vendorData) {
+    return this.request('/admin/vendors', {
+      method: 'POST',
+      body: JSON.stringify(vendorData),
+    });
+  }
+
+  async updateVendor(id, vendorData) {
+    return this.request(`/admin/vendors/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(vendorData),
+    });
+  }
+
+  async archiveVendor(id) {
+    return this.request(`/admin/vendors/${id}/archive`, {
+      method: 'POST',
+    });
+  }
+
+  async unarchiveVendor(id) {
+    return this.request(`/admin/vendors/${id}/unarchive`, {
+      method: 'POST',
+    });
+  }
+
+  async deleteVendor(id) {
+    return this.request(`/admin/vendors/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async acceptVendor(id) {
+    return this.request(`/admin/vendors/${id}/accept`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectVendor(id) {
+    return this.request(`/admin/vendors/${id}/reject`, {
+      method: 'POST',
+    });
+  }
   
   // Other API methods can be added here...
 }
