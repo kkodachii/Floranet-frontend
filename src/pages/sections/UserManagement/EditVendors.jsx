@@ -24,10 +24,11 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SaveIcon from '@mui/icons-material/Save';
 import { useParams, useNavigate } from 'react-router-dom';
 import FloraTable from '../../../components/FloraTable';
+import apiService from '../../../services/api';
 
 const steps = [
-  'Basic Information',
-  'Residence Details',
+  'Basic Information (Read-only)',
+  'Residence Details (Read-only)',
   'Business Information',
   'Review & Save'
 ];
@@ -67,31 +68,48 @@ function EditVendors() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Mock API fetch for vendor data
-  const fetchVendorData = (residentId) =>
-    Promise.resolve({
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Andrea Dela Cruz',
-      residentId: residentId || 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      businessName: 'Cruz Sari-Sari Store',
-      contactNumber: '09171234567',
-    });
+  // Fetch vendor data from API
+  const fetchVendorData = async (vendorId) => {
+    try {
+      const response = await apiService.getVendorById(vendorId);
+      const vendor = response.data;
+      
+      return {
+        homeownerName: vendor.resident?.house_owner_name || '',
+        residentName: vendor.resident?.name || '',
+        residentId: vendor.resident_id || '',
+        houseNumber: vendor.resident?.house?.house_number || '',
+        street: vendor.resident?.house?.street || '',
+        businessName: vendor.business_name || '',
+        contactNumber: vendor.resident?.contact_no || ''
+      };
+    } catch (error) {
+      console.error('Error fetching vendor data:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const loadVendorData = async () => {
       try {
+        setLoading(true);
         const vendorData = await fetchVendorData(id);
         setFormData(vendorData);
-        setLoading(false);
       } catch (error) {
         console.error('Error loading vendor data:', error);
+        setSnackbar({
+          open: true,
+          message: 'Failed to load vendor data. Please try again.',
+          severity: 'error'
+        });
+      } finally {
         setLoading(false);
       }
     };
     
-    loadVendorData();
+    if (id) {
+      loadVendorData();
+    }
   }, [id]);
 
   const handleNext = () => {
@@ -116,22 +134,8 @@ function EditVendors() {
     const newErrors = {};
 
     switch (activeStep) {
-      case 0: // Basic Information
-        if (!formData.homeownerName.trim()) {
-          newErrors.homeownerName = 'Homeowner name is required';
-        }
-        if (!formData.residentName.trim()) {
-          newErrors.residentName = 'Resident name is required';
-        }
-        break;
-
-      case 1: // Residence Details
-        if (!formData.houseNumber.trim()) {
-          newErrors.houseNumber = 'House number is required';
-        }
-        if (!formData.street) {
-          newErrors.street = 'Street is required';
-        }
+      case 0: // Basic Information - no validation needed (read-only)
+      case 1: // Residence Details - no validation needed (read-only)
         break;
 
       case 2: // Business Information
@@ -153,8 +157,19 @@ function EditVendors() {
 
   const handleSave = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoading(true);
+      
+      // Only update business-related information
+      const updateData = {
+        business_name: formData.businessName,
+        // Update only contact number for resident
+        resident: {
+          contact_no: formData.contactNumber
+        }
+      };
+
+      // Call API to update vendor
+      await apiService.updateVendor(id, updateData);
       
       setSnackbar({
         open: true,
@@ -167,11 +182,14 @@ function EditVendors() {
         navigate('/user-management/vendors');
       }, 1500);
     } catch (error) {
+      console.error('Error updating vendor:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to update vendor. Please try again.',
+        message: error.message || 'Failed to update vendor. Please try again.',
         severity: 'error'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -189,12 +207,15 @@ function EditVendors() {
                 fullWidth
                 label="Homeowner Name"
                 value={formData.homeownerName}
-                onChange={(e) => handleInputChange('homeownerName', e.target.value)}
-                error={!!errors.homeownerName}
-                helperText={errors.homeownerName}
+                InputProps={{ readOnly: true }}
+                helperText="Homeowner name cannot be changed"
                 required
-                inputProps={{ maxLength: 50 }}
-                sx={{ minWidth: 300 }}
+                sx={{
+                  minWidth: 300,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -202,12 +223,15 @@ function EditVendors() {
                 fullWidth
                 label="Resident Name"
                 value={formData.residentName}
-                onChange={(e) => handleInputChange('residentName', e.target.value)}
-                error={!!errors.residentName}
-                helperText={errors.residentName}
+                InputProps={{ readOnly: true }}
+                helperText="Resident name cannot be changed"
                 required
-                inputProps={{ maxLength: 50 }}
-                sx={{ minWidth: 300 }}
+                sx={{
+                  minWidth: 300,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -239,24 +263,32 @@ function EditVendors() {
                 fullWidth
                 label="House Number"
                 value={formData.houseNumber}
-                onChange={(e) => handleInputChange('houseNumber', e.target.value)}
-                error={!!errors.houseNumber}
-                helperText={errors.houseNumber || 'Format: B#A - L## (e.g., B3A - L23)'}
+                InputProps={{ readOnly: true }}
+                helperText="House number cannot be changed"
                 required
-                placeholder="B3A - L23"
-                inputProps={{ maxLength: 20 }}
-                sx={{ minWidth: 350, maxWidth: 500 }}
+                sx={{
+                  minWidth: 350,
+                  maxWidth: 500,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth error={!!errors.street} required sx={{ minWidth: 350, maxWidth: 500 }}>
+              <FormControl fullWidth required sx={{ minWidth: 350, maxWidth: 500 }}>
                 <InputLabel shrink={Boolean(formData.street) || formData.street === ''}>Street</InputLabel>
                 <Select
                   value={formData.street}
                   label="Street"
-                  onChange={(e) => handleInputChange('street', e.target.value)}
+                  InputProps={{ readOnly: true }}
                   displayEmpty
                   renderValue={selected => selected ? selected : <em style={{ color: '#888' }}>Select Street</em>}
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
                 >
                   <MenuItem value="" disabled>
                     <em>Select Street</em>
@@ -267,7 +299,7 @@ function EditVendors() {
                     </MenuItem>
                   ))}
                 </Select>
-                {errors.street && <FormHelperText>{errors.street}</FormHelperText>}
+                <FormHelperText>Street cannot be changed</FormHelperText>
               </FormControl>
             </Grid>
           </Grid>
@@ -370,10 +402,10 @@ function EditVendors() {
         <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3, width: '100%', maxHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" gutterBottom>
-              Edit Vendor
+              Edit Vendor Business Information
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Update vendor information step by step
+              Update vendor business details. Personal and residence information cannot be modified.
             </Typography>
           </Box>
 
@@ -403,7 +435,7 @@ function EditVendors() {
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button
-              disabled={activeStep === 0}
+              disabled={activeStep === 0 || loading}
               onClick={handleBack}
               startIcon={<ArrowBackIcon />}
               sx={{ minWidth: 100, backgroundColor: activeStep === 0 ? '#e0e0e0' : undefined, color: activeStep === 0 ? '#888' : undefined, '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#888' } }}
@@ -416,9 +448,10 @@ function EditVendors() {
                   variant="contained"
                   onClick={handleSave}
                   endIcon={<SaveIcon />}
+                  disabled={loading}
                   sx={{ minWidth: 120 }}
                 >
-                  Save Changes
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </Button>
               ) : (
                 <Button

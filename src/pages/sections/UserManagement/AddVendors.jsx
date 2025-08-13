@@ -17,17 +17,19 @@ import {
   useMediaQuery,
   useTheme,
   Alert,
-  Snackbar
+  Snackbar,
+  Autocomplete
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate } from 'react-router-dom';
 import FloraTable from '../../../components/FloraTable';
+import apiService from '../../../services/api';
 
 const steps = [
-  'Basic Information',
-  'Residence Details',
+  'Select Resident',
+  'Residence Details (Read-only)',
   'Business Information',
   'Review & Submit'
 ];
@@ -47,61 +49,9 @@ const streets = [
   'Kalachuchi'
 ];
 
-// Mock API fetch for existing vendors
-const fetchExistingVendors = () =>
-  Promise.resolve([
-    {
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Andrea Dela Cruz',
-      residentId: 'MHH0001',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      businessName: 'Cruz Sari-Sari Store',
-      contactNumber: '09171234567',
-    },
-    {
-      homeownerName: 'Maria Santos',
-      residentName: 'Luis Santos',
-      residentId: 'MHH0002',
-      houseNumber: 'B1B - L17',
-      street: 'Bouganvilla',
-      businessName: "Maria's Laundry Hub",
-      contactNumber: '09281234567',
-    },
-    {
-      homeownerName: 'Jose Rizal',
-      residentName: 'Lea Rizal',
-      residentId: 'MHH0003',
-      houseNumber: 'B4C - L09',
-      street: 'Dahlia',
-      businessName: 'Rizal Tailoring',
-      contactNumber: '09171234568',
-    },
-    {
-      homeownerName: 'Ana Mendoza',
-      residentName: 'Marco Mendoza',
-      residentId: 'MHH0004',
-      houseNumber: 'B2A - L12',
-      street: 'Champaca',
-      businessName: "Ana's Flower Shop",
-      contactNumber: '09351234567',
-    },
-    {
-      homeownerName: 'Lito Garcia',
-      residentName: 'Nina Garcia',
-      residentId: 'MHH0005',
-      houseNumber: 'B5D - L02',
-      street: 'Sampaguita',
-      businessName: 'Garcia Car Wash',
-      contactNumber: '09291234567',
-    },
-    // ... more mock data as needed
-  ]);
-
 function AddVendors() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    homeownerName: '',
     residentName: '',
     residentId: '',
     houseNumber: '',
@@ -111,40 +61,54 @@ function AddVendors() {
   });
   const [errors, setErrors] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [residents, setResidents] = useState([]);
+  const [selectedResident, setSelectedResident] = useState(null);
+  const [residentsLoading, setResidentsLoading] = useState(true);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
-  // Generate next available Resident ID
-  const generateNextResidentId = (existingVendors) => {
-    if (!existingVendors || existingVendors.length === 0) {
-      return 'MHH0001';
-    }
-    const maxId = Math.max(...existingVendors.map(vendor => {
-      const idNumber = parseInt(vendor.residentId.replace('MHH', ''));
-      return idNumber;
-    }));
-    const nextId = maxId + 1;
-    return `MHH${nextId.toString().padStart(4, '0')}`;
-  };
-
+  // Fetch all residents for dropdown
   useEffect(() => {
-    const loadExistingVendors = async () => {
+    const fetchResidents = async () => {
       try {
-        const existingVendors = await fetchExistingVendors();
-        const nextResidentId = generateNextResidentId(existingVendors);
-        setFormData(prev => ({ ...prev, residentId: nextResidentId }));
-        setLoading(false);
+        setResidentsLoading(true);
+        const response = await apiService.getResidents(1, '', {});
+        if (response.data) {
+          setResidents(response.data);
+        }
       } catch (error) {
-        console.error('Error loading existing vendors:', error);
-        setFormData(prev => ({ ...prev, residentId: 'MHH0001' }));
-        setLoading(false);
+        console.error('Error fetching residents:', error);
+        setSnackbar({
+          open: true,
+          message: 'Failed to load residents. Please try again.',
+          severity: 'error'
+        });
+      } finally {
+        setResidentsLoading(false);
       }
     };
-    loadExistingVendors();
+    fetchResidents();
   }, []);
+
+  // Handle resident selection
+  const handleResidentSelect = (resident) => {
+    if (resident) {
+      setSelectedResident(resident);
+      setFormData({
+        residentName: resident.name || '',
+        residentId: resident.resident_id || '',
+        houseNumber: resident.house?.house_number || '',
+        street: resident.house?.street || '',
+        businessName: '',
+        contactNumber: resident.contact_no || ''
+      });
+      // Clear errors when resident is selected
+      setErrors({});
+    }
+  };
 
   const handleNext = () => {
     if (validateStep()) {
@@ -166,21 +130,12 @@ function AddVendors() {
   const validateStep = () => {
     const newErrors = {};
     switch (activeStep) {
-      case 0: // Basic Information
-        if (!formData.homeownerName.trim()) {
-          newErrors.homeownerName = 'Homeowner name is required';
-        }
-        if (!formData.residentName.trim()) {
-          newErrors.residentName = 'Resident name is required';
+      case 0: // Select Resident
+        if (!selectedResident) {
+          newErrors.resident = 'Please select a resident';
         }
         break;
-      case 1: // Residence Details
-        if (!formData.houseNumber.trim()) {
-          newErrors.houseNumber = 'House number is required';
-        }
-        if (!formData.street) {
-          newErrors.street = 'Street is required';
-        }
+      case 1: // Residence Details - no validation needed (read-only)
         break;
       case 2: // Business Information
         if (!formData.businessName.trim()) {
@@ -199,21 +154,36 @@ function AddVendors() {
 
   const handleSubmit = async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoading(true);
+
+      // Create the vendor using existing resident
+      const vendorPayload = {
+        resident_id: formData.residentId,
+        business_name: formData.businessName,
+        isArchived: false,
+        isAccepted: true
+      };
+
+      await apiService.createVendor(vendorPayload);
+      
       setSnackbar({
         open: true,
         message: 'Vendor added successfully!',
         severity: 'success'
       });
+      
       setTimeout(() => {
         navigate('/user-management/vendors');
       }, 1500);
     } catch (error) {
+      console.error('Error adding vendor:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to add vendor. Please try again.',
+        message: error.message || 'Failed to add vendor. Please try again.',
         severity: 'error'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -226,47 +196,38 @@ function AddVendors() {
       case 0:
         return (
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Homeowner Name"
-                value={formData.homeownerName}
-                onChange={(e) => handleInputChange('homeownerName', e.target.value)}
-                error={!!errors.homeownerName}
-                helperText={errors.homeownerName}
-                required
-                inputProps={{ maxLength: 50 }}
-                sx={{ minWidth: 300 }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Resident Name"
-                value={formData.residentName}
-                onChange={(e) => handleInputChange('residentName', e.target.value)}
-                error={!!errors.residentName}
-                helperText={errors.residentName}
-                required
-                inputProps={{ maxLength: 50 }}
-                sx={{ minWidth: 300 }}
-              />
-            </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Resident ID"
-                value={formData.residentId}
-                InputProps={{ readOnly: true }}
-                helperText="Auto-generated Resident ID"
-                required
-                sx={{
-                  minWidth: 300,
-                  '& .MuiInputBase-root': {
-                    backgroundColor: 'action.hover',
-                  },
-                }}
-              />
+              <FormControl fullWidth error={!!errors.resident} required>
+                <Autocomplete
+                  options={residents}
+                  getOptionLabel={(resident) => `${resident.name} - ${resident.house?.street || 'No street'}`}
+                  value={selectedResident}
+                  onChange={(event, newValue) => handleResidentSelect(newValue)}
+                  loading={residentsLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Resident"
+                      placeholder="Search for resident by name or street"
+                      helperText={errors.resident || "Select an existing resident to add as vendor"}
+                      required
+                    />
+                  )}
+                  renderOption={(props, resident) => (
+                    <li {...props}>
+                      <Box>
+                        <Typography variant="body1" fontWeight="medium">
+                          {resident.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {resident.house?.street} - {resident.house?.house_number}
+                        </Typography>
+                      </Box>
+                    </li>
+                  )}
+                  sx={{ minWidth: 400 }}
+                />
+              </FormControl>
             </Grid>
           </Grid>
         );
@@ -276,38 +237,68 @@ function AddVendors() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="House Number"
-                value={formData.houseNumber}
-                onChange={(e) => handleInputChange('houseNumber', e.target.value)}
-                error={!!errors.houseNumber}
-                helperText={errors.houseNumber || 'Format: B#A - L## (e.g., B3A - L23)'}
+                label="Resident Name"
+                value={formData.residentName}
+                InputProps={{ readOnly: true }}
+                helperText="Resident name (auto-filled)"
                 required
-                placeholder="B3A - L23"
-                inputProps={{ maxLength: 20 }}
-                sx={{ minWidth: 350, maxWidth: 500 }}
+                sx={{
+                  minWidth: 300,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth error={!!errors.street} required sx={{ minWidth: 350, maxWidth: 500 }}>
-                <InputLabel shrink={Boolean(formData.street) || formData.street === ''}>Street</InputLabel>
-                <Select
-                  value={formData.street}
-                  label="Street"
-                  onChange={(e) => handleInputChange('street', e.target.value)}
-                  displayEmpty
-                  renderValue={selected => selected ? selected : <em style={{ color: '#888' }}>Select Street</em>}
-                >
-                  <MenuItem value="" disabled>
-                    <em>Select Street</em>
-                  </MenuItem>
-                  {streets.map((street) => (
-                    <MenuItem key={street} value={street}>
-                      {street}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.street && <FormHelperText>{errors.street}</FormHelperText>}
-              </FormControl>
+              <TextField
+                fullWidth
+                label="Resident ID"
+                value={formData.residentId}
+                InputProps={{ readOnly: true }}
+                helperText="Resident ID (auto-filled)"
+                required
+                sx={{
+                  minWidth: 300,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="House Number"
+                value={formData.houseNumber}
+                InputProps={{ readOnly: true }}
+                helperText="House number (auto-filled)"
+                required
+                sx={{
+                  minWidth: 350,
+                  maxWidth: 500,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Street"
+                value={formData.street}
+                InputProps={{ readOnly: true }}
+                helperText="Street (auto-filled)"
+                required
+                sx={{
+                  minWidth: 350,
+                  maxWidth: 500,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              />
             </Grid>
           </Grid>
         );
@@ -351,7 +342,6 @@ function AddVendors() {
             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
               <FloraTable
                 columns={[
-                  { id: 'homeownerName', label: 'Homeowner Name' },
                   { id: 'residentName', label: 'Resident Name' },
                   { id: 'residentId', label: 'Resident ID' },
                   { id: 'houseNumber', label: 'House Number' },
@@ -361,7 +351,6 @@ function AddVendors() {
                 ]}
                 rows={[
                   {
-                    homeownerName: formData.homeownerName,
                     residentName: formData.residentName,
                     residentId: formData.residentId,
                     houseNumber: formData.houseNumber,
@@ -386,20 +375,6 @@ function AddVendors() {
     }
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
-        <Box maxWidth="md" mx="auto">
-          <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-              <Typography>Loading...</Typography>
-            </Box>
-          </Paper>
-        </Box>
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ p: { xs: 0.5, sm: 1 }, width: '100%', height: '100%' }}>
       <Box maxWidth="100%" mx="auto">
@@ -409,7 +384,7 @@ function AddVendors() {
               Add New Vendor
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Fill in the required information to register a new vendor
+              Select an existing resident and add business information to register as vendor
             </Typography>
           </Box>
 
@@ -452,15 +427,17 @@ function AddVendors() {
                   variant="contained"
                   onClick={handleSubmit}
                   endIcon={<CheckIcon />}
+                  disabled={loading}
                   sx={{ minWidth: 120 }}
                 >
-                  Submit
+                  {loading ? 'Submitting...' : 'Submit'}
                 </Button>
               ) : (
                 <Button
                   variant="contained"
                   onClick={handleNext}
                   endIcon={<ArrowForwardIcon />}
+                  disabled={activeStep === 0 && !selectedResident}
                   sx={{ minWidth: 100 }}
                 >
                   Next

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -9,19 +9,29 @@ import {
   Tooltip,
   InputAdornment,
   IconButton,
-  useMediaQuery
+  useMediaQuery,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 import PeopleIcon from '@mui/icons-material/People';
+import ArchiveIcon from '@mui/icons-material/Archive';
 import Badge from '@mui/material/Badge';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { useTheme } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import FloraTable from '../../../components/FloraTable';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -31,12 +41,24 @@ import apiService from '../../../services/api';
 function Residents() {
   const [users, setUsers] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [archivedUsers, setArchivedUsers] = useState([]);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const [filterValues, setFilterValues] = useState({ status: '', street: '' });
+  const [filterValues, setFilterValues] = useState({ 
+    status: '', 
+    street: '', 
+    homeownerName: '', 
+    residentName: '', 
+    houseNumber: '', 
+    contactNumber: '', 
+    email: '' 
+  });
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -45,48 +67,157 @@ function Residents() {
     from: 0,
     to: 0
   });
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', data: null });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const rowsPerPage = 9;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
-  const fetchData = async (pageNum = 1, isRequest = false) => {
+  const fetchData = async (pageNum = 1, viewType = 'users') => {
     try {
-      setLoading(true);
-      if (isRequest) {
-        const response = await apiService.getResidentRequests(pageNum);
+      if (pageNum === 1) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
+      if (viewType === 'requests') {
+        const response = await apiService.getResidentRequests(pageNum, search, filterValues);
         setRequests(response.data || []);
         setPagination(response.pagination || {});
+      } else if (viewType === 'archived') {
+        const response = await apiService.getArchivedResidents(pageNum, search, filterValues);
+        setArchivedUsers(response.data || []);
+        setPagination(response.pagination || {});
       } else {
-        const response = await apiService.getResidents(pageNum);
+        const response = await apiService.getResidents(pageNum, search, filterValues);
         setUsers(response.data || []);
         setPagination(response.pagination || {});
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       // Set empty data on error
-      if (isRequest) {
+      if (viewType === 'requests') {
         setRequests([]);
+      } else if (viewType === 'archived') {
+        setArchivedUsers([]);
       } else {
         setUsers([]);
       }
     } finally {
       setLoading(false);
+      setSearchLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData(1, showRequests);
-  }, [showRequests]);
+  const handleAccept = async (resident) => {
+    try {
+      await apiService.acceptResidentRequest(resident.originalData.id);
+      setSnackbar({ open: true, message: 'Resident request accepted successfully', severity: 'success' });
+      // Refresh the data
+      fetchData(page, showRequests);
+    } catch (error) {
+      console.error('Error accepting resident request:', error);
+      setSnackbar({ open: true, message: error.message || 'Failed to accept resident request', severity: 'error' });
+    }
+  };
+
+  const handleDelete = async (resident) => {
+    try {
+      await apiService.deleteResidentRequest(resident.originalData.id);
+      setSnackbar({ open: true, message: 'Resident request deleted successfully', severity: 'success' });
+      // Refresh the data
+      fetchData(page, showRequests);
+    } catch (error) {
+      console.error('Error deleting resident request:', error);
+      setSnackbar({ open: true, message: error.message || 'Failed to delete resident request', severity: 'error' });
+    }
+  };
+
+  const handleArchive = async (resident) => {
+    try {
+      await apiService.archiveResident(resident.originalData.id);
+      setSnackbar({ open: true, message: 'Resident archived successfully', severity: 'success' });
+      // Refresh the data
+      fetchData(page, getCurrentViewType());
+    } catch (error) {
+      console.error('Error archiving resident:', error);
+      setSnackbar({ open: true, message: error.message || 'Failed to archive resident', severity: 'error' });
+    }
+  };
+
+  const handleUnarchive = async (resident) => {
+    try {
+      await apiService.unarchiveResident(resident.originalData.id);
+      setSnackbar({ open: true, message: 'Resident unarchived successfully', severity: 'success' });
+      // Refresh the data
+      fetchData(page, getCurrentViewType());
+    } catch (error) {
+      console.error('Error unarchiving resident:', error);
+      setSnackbar({ open: true, message: error.message || 'Failed to unarchive resident', severity: 'error' });
+    }
+  };
+
+  const getCurrentViewType = () => {
+    if (showRequests) return 'requests';
+    if (showArchived) return 'archived';
+    return 'users';
+  };
+
+  const handleConfirmAction = () => {
+    if (confirmDialog.type === 'accept') {
+      handleAccept(confirmDialog.data);
+    } else if (confirmDialog.type === 'delete') {
+      handleDelete(confirmDialog.data);
+    } else if (confirmDialog.type === 'archive') {
+      handleArchive(confirmDialog.data);
+    } else if (confirmDialog.type === 'unarchive') {
+      handleUnarchive(confirmDialog.data);
+    }
+    setConfirmDialog({ open: false, type: '', data: null });
+  };
 
   useEffect(() => {
-    fetchData(page, showRequests);
-  }, [page, showRequests]);
+    fetchData(1, getCurrentViewType());
+  }, [showRequests, showArchived]);
 
-  const handleSearch = (e) => setSearch(e.target.value);
+  useEffect(() => {
+    fetchData(page, getCurrentViewType());
+  }, [page, showRequests, showArchived]);
+
+  // Add effect to handle search and filter changes
+  useEffect(() => {
+    setPage(1); // Reset to first page when search or filters change
+    fetchData(1, getCurrentViewType());
+  }, [search, filterValues]);
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId;
+      return (value) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setSearch(value);
+        }, 500); // 500ms delay
+      };
+    })(),
+    []
+  );
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedSearch(value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearch('');
+  };
 
   // Get filter options from current data
-  const currentData = showRequests ? requests : users;
+  const currentData = showRequests ? requests : showArchived ? archivedUsers : users;
   const statusOptions = ['pending'];
   const streetOptions = Array.from(new Set(currentData.map(u => u.house?.street || u.street))).filter(Boolean);
   const homeownerOptions = Array.from(new Set(currentData.map(u => u.house_owner_name || u.homeownerName))).filter(Boolean);
@@ -95,11 +226,20 @@ function Residents() {
   const contactOptions = Array.from(new Set(currentData.map(u => u.contact_no || u.contactNumber))).filter(Boolean);
   const emailOptions = Array.from(new Set(currentData.map(u => u.email))).filter(Boolean);
 
+  // Check if any filters are active
+  const hasActiveFilters = Object.values(filterValues).some(value => value && value !== '');
+
   const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
   const handleFilterClose = () => setFilterAnchorEl(null);
   const handleFilterChange = (name, value) => setFilterValues(f => ({ ...f, [name]: value }));
-  const handleFilterReset = () => setFilterValues({ status: '', street: '' });
-  const handleFilterApply = () => handleFilterClose();
+  const handleFilterReset = () => {
+    setFilterValues({ status: '', street: '', homeownerName: '', residentName: '', houseNumber: '', contactNumber: '', email: '' });
+    // The useEffect will handle the data fetching when filterValues changes
+  };
+  const handleFilterApply = () => {
+    handleFilterClose();
+    // The useEffect will handle the data fetching when filterValues changes
+  };
 
   // Transform backend data to match frontend expectations
   const transformData = (data) => {
@@ -115,12 +255,13 @@ function Residents() {
       requestType: item.request_type || 'New Resident Registration',
       status: item.status || 'pending',
       dateSubmitted: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+      dateArchived: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'N/A',
       // Keep original data for actions
       originalData: item
     }));
   };
 
-  const filteredData = showRequests ? requests : users;
+  const filteredData = showRequests ? requests : showArchived ? archivedUsers : users;
   const transformedData = transformData(filteredData);
 
   // Actions for each row
@@ -131,20 +272,44 @@ function Residents() {
       color: 'success',
       sx: { '&:hover': { bgcolor: 'success.main', color: '#fff' } },
       onClick: (row) => {
-        // Handle accept request
-        console.log('Accept request:', row.originalData);
-        // TODO: Implement accept logic
+        setConfirmDialog({ 
+          open: true, 
+          type: 'accept', 
+          data: row 
+        });
       },
     },
     {
       label: 'Reject',
       icon: <CloseIcon fontSize="small" />,
       color: 'error',
-      sx: { '&:hover': { bgcolor: 'error.main', color: '#fff' } },
+      sx: { 
+        color: 'error.main',
+        '&:hover': { bgcolor: 'error.main', color: '#fff' } 
+      },
       onClick: (row) => {
-        // Handle reject request
-        console.log('Reject request:', row.originalData);
-        // TODO: Implement reject logic
+        setConfirmDialog({ 
+          open: true, 
+          type: 'delete', 
+          data: row 
+        });
+      },
+    },
+  ] : showArchived ? [
+    {
+      label: 'Unarchive',
+      icon: <RestoreIcon fontSize="small" />,
+      color: 'success',
+      sx: { 
+        color: 'success.main',
+        '&:hover': { bgcolor: 'success.main', color: '#fff' } 
+      },
+      onClick: (row) => {
+        setConfirmDialog({ 
+          open: true, 
+          type: 'unarchive', 
+          data: row 
+        });
       },
     },
   ] : [
@@ -156,14 +321,19 @@ function Residents() {
       onClick: (row) => navigate(`/user-management/edit-resident/${row.residentId}`),
     },
     {
-      label: 'Delete',
+      label: 'Archive',
       icon: <DeleteIcon fontSize="small" />,
       color: 'error',
-      sx: { '&:hover': { bgcolor: 'error.main', color: '#fff' } },
+      sx: { 
+        color: 'error.main',
+        '&:hover': { bgcolor: 'error.main', color: '#fff' } 
+      },
       onClick: (row) => {
-        // Handle delete
-        console.log('Delete user:', row.originalData);
-        // TODO: Implement delete logic
+        setConfirmDialog({ 
+          open: true, 
+          type: 'archive', 
+          data: row 
+        });
       },
     },
   ];
@@ -176,6 +346,15 @@ function Residents() {
     { id: 'street', label: 'Street' },
     { id: 'requestType', label: 'Request Type' },
     { id: 'dateSubmitted', label: 'Date Submitted' },
+  ] : showArchived ? [
+    { id: 'homeownerName', label: 'Homeowner Name' },
+    { id: 'residentName', label: 'Resident Name' },
+    { id: 'residentId', label: 'Resident ID' },
+    { id: 'houseNumber', label: 'House Number' },
+    { id: 'street', label: 'Street' },
+    { id: 'contactNumber', label: 'Contact Number' },
+    { id: 'email', label: 'Email Address' },
+    { id: 'dateArchived', label: 'Date Archived' },
   ] : [
     { id: 'homeownerName', label: 'Homeowner Name' },
     { id: 'residentName', label: 'Resident Name' },
@@ -213,8 +392,8 @@ function Residents() {
             <TextField
               variant="outlined"
               size="small"
-              placeholder={`Search ${showRequests ? 'requests' : 'users'}...`}
-              value={search}
+              placeholder={`Search ${showRequests ? 'requests' : showArchived ? 'archived users' : 'users'}...`}
+              value={searchInput}
               onChange={handleSearch}
               sx={{
                 width: { xs: '100%', sm: 320 },
@@ -240,6 +419,17 @@ function Residents() {
                     <SearchIcon color="action" fontSize="small" />
                   </InputAdornment>
                 ),
+                endAdornment: searchInput && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={handleClearSearch}
+                      sx={{ p: 0 }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
                 sx: { py: 0 }
               }}
             />
@@ -257,7 +447,15 @@ function Residents() {
                 </Tooltip>
               )}
               <Tooltip title="Filter">
-                <IconButton color="default" size="small" sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }} onClick={handleFilterOpen}>
+                <IconButton 
+                  color={hasActiveFilters ? "primary" : "default"} 
+                  size="small" 
+                  sx={{ 
+                    '&:hover': { bgcolor: 'primary.main', color: '#fff' },
+                    ...(hasActiveFilters && { bgcolor: 'primary.main', color: '#fff' })
+                  }} 
+                  onClick={handleFilterOpen}
+                >
                   <FilterListIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -292,6 +490,7 @@ function Residents() {
                     size="small" 
                     onClick={() => {
                       setShowRequests(!showRequests);
+                      setShowArchived(false);
                       setPage(1); // Reset to first page when switching views
                     }}
                     sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
@@ -300,19 +499,48 @@ function Residents() {
                   </IconButton>
                 </Badge>
               </Tooltip>
+              <Tooltip title={showArchived ? "Show Users" : "Show Archived"}>
+                <IconButton 
+                  color={showArchived ? "primary" : "default"} 
+                  size="small" 
+                  onClick={() => {
+                    setShowArchived(!showArchived);
+                    setShowRequests(false);
+                    setPage(1); // Reset to first page when switching views
+                  }}
+                  sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
+                >
+                  <ArchiveIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Stack>
-          </Box>
+                    </Box>
+          
+          {/* Active filters and search summary */}
+          {(search || hasActiveFilters) && (
+            <Box sx={{ px: 1, py: 0.5, mb: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                {search && `Search: "${search}"`}
+                {search && hasActiveFilters && ' | '}
+                {hasActiveFilters && `Filters: ${Object.entries(filterValues)
+                  .filter(([key, value]) => value && value !== '')
+                  .map(([key, value]) => `${key}: ${value}`)
+                  .join(', ')}`}
+              </Typography>
+            </Box>
+          )}
+          
           <FloraTable
-            columns={columns}
-            rows={transformedData}
-            actions={actions}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            maxHeight={tableMaxHeight}
-            emptyMessage={`No ${showRequests ? 'requests' : 'users'} found.`}
-            loading={loading}
-            disableInternalPagination={true}
-          />
+              columns={columns}
+              rows={transformedData}
+              actions={actions}
+              page={page}
+              rowsPerPage={rowsPerPage}
+              maxHeight={tableMaxHeight}
+              emptyMessage={`No ${showRequests ? 'requests' : showArchived ? 'archived users' : 'users'} found.`}
+              loading={loading || searchLoading}
+              disableInternalPagination={true}
+            />
           <Box
             sx={{
               display: 'flex',
@@ -383,6 +611,63 @@ function Residents() {
           </Box>
         </Paper>
       </Box>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ open: false, type: '', data: null })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {confirmDialog.type === 'accept' ? 'Accept Resident Request' : 
+           confirmDialog.type === 'archive' ? 'Archive Resident' : 
+           confirmDialog.type === 'unarchive' ? 'Unarchive Resident' : 'Delete Resident Request'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {confirmDialog.type === 'accept' 
+              ? `Are you sure you want to accept the resident request for ${confirmDialog.data?.residentName || 'this resident'}?`
+              : confirmDialog.type === 'archive'
+              ? `Are you sure you want to archive ${confirmDialog.data?.residentName || 'this resident'}? This will remove them from the active residents list.`
+              : confirmDialog.type === 'unarchive'
+              ? `Are you sure you want to unarchive ${confirmDialog.data?.residentName || 'this resident'}? This will restore them to the active residents list.`
+              : `Are you sure you want to delete the resident request for ${confirmDialog.data?.residentName || 'this resident'}? This action cannot be undone.`
+            }
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setConfirmDialog({ open: false, type: '', data: null })}
+            color="inherit"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmAction}
+            color={confirmDialog.type === 'accept' ? 'success' : confirmDialog.type === 'archive' ? 'error' : confirmDialog.type === 'unarchive' ? 'success' : 'error'}
+            variant="contained"
+          >
+            {confirmDialog.type === 'accept' ? 'Accept' : confirmDialog.type === 'archive' ? 'Archive' : confirmDialog.type === 'unarchive' ? 'Unarchive' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
