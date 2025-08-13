@@ -107,12 +107,49 @@ class ApiService {
   }
 
   // Resident management methods
-  async getResidents(page = 1) {
-    return this.request(`/admin/residents?page=${page}`);
+  async getResidents(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/residents?${params.toString()}`);
   }
 
-  async getResidentRequests(page = 1) {
-    return this.request(`/admin/resident-requests?page=${page}`);
+  async getResidentRequests(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/resident-requests?${params.toString()}`);
+  }
+
+  async getArchivedResidents(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/archived-residents?${params.toString()}`);
   }
 
   async getResidentById(residentId) {
@@ -134,6 +171,30 @@ class ApiService {
     return this.request(`/admin/residents`, {
       method: 'POST',
       body: JSON.stringify(residentData),
+    });
+  }
+
+  async acceptResidentRequest(id) {
+    return this.request(`/admin/resident-requests/${id}/accept`, {
+      method: 'POST',
+    });
+  }
+
+  async deleteResidentRequest(id) {
+    return this.request(`/admin/resident-requests/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async archiveResident(id) {
+    return this.request(`/admin/residents/${id}/archive`, {
+      method: 'POST',
+    });
+  }
+
+  async unarchiveResident(id) {
+    return this.request(`/admin/residents/${id}/unarchive`, {
+      method: 'POST',
     });
   }
   
