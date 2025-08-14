@@ -42,30 +42,30 @@ import apiService from '../../../services/api';
   const fetchVendors = async (search = '', filters = {}) => {
     try {
       const response = await apiService.getVendorsWithDetails(search, filters);
-      return response;
+      return response || [];
     } catch (error) {
       console.error('Error fetching vendors:', error);
-      throw error;
+      return [];
     }
   };
 
   const fetchVendorRequests = async (search = '', filters = {}) => {
     try {
       const response = await apiService.getVendorRequests(search, filters);
-      return response;
+      return response || [];
     } catch (error) {
       console.error('Error fetching vendor requests:', error);
-      throw error;
+      return [];
     }
   };
 
   const fetchArchivedVendors = async (search = '', filters = {}) => {
     try {
       const response = await apiService.getArchivedVendors(search, filters);
-      return response;
+      return response || [];
     } catch (error) {
       console.error('Error fetching archived vendors:', error);
-      throw error;
+      return [];
     }
   };
 
@@ -134,11 +134,33 @@ function Vendors() {
         setLoading(true);
       }
       setError('');
-      const [vendorsData, requestsData, archivedData] = await Promise.all([
-        fetchVendors(searchTerm, filterValues),
-        fetchVendorRequests(searchTerm, filterValues),
-        fetchArchivedVendors(searchTerm, filterValues)
-      ]);
+      
+      // Fetch data with better error handling
+      let vendorsData = [];
+      let requestsData = [];
+      let archivedData = [];
+      
+      try {
+        vendorsData = await fetchVendors(searchTerm, filterValues);
+      } catch (error) {
+        console.error('Error fetching vendors:', error);
+        vendorsData = [];
+      }
+      
+      try {
+        requestsData = await fetchVendorRequests(searchTerm, filterValues);
+      } catch (error) {
+        console.error('Error fetching vendor requests:', error);
+        requestsData = [];
+      }
+      
+      try {
+        archivedData = await fetchArchivedVendors(searchTerm, filterValues);
+      } catch (error) {
+        console.error('Error fetching archived vendors:', error);
+        archivedData = [];
+      }
+      
       setUsers(vendorsData);
       setRequests(requestsData);
       setArchivedVendors(archivedData);

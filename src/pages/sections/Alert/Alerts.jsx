@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -18,340 +18,226 @@ import {
   Divider,
   Select,
   MenuItem,
-  FormControl
+  FormControl,
+  Alert as MuiAlert,
+  Snackbar
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import WarningIcon from '@mui/icons-material/Warning';
 import { useTheme } from '@mui/material/styles';
-
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ClearIcon from '@mui/icons-material/Clear';
 import FloraTable from '../../../components/FloraTable';
 import FilterPopover from '../../../components/FilterPopover';
-
-// Mock alerts data based on the image
-const mockAlerts = [
-  {
-    id: 1,
-    residentName: 'Maria Lopez',
-    homeownerName: 'Cristina Lopez',
-    contactNumber: '+639061234567',
-    blockLot: 'B5A-L10',
-    street: 'Camia',
-    date: '2025-04-07',
-    time: '08:15 AM',
-    reason: 'Package Theft Suspected',
-    status: 'Resolved',
-    notifiedParties: 'Guardhouse',
-    isAlert: true
-  },
-  {
-    id: 2,
-    residentName: 'Jose Ramos',
-    homeownerName: 'Roberto Ramos',
-    contactNumber: '09351122334',
-    blockLot: 'B3C-L04',
-    street: 'Bongavilla',
-    date: '2025-04-06',
-    time: '10:45 PM',
-    reason: 'Stranger Seen Near Gate',
-    status: 'Responded',
-    notifiedParties: 'Guardhouse',
-    isAlert: true
-  },
-  {
-    id: 3,
-    residentName: 'Carmen Dizon',
-    homeownerName: 'Ana Mendoza',
-    contactNumber: '09351234567',
-    blockLot: 'B7F-L19',
-    street: 'Dahlia',
-    date: '2025-04-06',
-    time: '03:25 PM',
-    reason: 'Possible Vandalism',
-    status: 'Resolved',
-    notifiedParties: 'Guardhouse',
-    isAlert: true
-  },
-  {
-    id: 4,
-    residentName: 'Roberto Santos',
-    homeownerName: 'Elena Santos',
-    contactNumber: '09181234567',
-    blockLot: 'B2A-L15',
-    street: 'Champaca',
-    date: '2025-04-05',
-    time: '11:30 AM',
-    reason: 'Attempted Break-in',
-    status: 'Investigation Ongoing',
-    notifiedParties: 'Security, Police',
-    isAlert: true
-  },
-  {
-    id: 5,
-    residentName: 'Patricia Cruz',
-    homeownerName: 'Fernando Cruz',
-    contactNumber: '09101122334',
-    blockLot: 'B4B-L08',
-    street: 'Sampaguita',
-    date: '2025-04-05',
-    time: '09:20 AM',
-    reason: 'Suspicious Car Parked Nearby',
-    status: 'Escalated',
-    notifiedParties: 'Admin Office',
-    isAlert: true
-  },
-  {
-    id: 6,
-    residentName: 'Michael Garcia',
-    homeownerName: 'Lito Garcia',
-    contactNumber: '+639291234567',
-    blockLot: 'B5D-L02',
-    street: 'Adelfa',
-    date: '2025-04-04',
-    time: '07:45 PM',
-    reason: 'Unknown Individual Knocked',
-    status: 'Resolved',
-    notifiedParties: 'Security Team',
-    isAlert: true
-  },
-  {
-    id: 7,
-    residentName: 'Jessica Reyes',
-    homeownerName: 'Elena Reyes',
-    contactNumber: '09181234567',
-    blockLot: 'B4C-L08',
-    street: 'Gumamela',
-    date: '2025-04-04',
-    time: '02:15 PM',
-    reason: 'CCTV Footage Request for Lost Pet',
-    status: 'Resolved',
-    notifiedParties: 'Admin Office',
-    isAlert: false
-  },
-  {
-    id: 8,
-    residentName: 'Leo Aquino',
-    homeownerName: 'Mario Aquino',
-    contactNumber: '09081234567',
-    blockLot: 'B3B-L33',
-    street: 'Santan',
-    date: '2025-04-03',
-    time: '10:30 PM',
-    reason: 'Reported Loitering',
-    status: 'Responded',
-    notifiedParties: 'Barangay, Police',
-    isAlert: true
-  },
-  {
-    id: 9,
-    residentName: 'Daniel Lopez',
-    homeownerName: 'Cristina Lopez',
-    contactNumber: '+639061234567',
-    blockLot: 'B2D-L16',
-    street: 'Jasmine',
-    date: '2025-04-03',
-    time: '06:20 AM',
-    reason: 'Alarm Went Off Unexpectedly',
-    status: 'Resolved',
-    notifiedParties: 'Security Team',
-    isAlert: true
-  },
-  {
-    id: 10,
-    residentName: 'Teresa Bonifacio',
-    homeownerName: 'Andres Bonifacio',
-    contactNumber: '09191234567',
-    blockLot: 'B4C-L01',
-    street: 'Ilang-ilang',
-    date: '2025-04-02',
-    time: '04:45 PM',
-    reason: 'Check for Trespasser in Garden',
-    status: 'Investigation Ongoing',
-    notifiedParties: 'Admin, Maintenance',
-    isAlert: true
-  },
-  {
-    id: 11,
-    residentName: 'Allan Lim',
-    homeownerName: 'Jenny Lim',
-    contactNumber: '09209234567',
-    blockLot: 'B5B-L05',
-    street: 'Rosal',
-    date: '2025-04-02',
-    time: '01:10 PM',
-    reason: 'Bike Stolen from Porch',
-    status: 'Escalated',
-    notifiedParties: 'Security, Police',
-    isAlert: true
-  },
-  {
-    id: 12,
-    residentName: 'Edwin Torres',
-    homeownerName: 'Ramon Torres',
-    contactNumber: '09300234567',
-    blockLot: 'B1A-L11',
-    street: 'Kalachuchi',
-    date: '2025-04-01',
-    time: '08:55 PM',
-    reason: 'Unauthorized Entry in Driveway',
-    status: 'Resolved',
-    notifiedParties: 'Guardhouse',
-    isAlert: true
-  },
-  {
-    id: 13,
-    residentName: 'Melanie David',
-    homeownerName: 'Grace David',
-    contactNumber: '+639331234567',
-    blockLot: 'B2C-L19',
-    street: 'Camia',
-    date: '2025-04-01',
-    time: '03:30 PM',
-    reason: 'Noise Disruption from Neighbor',
-    status: 'Resolved',
-    notifiedParties: 'Admin Office',
-    isAlert: false
-  },
-  {
-    id: 14,
-    residentName: 'Robyn Cruz',
-    homeownerName: 'Fernando Cruz',
-    contactNumber: '09101122334',
-    blockLot: 'B3B-L29',
-    street: 'Bongavilla',
-    date: '2025-03-31',
-    time: '11:45 AM',
-    reason: 'Footage for Delivery Dispute',
-    status: 'Resolved',
-    notifiedParties: 'Admin Office',
-    isAlert: false
-  },
-  {
-    id: 15,
-    residentName: 'Francis Navarro',
-    homeownerName: 'Isabel Navarro',
-    contactNumber: '09221122334',
-    blockLot: 'B4B-L13',
-    street: 'Dahlia',
-    date: '2025-03-31',
-    time: '09:15 AM',
-    reason: 'Footage Request: Fence Damage',
-    status: 'Resolved',
-    notifiedParties: 'Admin Office',
-    isAlert: false
-  }
-];
+import apiService from '../../../services/api';
 
 const getStatusHoverColor = (status, theme) => {
   const isDark = theme.palette.mode === 'dark';
   switch (status) {
     case 'Resolved':
-      return isDark ? '#145317' : '#d4edda';
-    case 'Responded':
-      return isDark ? '#08306b' : '#bbdefb';
-    case 'Investigation Ongoing':
-      return isDark ? '#c66900' : '#ffe0b2';
-    case 'Escalated':
-      return isDark ? '#7f1313' : '#ffcdd2';
+      return isDark ? '#145317' : '#388e3c';
+    case 'Ongoing':
+      return isDark ? '#c66900' : '#ef6c00';
+    case 'Pending':
+      return isDark ? '#08306b' : '#0d47a1';
+    case 'Called':
+      return isDark ? '#7f1313' : '#b71c1c';
+    case 'Cancelled':
+      return isDark ? '#424242' : '#757575';
     default:
-      return isDark ? theme.palette.grey[900] : '#eeeeee';
+      return isDark ? theme.palette.grey[900] : theme.palette.grey[800];
   }
 };
 
 function Alerts() {
-  const [alerts, setAlerts] = useState(mockAlerts);
+  const [alerts, setAlerts] = useState([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalAlerts, setTotalAlerts] = useState(0);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 5,
+    total: 0,
+    from: 0,
+    to: 0
+  });
+  const rowsPerPage = 5;
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const [filterValues, setFilterValues] = useState({ status: '', street: '' });
+  const [filterValues, setFilterValues] = useState({ 
+    status: '', 
+    type: '', 
+    resident_id: '',
+    date_from: '',
+    date_to: ''
+  });
 
-  const handleSearch = (e) => setSearch(e.target.value);
+  // Fetch alerts from API
+  const fetchAlerts = async (page = 1, searchTerm = '', filters = {}) => {
+    try {
+      if (page === 1) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+      
+      const response = await apiService.getAlerts(page, searchTerm, filters);
+      
+      if (response.success) {
+        setAlerts(response.data);
+        setTotalPages(response.pagination.last_page);
+        setTotalAlerts(response.pagination.total);
+        setCurrentPage(response.pagination.current_page);
+        setPagination(response.pagination);
+      } else {
+        throw new Error('Failed to fetch alerts');
+      }
+    } catch (err) {
+      console.error('Error fetching alerts:', err);
+      setError(err.message || 'Failed to fetch alerts');
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+      setSearchLoading(false);
+    }
+  };
 
-  const handleStatusChange = (alertId, newStatus) => {
-    setAlerts(prevAlerts =>
-      prevAlerts.map(alert =>
-        alert.id === alertId
-          ? { ...alert, status: newStatus }
-          : alert
-      )
-    );
+  // Initial fetch
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  // Handle pagination changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchAlerts(currentPage, search, filterValues);
+    }
+  }, [currentPage]);
+
+  // Handle search and filter changes
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page when search or filters change
+    fetchAlerts(1, search, filterValues);
+  }, [search, filterValues]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearch(searchInput);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
+
+
+
+  const handleStatusChange = async (alertId, newStatus) => {
+    try {
+      const response = await apiService.updateAlertStatus(alertId, newStatus);
+      
+      if (response.success) {
+        // Update local state
+        setAlerts(prevAlerts =>
+          prevAlerts.map(alert =>
+            alert.id === alertId
+              ? { ...alert, status: newStatus }
+              : alert
+          )
+        );
+        
+        setSuccessMessage(`Alert status updated to ${newStatus}`);
+        
+        // Refresh alerts to get updated data
+        fetchAlerts(currentPage, search, filterValues);
+      }
+    } catch (err) {
+      console.error('Error updating alert status:', err);
+      setError(err.message || 'Failed to update alert status');
+    }
   };
 
   const getStatusColor = (status, theme) => {
     const isDark = theme.palette.mode === 'dark';
     switch (status) {
       case 'Resolved':
-        return isDark ? '#1b5e20' : '#e8f5e8';
-      case 'Responded':
-        return isDark ? '#0d47a1' : '#e3f2fd';
-      case 'Investigation Ongoing':
-        return isDark ? '#ff9800' : '#fff3e0';
-      case 'Escalated':
-        return isDark ? '#b71c1c' : '#ffebee';
+        return isDark ? '#1b5e20' : '#2e7d32';
+      case 'Ongoing':
+        return isDark ? '#ff9800' : '#f57c00';
+      case 'Pending':
+        return isDark ? '#0d47a1' : '#1565c0';
+      case 'Called':
+        return isDark ? '#b71c1c' : '#c62828';
+      case 'Cancelled':
+        return isDark ? '#424242' : '#616161';
       default:
-        return isDark ? theme.palette.grey[800] : '#f5f5f5';
+        return isDark ? theme.palette.grey[800] : theme.palette.grey[700];
     }
   };
 
-  const statusOptions = ['Resolved', 'Responded', 'Investigation Ongoing', 'Escalated'];
-  const streetOptions = Array.from(new Set(alerts.map(a => a.street))).filter(Boolean);
-  const homeownerOptions = Array.from(new Set(alerts.map(a => a.homeownerName))).filter(Boolean);
-  const residentOptions = Array.from(new Set(alerts.map(a => a.residentName))).filter(Boolean);
-  const blockLotOptions = Array.from(new Set(alerts.map(a => a.blockLot))).filter(Boolean);
-  const dateOptions = Array.from(new Set(alerts.map(a => a.date))).filter(Boolean);
-  // Reason is text, so just add as a text field
+  const statusOptions = ['Pending', 'Ongoing', 'Resolved', 'Called', 'Cancelled'];
+  const typeOptions = ['incident', 'urgent'];
 
   const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
   const handleFilterClose = () => setFilterAnchorEl(null);
   const handleFilterChange = (name, value) => setFilterValues(f => ({ ...f, [name]: value }));
-  const handleFilterReset = () => setFilterValues({ status: '', street: '' });
-  const handleFilterApply = () => handleFilterClose();
+  const handleFilterReset = () => {
+    const resetFilters = { status: '', type: '', resident_id: '', date_from: '', date_to: '' };
+    setFilterValues(resetFilters);
+    setSearchInput('');
+    setSearch('');
+    setCurrentPage(1);
+    fetchAlerts(1, '', resetFilters);
+  };
+  const handleFilterApply = () => {
+    setCurrentPage(1);
+    fetchAlerts(1, search, filterValues);
+    handleFilterClose();
+  };
 
-  const filteredAlerts = alerts.filter(
-    (alert) => {
-      const matchesSearch = Object.values(alert)
-        .join(' ')
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesStatus = !filterValues.status || (alert.status === filterValues.status);
-      const matchesStreet = !filterValues.street || (alert.street === filterValues.street);
-      const matchesHomeowner = !filterValues.homeownerName || (alert.homeownerName === filterValues.homeownerName);
-      const matchesResident = !filterValues.residentName || (alert.residentName === filterValues.residentName);
-      const matchesBlockLot = !filterValues.blockLot || (alert.blockLot === filterValues.blockLot);
-      const matchesDate = !filterValues.date || (alert.date === filterValues.date);
-      const matchesReason = !filterValues.reason || (alert.reason.toLowerCase().includes(filterValues.reason.toLowerCase()));
-      return matchesSearch && matchesStatus && matchesStreet && matchesHomeowner && matchesResident && matchesBlockLot && matchesDate && matchesReason;
-    }
-  );
 
-  // Actions for each row
-  const actions = [
-    {
-      label: 'Edit',
-      onClick: (row) => {
-        navigate(`/alerts-security/edit-alert/${row.id}`);
-      },
-    },
-  ];
 
   const columns = [
-    { id: 'residentName', label: 'Resident Name' },
+    { id: 'resident_name', label: 'Resident Name' },
     {
-      id: 'reason',
-      label: 'Reason',
+      id: 'type',
+      label: 'Type',
       render: (value, row) => (
-        <Box sx={{ color: row.isAlert ? 'error.main' : 'text.primary', fontWeight: row.isAlert ? 600 : 400 }}>
-          {value}
+        <Chip
+          label={value}
+          size="small"
+          color={value === 'urgent' ? 'error' : 'primary'}
+          sx={{ fontSize: '0.75rem' }}
+        />
+      )
+    },
+    {
+      id: 'description',
+      label: 'Description',
+      render: (value, row) => (
+        <Box sx={{ 
+          color: row.type === 'urgent' ? 'error.main' : 'text.primary', 
+          fontWeight: row.type === 'urgent' ? 600 : 400 
+        }}>
+          {value || 'N/A'}
         </Box>
       )
     },
-    { id: 'date', label: 'Date' },
-    { id: 'time', label: 'Time' },
+    { id: 'location', label: 'Location' },
+    { id: 'reported_at', label: 'Reported At' },
     {
       id: 'status',
       label: 'Status',
@@ -363,7 +249,7 @@ function Alerts() {
             sx={{
               fontSize: '0.75rem',
               bgcolor: getStatusColor(value, theme),
-              color: theme.palette.mode === 'dark' ? '#fff' : undefined,
+              color: '#fff',
               border: 'none',
             }}
             variant="outlined"
@@ -373,64 +259,86 @@ function Alerts() {
     },
   ];
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
 
+  // Format time for display
+  const formatTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
+    <Box sx={{ p: { xs: 0.5, sm: 1 }, maxWidth: '100%' }}>
+      <Snackbar 
+        open={!!error} 
+        autoHideDuration={6000} 
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MuiAlert onClose={() => setError(null)} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </MuiAlert>
+      </Snackbar>
+
+      <Snackbar 
+        open={!!successMessage} 
+        autoHideDuration={4000} 
+        onClose={() => setSuccessMessage('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MuiAlert onClose={() => setSuccessMessage('')} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </MuiAlert>
+      </Snackbar>
 
       <Paper
         elevation={0}
         sx={{
-          borderRadius: 3,
-          overflow: 'hidden',
-          boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0,0,0,0.25)' : '0 4px 20px rgba(0,0,0,0.08)',
+          borderRadius: 2,
+          overflow: 'visible',
+          boxShadow: theme.palette.mode === 'dark' ? '0 2px 12px rgba(0,0,0,0.2)' : '0 2px 12px rgba(0,0,0,0.06)',
           backgroundColor: theme.palette.background.paper,
+          maxWidth: '100%',
+          mx: 'auto',
         }}
       >
-        {/* Header Section */}
-        <Box
-          sx={{
-            p: { xs: 1.5, sm: 2 },
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: theme.palette.background.paper,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <WarningIcon sx={{ fontSize: 24, color: 'primary.main' }} />
-            <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Resident Alerts
-            </Typography>
-          </Box>
-        </Box>
+
 
         {/* Search and Controls Section */}
         <Box
           sx={{
-            p: { xs: 1.5, sm: 2 },
-            borderBottom: '1px solid',
+            p: { xs: 0.75, sm: 1 },
+            borderRadius: 1,
             borderColor: 'divider',
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa',
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Box
             sx={{
               display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: 'center',
+              alignItems: { xs: 'stretch', sm: 'center' },
               justifyContent: 'space-between',
-              gap: 1.5,
+              gap: 1,
             }}
           >
             <TextField
               variant="outlined"
-              size="medium"
-              placeholder="Search alerts by resident, reason, or status..."
-              value={search}
-              onChange={handleSearch}
+              size="small"
+              placeholder="Search alerts by description, location, or notified party..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               sx={{
-                width: { xs: '100%', sm: 400 },
+                flex: { xs: '1 1 auto', sm: '0 0 auto' },
+                width: { xs: '100%', sm: 300, md: 350 },
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
+                  borderRadius: 1,
                   backgroundColor: theme.palette.background.paper,
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'primary.main',
@@ -444,14 +352,36 @@ function Alerts() {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon color="action" />
+                    <SearchIcon color="action" sx={{ fontSize: 16 }} />
+                  </InputAdornment>
+                ),
+                endAdornment: searchInput && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSearchInput('');
+                        setSearch('');
+                      }}
+                      sx={{ p: 0 }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
                   </InputAdornment>
                 ),
               }}
             />
-            <Stack direction="row" spacing={1}>
+            <Stack 
+              direction="row" 
+              spacing={0.5}
+              sx={{ 
+                flexShrink: 0,
+                justifyContent: { xs: 'center', sm: 'flex-end' }
+              }}
+            >
               <Tooltip title="Filter Alerts">
                 <IconButton
+                  size="small"
                   sx={{
                     backgroundColor: theme.palette.background.paper,
                     border: '1px solid',
@@ -464,7 +394,7 @@ function Alerts() {
                   }}
                   onClick={handleFilterOpen}
                 >
-                  <FilterListIcon />
+                  <FilterListIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
               <FilterPopover
@@ -473,12 +403,9 @@ function Alerts() {
                 onClose={handleFilterClose}
                 fields={[
                   { name: 'status', label: 'Status', type: 'select', options: statusOptions },
-                  { name: 'street', label: 'Street', type: 'select', options: streetOptions },
-                  { name: 'homeownerName', label: 'Homeowner Name', type: 'select', options: homeownerOptions },
-                  { name: 'residentName', label: 'Resident Name', type: 'select', options: residentOptions },
-                  { name: 'blockLot', label: 'Block & Lot', type: 'select', options: blockLotOptions },
-                  { name: 'date', label: 'Date', type: 'select', options: dateOptions },
-                  { name: 'reason', label: 'Reason', type: 'text' },
+                  { name: 'type', label: 'Type', type: 'select', options: typeOptions },
+                  { name: 'date_from', label: 'Date From', type: 'date' },
+                  { name: 'date_to', label: 'Date To', type: 'date' },
                 ]}
                 values={filterValues}
                 onChange={handleFilterChange}
@@ -488,163 +415,200 @@ function Alerts() {
             </Stack>
           </Box>
         </Box>
-        <Box sx={{ height: 'calc(100vh - 200px)', overflow: 'auto', p: 1.5 }}>
-          {filteredAlerts.length === 0 ? (
+
+        <Box sx={{ overflow: 'auto', p: 0.75 }}>
+          {loading || searchLoading ? (
             <Box
               display="flex"
               flexDirection="column"
               justifyContent="center"
               alignItems="center"
-              py={6}
+              py={4}
               textAlign="center"
             >
               <Box
                 sx={{
-                  width: 80,
-                  height: 80,
+                  width: 60,
+                  height: 60,
                   borderRadius: '50%',
                   backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#f0f0f0',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  mb: 2,
+                  mb: 1.5,
                 }}
               >
-                <WarningIcon sx={{ fontSize: 32, color: theme.palette.mode === 'dark' ? theme.palette.grey[500] : '#999' }} />
+                <WarningIcon sx={{ fontSize: 24, color: theme.palette.mode === 'dark' ? theme.palette.grey[500] : '#999' }} />
               </Box>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                {loading ? 'Loading alerts...' : 'No alerts found'}
+                Loading alerts...
+              </Typography>
+            </Box>
+          ) : alerts.length === 0 ? (
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              py={4}
+              textAlign="center"
+            >
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: '50%',
+                  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#f0f0f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mb: 1.5,
+                }}
+              >
+                <WarningIcon sx={{ fontSize: 24, color: theme.palette.mode === 'dark' ? theme.palette.grey[500] : '#999' }} />
+              </Box>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                No alerts found
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {loading ? 'Please wait while we fetch the latest alerts.' : 'Try adjusting your search criteria.'}
+                Try adjusting your search criteria.
               </Typography>
             </Box>
           ) : (
-            filteredAlerts.map((alert, index) => (
+            alerts.map((alert, index) => (
               <Accordion
                 key={alert.id}
                 sx={{
-                  mb: 1.5,
+                  mb: 0.75,
                   '&:before': { display: 'none' },
-                  borderRadius: 2,
+                  borderRadius: 1,
                   overflow: 'hidden',
-                  boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.06)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 1px 6px rgba(0,0,0,0.15)' : '0 1px 6px rgba(0,0,0,0.05)',
                   border: '1px solid',
                   borderColor: 'divider',
                   '&:hover': {
-                    boxShadow: theme.palette.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.25)' : '0 4px 16px rgba(0,0,0,0.1)',
+                    boxShadow: theme.palette.mode === 'dark' ? '0 2px 12px rgba(0,0,0,0.2)' : '0 2px 12px rgba(0,0,0,0.08)',
                     transform: 'translateY(-1px)',
                     transition: 'all 0.2s ease-in-out',
                   },
                   backgroundColor: theme.palette.background.paper,
+                  cursor: 'pointer',
                 }}
               >
                 <AccordionSummary
-                  expandIcon={
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        backgroundColor: 'primary.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff'
-                      }}
-                    >
-                      <ExpandMoreIcon sx={{ fontSize: 20 }} />
-                    </Box>
-                  }
+                  expandIcon={null}
                   sx={{
                     backgroundColor: theme.palette.background.paper,
-                    p: 1.5,
+                    p: 0.75,
                     '&:hover': { backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa' },
                     '& .MuiAccordionSummary-content': {
                       m: 0
-                    }
+                    },
+                    cursor: 'pointer',
                   }}
                 >
-                  <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ flex: '0 0 200px' }}>
-                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                    <Box sx={{ 
+                    display: 'flex', 
+                    width: '100%', 
+                    alignItems: 'center', 
+                    gap: { xs: 1.5, sm: 2 },
+                    flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                  }}>
+                    <Box sx={{ flex: { xs: '1 1 100%', sm: '0 0 180px' }, minWidth: { xs: '100%', sm: 'auto' } }}>
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
                         Resident
                       </Typography>
-                      <Typography variant="body1" fontWeight={600} color="text.primary">
-                        {alert.residentName}
+                      <Typography variant="body2" fontWeight={600} color="text.primary">
+                        {alert.resident?.name || 'Unknown'}
                       </Typography>
                     </Box>
-                    <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
-                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                        Alert Reason
+                    <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 auto' }, minWidth: { xs: '100%', sm: 0 } }}>
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
+                        Description
                       </Typography>
-                      <Typography
-                        variant="body1"
+                      <Box
                         sx={{
-                          color: '#d32f2f',
+                          color: alert.type === 'urgent' ? '#d32f2f' : 'text.primary',
                           fontWeight: 600,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 1
+                          gap: 0.5
                         }}
                       >
                         <Box
                           sx={{
-                            width: 8,
-                            height: 8,
+                            width: 6,
+                            height: 6,
                             borderRadius: '50%',
-                            backgroundColor: '#d32f2f',
+                            backgroundColor: alert.type === 'urgent' ? '#d32f2f' : 'primary.main',
                             flexShrink: 0
                           }}
                         />
-                        {alert.reason}
-                      </Typography>
+                        <Typography variant="body2" component="span" sx={{ 
+                          maxWidth: { xs: '100%', sm: '200px', md: '300px' },
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {alert.description || (alert.type === 'urgent' ? 'URGENT Alert' : 'Incident Report')}
+                        </Typography>
+                      </Box>
                     </Box>
-                    <Box sx={{ flex: '0 0 100px', textAlign: 'center' }}>
-                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    <Box sx={{ flex: { xs: '1 1 50%', sm: '0 0 90px' }, textAlign: 'center', minWidth: { xs: '50%', sm: 'auto' } }}>
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
                         Date
                       </Typography>
-                      <Typography variant="body2" color="text.primary" fontWeight={500}>
-                        {alert.date}
+                      <Typography variant="body2" color="text.primary" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                        {formatDate(alert.reported_at)}
                       </Typography>
                     </Box>
-                    <Box sx={{ flex: '0 0 100px', textAlign: 'center' }}>
-                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    <Box sx={{ flex: { xs: '1 1 50%', sm: '0 0 90px' }, textAlign: 'center', minWidth: { xs: '50%', sm: 'auto' } }}>
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
                         Time
                       </Typography>
-                      <Typography variant="body2" color="text.primary" fontWeight={500}>
-                        {alert.time}
+                      <Typography variant="body2" color="text.primary" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                        {formatTime(alert.reported_at)}
                       </Typography>
                     </Box>
-                    <Box sx={{ flex: '0 0 120px', textAlign: 'center' }}>
-                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    <Box sx={{ flex: { xs: '1 1 100%', sm: '0 0 110px' }, textAlign: 'center', minWidth: { xs: '100%', sm: 'auto' }, ml: { xs: 0, sm: 1 } }}>
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
                         Status
                       </Typography>
-                      <FormControl size="small" sx={{ minWidth: 100 }}>
+                      <FormControl size="small" sx={{ minWidth: 90, width: '100%' }}>
                         <Select
                           value={alert.status}
-                          onChange={(e) => handleStatusChange(alert.id, e.target.value)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(alert.id, e.target.value);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           sx={{
-                            height: 32,
-                            fontSize: '0.75rem',
+                            height: 28,
+                            fontSize: '0.7rem',
                             fontWeight: 600,
+                            color: '#fff',
                             '& .MuiSelect-select': {
-                              py: 0.5,
-                              px: 1
+                              py: 0.25,
+                              px: 0.75,
+                              color: '#fff',
                             },
                             '& .MuiOutlinedInput-notchedOutline': {
                               border: 'none'
                             },
+                            '& .MuiSelect-icon': {
+                              color: '#fff',
+                            },
                             backgroundColor: getStatusColor(alert.status, theme),
-                            borderRadius: 1.5,
+                            borderRadius: 1,
                             '&:hover': {
                               backgroundColor: getStatusHoverColor(alert.status, theme),
                             },
                           }}
                         >
                           {statusOptions.map((status) => (
-                            <MenuItem key={status} value={status} sx={{ fontSize: '0.75rem' }}>
-                              {status === 'Investigation Ongoing' ? 'Ongoing' : status}
+                            <MenuItem key={status} value={status} sx={{ fontSize: '0.7rem' }}>
+                              {status}
                             </MenuItem>
                           ))}
                         </Select>
@@ -652,172 +616,208 @@ function Alerts() {
                     </Box>
                   </Box>
                 </AccordionSummary>
-                <AccordionDetails sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa', py: 2, px: 0 }}>
-                  <Grid container spacing={2} justifyContent="center">
-                    <Grid item xs={12} sm={4}>
+                <AccordionDetails sx={{ backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#ffffff', py: 1, px: 0 }}>
+                  <Grid container spacing={1} justifyContent="center">
+                    <Grid xs={12} sm={6} md={4}>
                       <Paper
                         elevation={0}
                         sx={{
-                          p: 2.5,
+                          p: 1.5,
                           backgroundColor: theme.palette.background.paper,
-                          borderRadius: 2,
+                          borderRadius: 1,
                           border: '1px solid',
                           borderColor: 'divider',
-                          minHeight: '200px',
                         }}
                       >
-                        <Typography variant="h6" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
-                          Homeowner Information
+                        <Typography variant="subtitle1" color="primary.main" gutterBottom sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                          Resident Information
                         </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                           <Box>
                             <Typography variant="caption" color="text.secondary">
-                              Homeowner Name
+                              Resident Name
                             </Typography>
-                            <Typography variant="body2" fontWeight={500}>
-                              {alert.homeownerName}
+                            <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                              {alert.resident?.name || 'Unknown'}
                             </Typography>
                           </Box>
                           <Box>
                             <Typography variant="caption" color="text.secondary">
                               Contact Number
                             </Typography>
-                            <Typography variant="body2" fontWeight={500}>
-                              {alert.contactNumber}
+                            <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                              {alert.resident?.contact_no || 'N/A'}
                             </Typography>
                           </Box>
                         </Box>
                       </Paper>
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid xs={12} sm={4}>
                       <Paper
                         elevation={0}
                         sx={{
-                          p: 2.5,
+                          p: 1.5,
                           backgroundColor: theme.palette.background.paper,
-                          borderRadius: 2,
+                          borderRadius: 1,
                           border: '1px solid',
                           borderColor: 'divider',
-                          minHeight: '200px',
                         }}
                       >
-                        <Typography variant="h6" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
-                          Property Details
+                        <Typography variant="subtitle1" color="primary.main" gutterBottom sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                          Alert Details
                         </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                           <Box>
                             <Typography variant="caption" color="text.secondary">
-                              Block & Lot
+                              Type
                             </Typography>
-                            <Typography variant="body2" fontWeight={500}>
-                              {alert.blockLot}
+                            <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                              {alert.type}
                             </Typography>
                           </Box>
                           <Box>
                             <Typography variant="caption" color="text.secondary">
-                              Street
+                              Location
                             </Typography>
-                            <Typography variant="body2" fontWeight={500}>
-                              {alert.street}
+                            <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                              {alert.location || 'N/A'}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">
+                              Description
+                            </Typography>
+                            <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                              {alert.description || 'N/A'}
                             </Typography>
                           </Box>
                         </Box>
                       </Paper>
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid xs={12} sm={4}>
                       <Paper
                         elevation={0}
                         sx={{
-                          p: 2.5,
+                          p: 1.5,
                           backgroundColor: theme.palette.background.paper,
-                          borderRadius: 2,
+                          borderRadius: 1,
                           border: '1px solid',
                           borderColor: 'divider',
-                          minHeight: '200px',
                         }}
                       >
-                        <Typography variant="h6" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
+                        <Typography variant="subtitle1" color="primary.main" gutterBottom sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
                           Response Information
                         </Typography>
                         <Box>
                           <Typography variant="caption" color="text.secondary">
                             Notified Parties
                           </Typography>
-                          <Typography variant="body2" fontWeight={500}>
-                            {alert.notifiedParties}
+                          <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                            {alert.notified_party || 'N/A'}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Reported At
+                          </Typography>
+                          <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                            {new Date(alert.reported_at).toLocaleString()}
                           </Typography>
                         </Box>
                       </Paper>
                     </Grid>
                   </Grid>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, px: 2 }}>
-                    <Box
-                      component="button"
-                      onClick={() => actions[0].onClick(alert)}
-                      sx={{
-                        backgroundColor: 'primary.main',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 2,
-                        px: 2.5,
-                        py: 1.5,
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          backgroundColor: 'primary.dark',
-                          transform: 'translateY(-1px)',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                        }
-                      }}
-                    >
-                      Edit
-                    </Box>
-                  </Box>
+
                 </AccordionDetails>
               </Accordion>
             ))
           )}
         </Box>
+
+
+        {/* Pagination Controls */}
         <Box
           sx={{
             display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
             justifyContent: 'space-between',
-            alignItems: 'center',
-            p: 2,
-            borderTop: '1px solid',
+            alignItems: { xs: 'flex-start', md: 'center' },
+            p: 0.75,
+            gap: 0.75,
+            borderRadius: 1,
             borderColor: 'divider',
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fafafa',
+            backgroundColor: theme.palette.background.paper,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                backgroundColor: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff'
-              }}
-            >
-              <Typography variant="caption" fontWeight={600}>
-                {filteredAlerts.length}
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              {filteredAlerts.length === 1 ? 'alert found' : 'alerts found'}
-            </Typography>
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            Last updated: {new Date().toLocaleDateString()}
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', minHeight: 32 }}
+          >
+            {pagination.total === 0 ? '0 of 0' : `${pagination.from}–${pagination.to} of ${pagination.total}`}
           </Typography>
-        </Box>
-      </Paper>
-  );
-}
+          <Box width="100%" display="flex" justifyContent={{ xs: 'center', md: 'flex-end' }}>
+            <IconButton
+              onClick={() => {
+                const newPage = currentPage - 1;
+                setCurrentPage(newPage);
+                fetchAlerts(newPage, search, filterValues);
+              }}
+              disabled={currentPage === 1}
+              sx={{
+                border: '1.5px solid',
+                borderColor: currentPage === 1 ? 'divider' : 'primary.main',
+                borderRadius: 2,
+                mx: 0.5,
+                bgcolor: 'background.paper',
+                color: currentPage === 1 ? 'text.disabled' : 'primary.main',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: 'primary.main',
+                  color: '#fff',
+                  borderColor: 'primary.main',
+                  '& .MuiSvgIcon-root': {
+                    color: '#fff'
+                  }
+                }
+              }}
+              size="small"
+            >
+              <ChevronLeftIcon sx={{ color: currentPage === 1 ? 'text.disabled' : 'primary.main' }} />
+            </IconButton>
+            <IconButton
+              onClick={() => {
+                const newPage = currentPage + 1;
+                setCurrentPage(newPage);
+                fetchAlerts(newPage, search, filterValues);
+              }}
+              disabled={currentPage >= totalPages}
+              sx={{
+                border: '1.5px solid',
+                borderColor: currentPage >= totalPages ? 'divider' : 'primary.main',
+                borderRadius: 2,
+                mx: 0.5,
+                bgcolor: 'background.paper',
+                color: currentPage >= totalPages ? 'text.disabled' : 'primary.main',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: 'primary.main',
+                  color: '#fff',
+                  borderColor: 'primary.main',
+                  '& .MuiSvgIcon-root': {
+                    color: '#fff'
+                  }
+                }
+              }}
+              size="small"
+            >
+              <ChevronRightIcon sx={{ color: currentPage >= totalPages ? 'text.disabled' : 'primary.main' }} />
+            </IconButton>
+          </Box>
+                </Box>
+        </Paper>
+      </Box>
+    );
+  }
 
 export default Alerts; 

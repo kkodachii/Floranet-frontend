@@ -5,7 +5,7 @@ import MainLayout from './MainLayout'
 import CommunityHub from './pages/CommunityHub'
 import Settings from './pages/Settings'
 import Alerts from './pages/sections/Alert/Alerts'
-import EditAlerts from './pages/sections/Alert/EditAlerts'
+
 import CCTV from './pages/sections/Alert/CCTV'
 import WasteCollection from './pages/sections/Alert/WasteCollection'
 import PersonalPayment from './pages/sections/Billing/PersonalPayment'
@@ -74,7 +74,7 @@ function AppRoutes() {
                 <Route path="/user-management/add-vendors" element={<AddVendors />} />
                 <Route path="/user-management/edit-vendor/:id" element={<EditVendors />} />
                 <Route path="/alerts-security/alerts" element={<Alerts />} />
-                <Route path="/alerts-security/edit-alert/:id" element={<EditAlerts />} />
+
                 <Route path="/alerts-security/cctv" element={<CCTV />} />
                 <Route path="/alerts-security/waste-collection" element={<WasteCollection />} />
                 <Route path="/billing-payment/personal-payment" element={<PersonalPayment />} />
