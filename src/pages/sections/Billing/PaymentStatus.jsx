@@ -13,7 +13,9 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -21,221 +23,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTheme } from '@mui/material/styles';
 import FloraTable from '../../../components/FloraTable';
-
-// Mock API fetch for residents with payment data
-const fetchResidentsWithPayments = () =>
-  Promise.resolve([
-    {
-      id: 'RES001',
-      street: 'Camia',
-      blockLot: 'B3A - L23',
-      homeownerName: 'Juan Dela Cruz',
-      residentName: 'Carlos Dela Cruz',
-      residentId: 'MHH0001',
-      contactNumber: '09171234567',
-      email: 'juan.cruz@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-02-15',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES002',
-      street: 'Bouganvilla',
-      blockLot: 'B1B - L17',
-      homeownerName: 'Maria Santos',
-      residentName: 'Anna Santos',
-      residentId: 'MHH0002',
-      contactNumber: '09281234567',
-      email: 'maria.santos@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-01-20',
-      paymentStatus: 'Overdue',
-      outstandingBalance: 5000,
-    },
-    {
-      id: 'RES003',
-      street: 'Dahlia',
-      blockLot: 'B4C - L09',
-      homeownerName: 'Jose Rizal',
-      residentName: 'Emilio Rizal',
-      residentId: 'MHH0003',
-      contactNumber: '+639171234568',
-      email: 'jose.rizal@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-03-01',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES004',
-      street: 'Champaca',
-      blockLot: 'B2A - L12',
-      homeownerName: 'Ana Mendoza',
-      residentName: 'Patricia Mendoza',
-      residentId: 'MHH0004',
-      contactNumber: '09351234567',
-      email: 'ana.mendoza@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-02-28',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES005',
-      street: 'Sampaguita',
-      blockLot: 'B5D - L02',
-      homeownerName: 'Lito Garcia',
-      residentName: 'Michael Garcia',
-      residentId: 'MHH0005',
-      contactNumber: '+639291234567',
-      email: 'lito.garcia@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-01-15',
-      paymentStatus: 'Overdue',
-      outstandingBalance: 7500,
-    },
-    {
-      id: 'RES006',
-      street: 'Adelfa',
-      blockLot: 'B4C - L08',
-      homeownerName: 'Elena Reyes',
-      residentName: 'Jessica Reyes',
-      residentId: 'MHH0006',
-      contactNumber: '09181234567',
-      email: 'elena.reyes@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-03-10',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES007',
-      street: 'Dahlia',
-      blockLot: 'B3B - L33',
-      homeownerName: 'Mario Aquino',
-      residentName: 'Leo Aquino',
-      residentId: 'MHH0007',
-      contactNumber: '09081234567',
-      email: 'mario.aquino@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-02-25',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES008',
-      street: 'Gumamela',
-      blockLot: 'B2D - L16',
-      homeownerName: 'Cristina Lopez',
-      residentName: 'Daniel Lopez',
-      residentId: 'MHH0008',
-      contactNumber: '+639061234567',
-      email: 'cristina.lopez@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-01-30',
-      paymentStatus: 'Overdue',
-      outstandingBalance: 2500,
-    },
-    {
-      id: 'RES009',
-      street: 'Santan',
-      blockLot: 'B4C - L01',
-      homeownerName: 'Andres Bonifacio',
-      residentName: 'Teresa Bonifacio',
-      residentId: 'MHH0009',
-      contactNumber: '09191234567',
-      email: 'andres.bonifacio@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-03-05',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES010',
-      street: 'Jasmine',
-      blockLot: 'B5B - L05',
-      homeownerName: 'Jenny Lim',
-      residentName: 'Allan Lim',
-      residentId: 'MHH0010',
-      contactNumber: '09209234567',
-      email: 'jenny.lim@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-02-20',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES011',
-      street: 'Ilang-ilang',
-      blockLot: 'B1A - L11',
-      homeownerName: 'Ramon Torres',
-      residentName: 'Edwin Torres',
-      residentId: 'MHH0011',
-      contactNumber: '09300234567',
-      email: 'ramon.torres@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-01-25',
-      paymentStatus: 'Overdue',
-      outstandingBalance: 5000,
-    },
-    {
-      id: 'RES012',
-      street: 'Rosal',
-      blockLot: 'B2C - L19',
-      homeownerName: 'Grace David',
-      residentName: 'Melanie David',
-      residentId: 'MHH0012',
-      contactNumber: '+639331234567',
-      email: 'grace.david@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-03-08',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES013',
-      street: 'Kalachuchi',
-      blockLot: 'B3B - L29',
-      homeownerName: 'Fernando Cruz',
-      residentName: 'Robyn Cruz',
-      residentId: 'MHH0013',
-      contactNumber: '09101122334',
-      email: 'fernando.cruz@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-02-18',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-    {
-      id: 'RES014',
-      street: 'Camia',
-      blockLot: 'B4B - L13',
-      homeownerName: 'Isabel Navarro',
-      residentName: 'Francis Navarro',
-      residentId: 'MHH0014',
-      contactNumber: '09221122334',
-      email: 'isabel.navarro@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-01-22',
-      paymentStatus: 'Overdue',
-      outstandingBalance: 2500,
-    },
-    {
-      id: 'RES015',
-      street: 'Bouganvilla',
-      blockLot: 'B5C - L07',
-      homeownerName: 'Roberto Ramos',
-      residentName: 'Vincent Ramos',
-      residentId: 'MHH0015',
-      contactNumber: '09351122334',
-      email: 'roberto.ramos@email.com',
-      monthlyDue: 2500,
-      lastPayment: '2024-03-12',
-      paymentStatus: 'Paid',
-      outstandingBalance: 0,
-    },
-  ]);
+import apiService from '../../../services/api';
 
 function PaymentStatus() {
   const [residents, setResidents] = useState([]);
@@ -243,34 +31,80 @@ function PaymentStatus() {
   const [selectedStreet, setSelectedStreet] = useState('all');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [totalResidents, setTotalResidents] = useState(0);
   const rowsPerPage = 10;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchResidentsWithPayments().then((data) => {
-      setResidents(data);
-      setLoading(false);
-    });
-  }, []);
+    const loadResidents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Load residents with pagination
+        const residentsData = await apiService.getResidents(page, search, { per_page: rowsPerPage });
+        
+        // Transform the data to include payment status information
+        const transformedResidents = residentsData.data.map(resident => {
+          // Calculate payment status based on monthly dues
+          const currentYear = new Date().getFullYear();
+          const currentMonth = new Date().getMonth() + 1;
+          
+          // For now, we'll set a default status - in a real app you'd fetch monthly dues
+          let paymentStatus = 'Paid';
+          let outstandingBalance = 0;
+          let lastPayment = null;
+          
+          // You can enhance this by fetching monthly dues for each resident
+          // const monthlyDues = await apiService.getResidentMonthlyDueHistory(resident.id, currentYear);
+          
+          return {
+            id: resident.id,
+            street: resident.house?.street || 'N/A',
+            blockLot: resident.house?.house_number || 'N/A',
+            homeownerName: resident.house_owner_name || resident.name,
+            residentName: resident.name,
+            residentId: resident.resident_id || resident.id,
+            contactNumber: resident.contact_no || 'N/A',
+            email: resident.email || 'N/A',
+            monthlyDue: 200, // Default amount from your backend
+            lastPayment: lastPayment || 'N/A',
+            paymentStatus: paymentStatus,
+            outstandingBalance: outstandingBalance,
+          };
+        });
+
+        setResidents(transformedResidents);
+        setTotalResidents(residentsData.pagination?.total || transformedResidents.length);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading residents:', error);
+        setError('Failed to load residents. Please try again.');
+        setLoading(false);
+      }
+    };
+
+    loadResidents();
+  }, [page, search]);
 
   const handleSearch = (e) => setSearch(e.target.value);
   const handleStreetChange = (e) => setSelectedStreet(e.target.value);
 
+  // Reset page when search or street filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedStreet]);
+
   // Get unique streets for dropdown
   const uniqueStreets = ['all', ...Array.from(new Set(residents.map(r => r.street)))];
 
-  // Filter residents based on search and street selection
+  // Filter residents based on street selection (search is handled by server)
   const filteredResidents = residents.filter((resident) => {
-    const matchesSearch = Object.values(resident)
-      .join(' ')
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    
     const matchesStreet = selectedStreet === 'all' || resident.street === selectedStreet;
-    
-    return matchesSearch && matchesStreet;
+    return matchesStreet;
   });
 
   // Actions for each row
@@ -298,12 +132,39 @@ function PaymentStatus() {
   ];
 
   // Pagination logic
-  const total = filteredResidents.length;
+  const total = totalResidents;
   const from = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
   const to = Math.min(page * rowsPerPage, total);
+  const totalPages = Math.ceil(total / rowsPerPage);
 
   // Table max height
   const tableMaxHeight = isMobile ? '40vh' : '60vh';
+
+  if (loading) {
+    return (
+      <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
+        <Box maxWidth="xl" mx="auto">
+          <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 0.5, sm: 1 }, boxShadow: 3, minHeight: 300 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+              <CircularProgress color="primary" />
+            </Box>
+          </Paper>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
+        <Box maxWidth="xl" mx="auto">
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
@@ -383,11 +244,12 @@ function PaymentStatus() {
             columns={columns}
             rows={filteredResidents}
             actions={actions}
-            page={page}
+            page={1}
             rowsPerPage={rowsPerPage}
             maxHeight={tableMaxHeight}
             emptyMessage="No residents found."
             loading={loading}
+            disableInternalPagination={true}
           />
           <Box
             sx={{
@@ -409,14 +271,14 @@ function PaymentStatus() {
             <Box width="100%" display="flex" justifyContent={{ xs: 'center', md: 'flex-end' }}>
               <IconButton
                 onClick={() => setPage(page - 1)}
-                disabled={page === 1}
+                disabled={page <= 1}
                 sx={{
                   border: '1.5px solid',
-                  borderColor: page === 1 ? 'divider' : 'primary.main',
+                  borderColor: page <= 1 ? 'divider' : 'primary.main',
                   borderRadius: 2,
                   mx: 0.5,
                   bgcolor: 'background.paper',
-                  color: page === 1 ? 'text.disabled' : 'primary.main',
+                  color: page <= 1 ? 'text.disabled' : 'primary.main',
                   transition: 'all 0.2s',
                   '&:hover': {
                     bgcolor: 'primary.main',
@@ -429,18 +291,18 @@ function PaymentStatus() {
                 }}
                 size="small"
               >
-                <ChevronLeftIcon sx={{ color: page === 1 ? 'text.disabled' : 'primary.main' }} />
+                <ChevronLeftIcon sx={{ color: page <= 1 ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
               <IconButton
                 onClick={() => setPage(page + 1)}
-                disabled={page * rowsPerPage >= total}
+                disabled={page >= totalPages}
                 sx={{
                   border: '1.5px solid',
-                  borderColor: page * rowsPerPage >= total ? 'divider' : 'primary.main',
+                  borderColor: page >= totalPages ? 'divider' : 'primary.main',
                   borderRadius: 2,
                   mx: 0.5,
                   bgcolor: 'background.paper',
-                  color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main',
+                  color: page >= totalPages ? 'text.disabled' : 'primary.main',
                   transition: 'all 0.2s',
                   '&:hover': {
                     bgcolor: 'primary.main',
@@ -453,7 +315,7 @@ function PaymentStatus() {
                 }}
                 size="small"
               >
-                <ChevronRightIcon sx={{ color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main' }} />
+                <ChevronRightIcon sx={{ color: page >= totalPages ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
             </Box>
           </Box>

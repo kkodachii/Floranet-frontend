@@ -18,79 +18,35 @@ import {
   useTheme,
   Alert,
   Snackbar,
-  Autocomplete
+  Autocomplete,
+  CircularProgress,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate } from 'react-router-dom';
 import FloraTable from '../../../components/FloraTable';
+import apiService from '../../../services/api';
 
 const steps = [
   'Resident Information',
-  'Payment & Contact Details',
+  'Payment Details',
   'Review & Submit'
 ];
 
 const paymentMethods = [
   'Cash',
+  'Bank Transfer',
   'Credit Card',
   'Debit Card',
-  'Bank Transfer',
-  'GCash',
-  'PayMaya',
-  'Other'
+  'Check',
+  'Online Payment',
 ];
 
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
-
-// Mock API fetch for existing residents
-const fetchExistingResidents = () =>
-  Promise.resolve([
-    {
-      residentId: 'MHH0001',
-      residentName: 'Carlos Dela Cruz',
-      homeownerName: 'Juan Dela Cruz',
-      houseNumber: 'B3A - L23',
-      street: 'Camia',
-      contactNumber: '09171234567',
-    },
-    {
-      residentId: 'MHH0002',
-      residentName: 'Anna Santos',
-      homeownerName: 'Maria Santos',
-      houseNumber: 'B1B - L17',
-      street: 'Bouganvilla',
-      contactNumber: '09281234567',
-    },
-    {
-      residentId: 'MHH0003',
-      residentName: 'Emilio Rizal',
-      homeownerName: 'Jose Rizal',
-      houseNumber: 'B4C - L09',
-      street: 'Dahlia',
-      contactNumber: '+639171234568',
-    },
-    {
-      residentId: 'MHH0004',
-      residentName: 'Patricia Mendoza',
-      homeownerName: 'Ana Mendoza',
-      houseNumber: 'B2A - L12',
-      street: 'Champaca',
-      contactNumber: '09351234567',
-    },
-    {
-      residentId: 'MHH0005',
-      residentName: 'Michael Garcia',
-      homeownerName: 'Lito Garcia',
-      houseNumber: 'B5D - L02',
-      street: 'Sampaguita',
-      contactNumber: '+639291234567',
-    },
-  ]);
 
 function PersonalPayment() {
   const [activeStep, setActiveStep] = useState(0);
@@ -108,6 +64,8 @@ function PersonalPayment() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(true);
   const [existingResidents, setExistingResidents] = useState([]);
+  const [availableMonthlyDues, setAvailableMonthlyDues] = useState([]);
+  const [selectedMonthlyDue, setSelectedMonthlyDue] = useState(null);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -116,7 +74,13 @@ function PersonalPayment() {
   useEffect(() => {
     const loadExistingResidents = async () => {
       try {
-        const residents = await fetchExistingResidents();
+        setLoading(true);
+        
+        // Use a large page size to get all residents in one call
+        // This is more efficient than paginating through multiple pages
+        const response = await apiService.getResidents(1, '', { per_page: 1000 });
+        const residents = response.data || [];
+        
         setExistingResidents(residents);
         setLoading(false);
       } catch (error) {
@@ -127,6 +91,26 @@ function PersonalPayment() {
     
     loadExistingResidents();
   }, []);
+
+  useEffect(() => {
+    const loadAvailableMonthlyDues = async () => {
+      if (formData.residentId) {
+        try {
+          const monthlyDues = await apiService.getAvailableMonthlyDuesForPayment(
+            formData.residentId,
+            new Date().getFullYear()
+          );
+          setAvailableMonthlyDues(monthlyDues.data || []);
+        } catch (error) {
+          console.error('Error loading available monthly dues:', error);
+        }
+      } else {
+        setAvailableMonthlyDues([]);
+      }
+    };
+
+    loadAvailableMonthlyDues();
+  }, [formData.residentId]);
 
   const handleNext = () => {
     if (validateStep()) {
@@ -147,16 +131,62 @@ function PersonalPayment() {
   };
 
   const handleResidentSelect = (residentId) => {
-    const selectedResident = existingResidents.find(resident => resident.residentId === residentId);
+    const selectedResident = existingResidents.find(resident => resident.resident_id === residentId);
     if (selectedResident) {
       setFormData(prev => ({
         ...prev,
-        residentId: selectedResident.residentId,
-        homeownerName: selectedResident.homeownerName,
-        houseNumber: selectedResident.houseNumber,
-        contactNumber: selectedResident.contactNumber,
+        residentId: selectedResident.resident_id,
+        homeownerName: selectedResident.house_owner_name || selectedResident.name,
+        houseNumber: selectedResident.house?.house_number || 'N/A',
+        contactNumber: selectedResident.contact_no || '',
         email: selectedResident.email || ''
       }));
+      // Clear month and amount when resident changes
+      setFormData(prev => ({
+        ...prev,
+        paymentMonth: '',
+        amount: ''
+      }));
+      setSelectedMonthlyDue(null);
+    }
+  };
+
+  const handleMonthlyDueSelect = (monthlyDue) => {
+    if (monthlyDue) {
+      setSelectedMonthlyDue(monthlyDue);
+      setFormData(prev => ({
+        ...prev,
+        amount: monthlyDue.amount.toString(),
+        paymentMonth: months[monthlyDue.month - 1]
+      }));
+    }
+  };
+
+  const handlePaymentMonthChange = (monthName) => {
+    // Find the monthly due for the selected month
+    const selectedDue = availableMonthlyDues.find(due => 
+      months[due.month - 1] === monthName
+    );
+    
+    if (selectedDue) {
+      setFormData(prev => ({
+        ...prev,
+        paymentMonth: monthName,
+        amount: selectedDue.amount.toString()
+      }));
+      setSelectedMonthlyDue(selectedDue);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        paymentMonth: monthName,
+        amount: ''
+      }));
+      setSelectedMonthlyDue(null);
+    }
+    
+    // Clear error when user selects
+    if (errors.paymentMonth) {
+      setErrors(prev => ({ ...prev, paymentMonth: '' }));
     }
   };
 
@@ -165,31 +195,15 @@ function PersonalPayment() {
 
     switch (activeStep) {
       case 0: // Resident Information
-        if (!formData.houseNumber.trim()) {
-          newErrors.houseNumber = 'House number is required';
-        }
-        if (!formData.homeownerName.trim()) {
-          newErrors.homeownerName = 'Homeowner name is required';
-        }
+        // No validation needed for read-only fields that are auto-filled
         break;
 
       case 1: // Payment & Contact Details
         if (!formData.paymentMethod) {
           newErrors.paymentMethod = 'Payment method is required';
         }
-        if (!formData.amount.trim()) {
-          newErrors.amount = 'Amount is required';
-        } else if (isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
-          newErrors.amount = 'Please enter a valid amount';
-        }
         if (!formData.paymentMonth) {
           newErrors.paymentMonth = 'Payment month is required';
-        }
-        if (formData.contactNumber && !/^(\+63|0)?9\d{9}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
-          newErrors.contactNumber = 'Please enter a valid Philippine mobile number';
-        }
-        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-          newErrors.email = 'Please enter a valid email address';
         }
         break;
 
@@ -203,8 +217,28 @@ function PersonalPayment() {
 
   const handleSubmit = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoading(true);
+
+      // Find the selected monthly due
+      const selectedDue = availableMonthlyDues.find(due => 
+        due.month === months.indexOf(formData.paymentMonth) + 1
+      );
+
+      if (!selectedDue) {
+        throw new Error('Selected month not found in available monthly dues');
+      }
+
+      // Create payment data
+      const paymentData = {
+        resident_id: formData.residentId,
+        method_of_payment: formData.paymentMethod,
+        amount: parseFloat(formData.amount),
+        paid_at: new Date().toISOString(),
+        monthly_due_id: selectedDue.id,
+      };
+
+      // Submit payment to API
+      await apiService.createPayment(paymentData);
       
       setSnackbar({
         open: true,
@@ -224,21 +258,28 @@ function PersonalPayment() {
           paymentMonth: '',
           residentId: ''
         });
+        setSelectedMonthlyDue(null);
         setActiveStep(0);
         setErrors({});
       }, 1500);
     } catch (error) {
+      console.error('Payment submission error:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to submit payment. Please try again.',
+        message: error.message || 'Failed to submit payment. Please try again.',
         severity: 'error'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
+
+  // Get available months for dropdown (only months that have unpaid dues)
+  const availableMonths = availableMonthlyDues.map(due => months[due.month - 1]);
 
   const renderStepContent = (step) => {
     switch (step) {
@@ -248,11 +289,11 @@ function PersonalPayment() {
             <Grid item xs={12}>
               <Autocomplete
                 options={existingResidents}
-                getOptionLabel={(option) => `${option.residentId} - ${option.residentName} (${option.houseNumber})`}
-                value={existingResidents.find(resident => resident.residentId === formData.residentId) || null}
+                getOptionLabel={(option) => `${option.resident_id} - ${option.name} (${option.house?.house_number || 'N/A'})`}
+                value={existingResidents.find(resident => resident.resident_id === formData.residentId) || null}
                 onChange={(event, newValue) => {
                   if (newValue) {
-                    handleResidentSelect(newValue.residentId);
+                    handleResidentSelect(newValue.resident_id);
                   } else {
                     // Clear form data when no resident is selected
                     setFormData(prev => ({
@@ -268,25 +309,26 @@ function PersonalPayment() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Search and Select Resident (Optional)"
+                    label="Search and Select Resident (Required)"
                     placeholder="Type to search residents..."
                     helperText="Search by resident ID, name, or house number to auto-fill the form"
                     error={!!errors.residentId}
-                  />
+                    required
+              />
                 )}
                 renderOption={(props, option) => (
                   <Box component="li" {...props}>
                     <Box>
                       <Typography variant="body1" fontWeight="bold">
-                        {option.residentId} - {option.residentName}
+                        {option.resident_id} - {option.name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {option.houseNumber} • {option.homeownerName}
+                        {option.house?.house_number || 'N/A'} • {option.house_owner_name || option.name}
                       </Typography>
                     </Box>
                   </Box>
                 )}
-                isOptionEqualToValue={(option, value) => option.residentId === value.residentId}
+                isOptionEqualToValue={(option, value) => option.resident_id === value.resident_id}
                 sx={{ mb: 3 }}
               />
             </Grid>
@@ -295,10 +337,8 @@ function PersonalPayment() {
                 fullWidth
                 label="House Number"
                 value={formData.houseNumber}
-                onChange={(e) => handleInputChange('houseNumber', e.target.value)}
-                error={!!errors.houseNumber}
-                helperText={errors.houseNumber || 'Format: B#A - L## (e.g., B3A - L23)'}
-                required
+                disabled
+                helperText="Auto-filled from resident selection"
                 placeholder="B3A - L23"
                 inputProps={{ maxLength: 20 }}
                 sx={{ minWidth: 300 }}
@@ -310,10 +350,8 @@ function PersonalPayment() {
                 fullWidth
                 label="Homeowner Name"
                 value={formData.homeownerName}
-                onChange={(e) => handleInputChange('homeownerName', e.target.value)}
-                error={!!errors.homeownerName}
-                helperText={errors.homeownerName}
-                required
+                disabled
+                helperText="Auto-filled from resident selection"
                 placeholder="Enter homeowner name"
                 inputProps={{ maxLength: 50 }}
                 sx={{ minWidth: 300 }}
@@ -361,10 +399,8 @@ function PersonalPayment() {
                     fullWidth
                     label="Amount"
                     value={formData.amount}
-                    onChange={(e) => handleInputChange('amount', e.target.value)}
-                    error={!!errors.amount}
-                    helperText={errors.amount || 'Enter payment amount'}
-                    required
+                    disabled
+                    helperText="Auto-filled from selected monthly due"
                     placeholder="0.00"
                     type="number"
                     inputProps={{ 
@@ -381,20 +417,25 @@ function PersonalPayment() {
                     <Select
                       value={formData.paymentMonth}
                       label="Payment Month"
-                      onChange={(e) => handleInputChange('paymentMonth', e.target.value)}
+                      onChange={(e) => handlePaymentMonthChange(e.target.value)}
                       displayEmpty
                       renderValue={selected => selected ? selected : <em style={{ color: '#888' }}>Select payment month</em>}
                     >
                       <MenuItem value="" disabled>
                         <em>Select payment month</em>
                       </MenuItem>
-                      {months.map((month) => (
+                      {availableMonths.map((month) => (
                         <MenuItem key={month} value={month}>
                           {month}
                         </MenuItem>
                       ))}
                     </Select>
                     {errors.paymentMonth && <FormHelperText>{errors.paymentMonth}</FormHelperText>}
+                    {availableMonths.length === 0 && (
+                      <FormHelperText>
+                        No available months for payment. Please select a resident with unpaid dues.
+                      </FormHelperText>
+                    )}
                   </FormControl>
                 </Grid>
               </Grid>
@@ -403,7 +444,7 @@ function PersonalPayment() {
             {/* Contact Information Section */}
             <Box>
               <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
-                Contact Information (Optional)
+                Resident Contact Information
               </Typography>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
@@ -411,9 +452,8 @@ function PersonalPayment() {
                     fullWidth
                     label="Contact Number"
                     value={formData.contactNumber}
-                    onChange={(e) => handleInputChange('contactNumber', e.target.value)}
-                    error={!!errors.contactNumber}
-                    helperText={errors.contactNumber || 'Optional: Philippine mobile number'}
+                    disabled
+                    helperText="Auto-filled from resident selection"
                     placeholder="09171234567"
                     inputProps={{ maxLength: 15 }}
                     sx={{ minWidth: 300 }}
@@ -425,9 +465,8 @@ function PersonalPayment() {
                     label="Email Address"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    error={!!errors.email}
-                    helperText={errors.email || 'Optional: Valid email address'}
+                    disabled
+                    helperText="Auto-filled from resident selection"
                     placeholder="user@email.com"
                     inputProps={{ maxLength: 50 }}
                     sx={{ minWidth: 300 }}
@@ -438,47 +477,45 @@ function PersonalPayment() {
           </Box>
         );
 
-
-
-              case 2:
-          return (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Review Payment Information
-              </Typography>
-              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-                <FloraTable
-                  columns={[
-                    { id: 'houseNumber', label: 'House Number' },
-                    { id: 'homeownerName', label: 'Homeowner Name' },
-                    { id: 'paymentMethod', label: 'Payment Method' },
-                    { id: 'amount', label: 'Amount' },
-                    { id: 'paymentMonth', label: 'Payment Month' },
-                    { id: 'contactNumber', label: 'Contact Number' },
-                    { id: 'email', label: 'Email Address' },
-                  ]}
-                  rows={[
-                    {
-                      houseNumber: formData.houseNumber,
-                      homeownerName: formData.homeownerName,
-                      paymentMethod: formData.paymentMethod,
-                      amount: `₱${parseFloat(formData.amount || 0).toFixed(2)}`,
-                      paymentMonth: formData.paymentMonth,
-                      contactNumber: formData.contactNumber || 'Not provided',
-                      email: formData.email || 'Not provided',
-                    },
-                  ]}
-                  actions={[]}
-                  page={1}
-                  rowsPerPage={1}
-                  zebra={false}
-                  maxHeight={'none'}
-                  emptyMessage="No data to review."
-                  loading={false}
-                />
-              </Paper>
-            </Box>
-          );
+      case 2:
+        return (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Review Payment Information
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+              <FloraTable
+                columns={[
+                  { id: 'houseNumber', label: 'House Number' },
+                  { id: 'homeownerName', label: 'Homeowner Name' },
+                  { id: 'paymentMethod', label: 'Payment Method' },
+                  { id: 'amount', label: 'Amount' },
+                  { id: 'paymentMonth', label: 'Payment Month' },
+                  { id: 'contactNumber', label: 'Contact Number' },
+                  { id: 'email', label: 'Email Address' },
+                ]}
+                rows={[
+                  {
+                    houseNumber: formData.houseNumber,
+                    homeownerName: formData.homeownerName,
+                    paymentMethod: formData.paymentMethod,
+                    amount: `₱${parseFloat(formData.amount || 0).toFixed(2)}`,
+                    paymentMonth: formData.paymentMonth,
+                    contactNumber: formData.contactNumber || 'Not provided',
+                    email: formData.email || 'Not provided',
+                  },
+                ]}
+                actions={[]}
+                page={1}
+                rowsPerPage={1}
+                zebra={false}
+                maxHeight={'none'}
+                emptyMessage="No data to review."
+                loading={false}
+              />
+            </Paper>
+          </Box>
+        );
 
       default:
         return null;
@@ -491,7 +528,7 @@ function PersonalPayment() {
         <Box maxWidth="md" mx="auto">
           <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-              <Typography>Loading...</Typography>
+              <CircularProgress color="primary" />
             </Box>
           </Paper>
         </Box>
@@ -502,7 +539,7 @@ function PersonalPayment() {
   return (
     <Box sx={{ p: { xs: 0.5, sm: 1 }, width: '100%', height: '100%' }}>
       <Box maxWidth="100%" mx="auto">
-        <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3, width: '100%', maxHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Paper elevation={3} sx={{ borderRadius: 1, p: { xs: 1, sm: 2 }, boxShadow: 3, width: '100%', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" gutterBottom>
               Walk-in Payment
@@ -552,8 +589,9 @@ function PersonalPayment() {
                   onClick={handleSubmit}
                   endIcon={<CheckIcon />}
                   sx={{ minWidth: 120 }}
+                  disabled={loading || availableMonths.length === 0}
                 >
-                  Submit Payment
+                  {loading ? <CircularProgress size={20} /> : 'Submit Payment'}
                 </Button>
               ) : (
                 <Button
@@ -561,6 +599,7 @@ function PersonalPayment() {
                   onClick={handleNext}
                   endIcon={<ArrowForwardIcon />}
                   sx={{ minWidth: 100 }}
+                  disabled={!formData.residentId}
                 >
                   Next
                 </Button>

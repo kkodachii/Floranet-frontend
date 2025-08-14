@@ -357,6 +357,103 @@ class ApiService {
     
     return this.request(`/user/alerts?${params.toString()}`);
   }
+
+  // Payment management methods
+  async getPayments(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/payments?${params.toString()}`);
+  }
+
+  async getPaymentById(id) {
+    return this.request(`/admin/payments/${id}`);
+  }
+
+  async createPayment(paymentData) {
+    return this.request('/admin/payments', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  async updatePayment(id, paymentData) {
+    return this.request(`/admin/payments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  async deletePayment(id) {
+    return this.request(`/admin/payments/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Monthly due management methods
+  async getMonthlyDues(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/monthly-dues?${params.toString()}`);
+  }
+
+  async getMonthlyDueById(id) {
+    return this.request(`/admin/monthly-dues/${id}`);
+  }
+
+  async createMonthlyDue(monthlyDueData) {
+    return this.request('/admin/monthly-dues', {
+      method: 'POST',
+      body: JSON.stringify(monthlyDueData),
+    });
+  }
+
+  async updateMonthlyDue(id, monthlyDueData) {
+    return this.request(`/admin/monthly-dues/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(monthlyDueData),
+    });
+  }
+
+  async deleteMonthlyDue(id) {
+    return this.request(`/admin/monthly-dues/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Resident monthly due history
+  async getResidentMonthlyDueHistory(residentId, year = new Date().getFullYear(), defaultAmount = 200) {
+    const params = new URLSearchParams();
+    params.append('year', year);
+    params.append('default_amount', defaultAmount);
+    
+    return this.request(`/admin/residents/${residentId}/monthly-dues/history?${params.toString()}`);
+  }
+
+  // Available monthly dues for payment
+  async getAvailableMonthlyDuesForPayment(residentId, year = new Date().getFullYear()) {
+    const params = new URLSearchParams();
+    params.append('year', year);
+    
+    return this.request(`/admin/residents/${residentId}/monthly-dues/available?${params.toString()}`);
+  }
   
   // Other API methods can be added here...
 }

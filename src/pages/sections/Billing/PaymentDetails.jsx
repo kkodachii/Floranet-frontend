@@ -14,186 +14,111 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import FloraTable from '../../../components/FloraTable';
 import StatusBadge from '../../../components/StatusBadge';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
-// Mock API fetch for payment details
-const fetchPaymentDetails = (residentId) =>
-  Promise.resolve({
-    residentId: 'MHH0004',
-    blockLot: 'B3A - L23',
-    residentName: 'MENDOZA, RAVEN',
-    contactNumber: '09617060676',
-    email: 'MENDOZA@GMAIL.COM',
-    profileImage: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg', 
-    paymentHistory: [
-      {
-        id: 'PAY001',
-        dateDue: 'JANUARY',
-        paymentStatus: 'PAID',
-        paymentDate: '1/27/2025',
-        amount: '300.00',
-        reference: '0000001',
-        method: 'ONLINE',
-        hasReceipt: true,
-      },
-      {
-        id: 'PAY002',
-        dateDue: 'FEBRUARY',
-        paymentStatus: 'PAID',
-        paymentDate: '2/27/2025',
-        amount: '300.00',
-        reference: '0000002',
-        method: 'PERSONAL',
-        hasReceipt: true,
-      },
-      {
-        id: 'PAY003',
-        dateDue: 'MARCH',
-        paymentStatus: 'PAID',
-        paymentDate: '2/27/2025',
-        amount: '300.00',
-        reference: '0000003',
-        method: 'ONLINE',
-        hasReceipt: true,
-      },
-      {
-        id: 'PAY004',
-        dateDue: 'APRIL',
-        paymentStatus: 'OVERDUE',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY005',
-        dateDue: 'MAY',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY006',
-        dateDue: 'JUNE',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY007',
-        dateDue: 'JULY',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY008',
-        dateDue: 'AUGUST',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY009',
-        dateDue: 'SEPTEMBER',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY010',
-        dateDue: 'OCTOBER',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY011',
-        dateDue: 'NOVEMBER',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-      {
-        id: 'PAY012',
-        dateDue: 'DECEMBER',
-        paymentStatus: 'UNPAID',
-        paymentDate: '—',
-        amount: '300.00',
-        reference: '—',
-        method: '—',
-        hasReceipt: false,
-      },
-    ],
-  });
+import apiService from '../../../services/api';
 
 function PaymentDetails() {
   const { residentId } = useParams();
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const [monthlyDues, setMonthlyDues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
-  const [selectedYear, setSelectedYear] = useState('all');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // Extract unique years from paymentHistory
+  // Get available years from monthly dues data
   const years = React.useMemo(() => {
-    if (!paymentDetails) return [];
+    if (!monthlyDues || monthlyDues.length === 0) return [];
     const yearSet = new Set();
-    paymentDetails.paymentHistory.forEach((p) => {
-      if (p.paymentDate && p.paymentDate !== '—') {
-        const match = p.paymentDate.match(/\d{4}$/);
-        if (match) yearSet.add(match[0]);
-      }
+    monthlyDues.forEach((due) => {
+      yearSet.add(due.year);
     });
     return Array.from(yearSet).sort((a, b) => b - a); // Descending order
-  }, [paymentDetails]);
+  }, [monthlyDues]);
 
-  // Filter paymentHistory by selected year
+  // Filter payment history by selected year
   const filteredPaymentHistory = React.useMemo(() => {
     if (!paymentDetails) return [];
     if (selectedYear === 'all') return paymentDetails.paymentHistory;
     return paymentDetails.paymentHistory.filter((p) => {
-      if (p.paymentDate && p.paymentDate !== '—') {
-        const match = p.paymentDate.match(/\d{4}$/);
-        return match && match[0] === selectedYear;
-      }
-      return false;
+      // For now, show all since we're loading by year from API
+      return true;
     });
   }, [paymentDetails, selectedYear]);
 
   useEffect(() => {
-    fetchPaymentDetails(residentId).then((data) => {
-      setPaymentDetails(data);
-      setLoading(false);
-    });
-  }, [residentId]);
+    const loadPaymentDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Load resident information
+        const residentData = await apiService.getResidentById(residentId);
+        
+        // Load monthly due history for the resident
+        const monthlyDuesData = await apiService.getResidentMonthlyDueHistory(
+          residentId, 
+          selectedYear, 
+          200 // Default amount from your backend
+        );
+
+        // Transform the data to match the expected format
+        const transformedPaymentHistory = monthlyDuesData.data.map((due, index) => ({
+          id: due.id,
+          dateDue: due.month === 1 ? 'JANUARY' : 
+                   due.month === 2 ? 'FEBRUARY' : 
+                   due.month === 3 ? 'MARCH' : 
+                   due.month === 4 ? 'APRIL' : 
+                   due.month === 5 ? 'MAY' : 
+                   due.month === 6 ? 'JUNE' : 
+                   due.month === 7 ? 'JULY' : 
+                   due.month === 8 ? 'AUGUST' : 
+                   due.month === 9 ? 'SEPTEMBER' : 
+                   due.month === 10 ? 'OCTOBER' : 
+                   due.month === 11 ? 'NOVEMBER' : 'DECEMBER',
+          paymentStatus: due.status.toUpperCase(),
+          paymentDate: due.paid_at ? new Date(due.paid_at).toLocaleDateString('en-US', {
+            month: 'numeric',
+            day: 'numeric',
+            year: 'numeric'
+          }) : '—',
+          amount: `₱${parseFloat(due.amount).toFixed(2)}`,
+          reference: due.payments && due.payments.length > 0 ? due.payments[0].id : '—',
+          method: due.payments && due.payments.length > 0 ? due.payments[0].method_of_payment.toUpperCase() : '—',
+          hasReceipt: due.status === 'paid',
+        }));
+
+        setPaymentDetails({
+          residentId: residentData.data.resident_id || residentData.data.id,
+          blockLot: residentData.data.house?.house_number || 'N/A',
+          residentName: residentData.data.name || 'N/A',
+          contactNumber: residentData.data.contact_no || 'N/A',
+          email: residentData.data.email || 'N/A',
+          profileImage: residentData.data.profile_picture || 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg',
+          paymentHistory: transformedPaymentHistory,
+        });
+
+        setMonthlyDues(monthlyDuesData.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading payment details:', error);
+        setError('Failed to load payment details. Please try again.');
+        setLoading(false);
+      }
+    };
+
+    if (residentId) {
+      loadPaymentDetails();
+    }
+  }, [residentId, selectedYear]);
 
   const handlePrintReceipt = (payment) => {
     console.log('Print receipt for:', payment);
@@ -271,7 +196,28 @@ function PaymentDetails() {
   if (loading) {
     return (
       <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
-        <Typography>Loading payment details...</Typography>
+        <Box maxWidth="xl" mx="auto">
+          <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3, minHeight: 300 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+              <CircularProgress color="primary" />
+            </Box>
+          </Paper>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
+        <Box maxWidth="xl" mx="auto">
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+          <Button onClick={handleBack} startIcon={<ArrowBackIcon />}>
+            Go Back
+          </Button>
+        </Box>
       </Box>
     );
   }
@@ -279,7 +225,14 @@ function PaymentDetails() {
   if (!paymentDetails) {
     return (
       <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
-        <Typography>Payment details not found.</Typography>
+        <Box maxWidth="xl" mx="auto">
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Payment details not found.
+          </Alert>
+          <Button onClick={handleBack} startIcon={<ArrowBackIcon />}>
+            Go Back
+          </Button>
+        </Box>
       </Box>
     );
   }
@@ -390,7 +343,7 @@ function PaymentDetails() {
                 fontFamily: 'monospace',
               }}
             >
-              Payment History
+              Payment History - {selectedYear}
             </Typography>
             <FormControl size="small" sx={{ minWidth: 120 }}>
               <InputLabel id="year-select-label">Year</InputLabel>
@@ -401,6 +354,7 @@ function PaymentDetails() {
                 onChange={(e) => setSelectedYear(e.target.value)}
               >
                 <MenuItem value="all">All Years</MenuItem>
+                {/* The years are now dynamically generated based on monthlyDues */}
                 {years.map((year) => (
                   <MenuItem key={year} value={year}>{year}</MenuItem>
                 ))}
