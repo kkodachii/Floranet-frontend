@@ -316,7 +316,7 @@ function Alerts() {
             p: { xs: 0.75, sm: 1 },
             borderRadius: 1,
             borderColor: 'divider',
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#ffffff',
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Box
@@ -746,7 +746,7 @@ function Alerts() {
             gap: 0.75,
             borderRadius: 1,
             borderColor: 'divider',
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#ffffff',
+            backgroundColor: theme.palette.background.paper,
           }}
         >
           <Typography
