@@ -292,6 +292,71 @@ class ApiService {
       method: 'POST',
     });
   }
+
+  // Alert management methods
+  async getAlerts(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/alerts?${params.toString()}`);
+  }
+
+  async getAlertById(id) {
+    return this.request(`/admin/alerts/${id}`);
+  }
+
+  async createAlert(alertData) {
+    return this.request('/admin/alerts', {
+      method: 'POST',
+      body: JSON.stringify(alertData),
+    });
+  }
+
+  async updateAlert(id, alertData) {
+    return this.request(`/admin/alerts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(alertData),
+    });
+  }
+
+  async updateAlertStatus(id, status) {
+    return this.request(`/admin/alerts/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async deleteAlert(id) {
+    return this.request(`/admin/alerts/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getAlertStats() {
+    return this.request('/admin/alerts-stats');
+  }
+
+  async getUserAlerts(page = 1, filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/user/alerts?${params.toString()}`);
+  }
   
   // Other API methods can be added here...
 }

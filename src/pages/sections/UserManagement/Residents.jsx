@@ -114,8 +114,25 @@ function Residents() {
     try {
       await apiService.acceptResidentRequest(resident.originalData.id);
       setSnackbar({ open: true, message: 'Resident request accepted successfully', severity: 'success' });
-      // Refresh the data
-      fetchData(page, showRequests);
+      
+      // Remove the accepted request from the current requests list
+      setRequests(prevRequests => 
+        prevRequests.filter(req => req.id !== resident.originalData.id)
+      );
+      
+      // Update pagination if needed
+      if (pagination.total > 0) {
+        setPagination(prev => ({
+          ...prev,
+          total: prev.total - 1,
+          to: Math.max(prev.from, prev.to - 1)
+        }));
+      }
+      
+      // If we're on a page that might be empty now, go to previous page
+      if (requests.length === 1 && page > 1) {
+        setPage(page - 1);
+      }
     } catch (error) {
       console.error('Error accepting resident request:', error);
       setSnackbar({ open: true, message: error.message || 'Failed to accept resident request', severity: 'error' });
@@ -126,8 +143,25 @@ function Residents() {
     try {
       await apiService.deleteResidentRequest(resident.originalData.id);
       setSnackbar({ open: true, message: 'Resident request deleted successfully', severity: 'success' });
-      // Refresh the data
-      fetchData(page, showRequests);
+      
+      // Remove the deleted request from the current requests list
+      setRequests(prevRequests => 
+        prevRequests.filter(req => req.id !== resident.originalData.id)
+      );
+      
+      // Update pagination if needed
+      if (pagination.total > 0) {
+        setPagination(prev => ({
+          ...prev,
+          total: prev.total - 1,
+          to: Math.max(prev.from, prev.to - 1)
+        }));
+      }
+      
+      // If we're on a page that might be empty now, go to previous page
+      if (requests.length === 1 && page > 1) {
+        setPage(page - 1);
+      }
     } catch (error) {
       console.error('Error deleting resident request:', error);
       setSnackbar({ open: true, message: error.message || 'Failed to delete resident request', severity: 'error' });
