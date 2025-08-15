@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -18,6 +18,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -28,9 +29,11 @@ import apiService from '../../../services/api';
 function PaymentStatus() {
   const [residents, setResidents] = useState([]);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [selectedStreet, setSelectedStreet] = useState('all');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState(null);
   const [totalResidents, setTotalResidents] = useState(0);
   const rowsPerPage = 10;
@@ -41,14 +44,22 @@ function PaymentStatus() {
   useEffect(() => {
     const loadResidents = async () => {
       try {
-        setLoading(true);
+        if (page === 1) {
+          setSearchLoading(true);
+        } else {
+          setLoading(true);
+        }
         setError(null);
         
         // Load residents with pagination
         const residentsData = await apiService.getResidents(page, search, { per_page: rowsPerPage });
         
+        if (!residentsData.success) {
+          throw new Error('Failed to load residents');
+        }
+        
         // Transform the data to include payment status information
-        const transformedResidents = residentsData.data.map(resident => {
+        const transformedResidents = (residentsData.data || []).map(resident => {
           // Calculate payment status based on monthly dues
           const currentYear = new Date().getFullYear();
           const currentMonth = new Date().getMonth() + 1;
@@ -79,18 +90,43 @@ function PaymentStatus() {
 
         setResidents(transformedResidents);
         setTotalResidents(residentsData.pagination?.total || transformedResidents.length);
-        setLoading(false);
       } catch (error) {
         console.error('Error loading residents:', error);
         setError('Failed to load residents. Please try again.');
+      } finally {
         setLoading(false);
+        setSearchLoading(false);
       }
     };
 
     loadResidents();
   }, [page, search]);
 
-  const handleSearch = (e) => setSearch(e.target.value);
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId;
+      return (value) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setSearch(value);
+        }, 500); // 500ms delay
+      };
+    })(),
+    []
+  );
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedSearch(value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearch('');
+  };
+  
   const handleStreetChange = (e) => setSelectedStreet(e.target.value);
 
   // Reset page when search or street filter changes
@@ -186,8 +222,8 @@ function PaymentStatus() {
               <TextField
                 variant="outlined"
                 size="small"
-                placeholder="Search residents..."
-                value={search}
+                placeholder="Search by street, resident name, homeowner, or resident ID..."
+                value={searchInput}
                 onChange={handleSearch}
                 sx={{
                   width: { xs: '100%', sm: 320 },
@@ -211,6 +247,17 @@ function PaymentStatus() {
                   startAdornment: (
                     <InputAdornment position="start">
                       <SearchIcon color="action" fontSize="small" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: search && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={handleClearSearch}
+                        sx={{ p: 0 }}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
                     </InputAdornment>
                   ),
                   sx: { py: 0 }
@@ -240,6 +287,18 @@ function PaymentStatus() {
               </FormControl>
             </Box>
           </Box>
+          
+          {/* Active filters and search summary */}
+          {(search || selectedStreet !== 'all') && (
+            <Box sx={{ px: 1, py: 0.5, mb: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                {search && `Search: "${search}"`}
+                {search && selectedStreet !== 'all' && ' | '}
+                {selectedStreet !== 'all' && `Street: ${selectedStreet}`}
+              </Typography>
+            </Box>
+          )}
+          
           <FloraTable
             columns={columns}
             rows={filteredResidents}
@@ -248,7 +307,7 @@ function PaymentStatus() {
             rowsPerPage={rowsPerPage}
             maxHeight={tableMaxHeight}
             emptyMessage="No residents found."
-            loading={loading}
+            loading={loading || searchLoading}
             disableInternalPagination={true}
           />
           <Box

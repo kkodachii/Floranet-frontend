@@ -33,26 +33,40 @@ function PaymentDetails() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState([]);
 
-  // Get available years from monthly dues data
+  // Get years from backend
+  useEffect(() => {
+    const loadYears = async () => {
+      try {
+        const resp = await apiService.getResidentMonthlyDueYears(residentId);
+        if (resp.success) {
+          const yrs = resp.data.map((y) => Number(y)).sort((a, b) => b - a);
+          setAvailableYears(yrs);
+          if (yrs.length && !yrs.includes(Number(selectedYear))) {
+            setSelectedYear(yrs[0]);
+          }
+        }
+      } catch (e) {
+        // ignore silently
+      }
+    };
+    if (residentId) loadYears();
+  }, [residentId]);
+
+  // Filter options
   const years = React.useMemo(() => {
+    if (availableYears.length) return availableYears;
     if (!monthlyDues || monthlyDues.length === 0) return [];
     const yearSet = new Set();
-    monthlyDues.forEach((due) => {
-      yearSet.add(due.year);
-    });
-    return Array.from(yearSet).sort((a, b) => b - a); // Descending order
-  }, [monthlyDues]);
+    monthlyDues.forEach((due) => yearSet.add(due.year));
+    return Array.from(yearSet).sort((a, b) => b - a);
+  }, [availableYears, monthlyDues]);
 
-  // Filter payment history by selected year
+  // We fetch by year from API, so display as-is
   const filteredPaymentHistory = React.useMemo(() => {
-    if (!paymentDetails) return [];
-    if (selectedYear === 'all') return paymentDetails.paymentHistory;
-    return paymentDetails.paymentHistory.filter((p) => {
-      // For now, show all since we're loading by year from API
-      return true;
-    });
-  }, [paymentDetails, selectedYear]);
+    return paymentDetails ? paymentDetails.paymentHistory : [];
+  }, [paymentDetails]);
 
   useEffect(() => {
     const loadPaymentDetails = async () => {
@@ -63,11 +77,10 @@ function PaymentDetails() {
         // Load resident information
         const residentData = await apiService.getResidentById(residentId);
         
-        // Load monthly due history for the resident
+        // Load monthly due history for the resident (by selected year only)
         const monthlyDuesData = await apiService.getResidentMonthlyDueHistory(
-          residentId, 
-          selectedYear, 
-          200 // Default amount from your backend
+          residentId,
+          selectedYear
         );
 
         // Transform the data to match the expected format
@@ -353,8 +366,6 @@ function PaymentDetails() {
                 label="Year"
                 onChange={(e) => setSelectedYear(e.target.value)}
               >
-                <MenuItem value="all">All Years</MenuItem>
-                {/* The years are now dynamically generated based on monthlyDues */}
                 {years.map((year) => (
                   <MenuItem key={year} value={year}>{year}</MenuItem>
                 ))}
