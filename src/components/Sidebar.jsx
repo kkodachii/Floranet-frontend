@@ -50,6 +50,7 @@ const sidebarItems = [
     icon: <PaymentIcon />,
     section: "sales",
     children: [
+      { label: "Collection", to: "/billing-payment/collection" },
       { label: "Personal payment", to: "/billing-payment/personal-payment" },
       { label: "Payment status", to: "/billing-payment/payment-status" },
       { label: "Collection report", to: "/billing-payment/collection-report" },

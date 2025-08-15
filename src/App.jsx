@@ -12,6 +12,8 @@ import PersonalPayment from './pages/sections/Billing/PersonalPayment'
 import PaymentStatus from './pages/sections/Billing/PaymentStatus'
 import PaymentDetails from './pages/sections/Billing/PaymentDetails'
 import CollectionReport from './pages/sections/Billing/CollectionReport'
+import Collection from './pages/sections/Billing/Collection'
+import AddCollection from './pages/sections/Billing/AddCollection'
 import GeneralComplaints from './pages/sections/Complaints/GeneralComplaints'
 import ServiceComplaints from './pages/sections/Complaints/ServiceComplaints'
 import Residents from './pages/sections/UserManagement/Residents'
@@ -81,6 +83,8 @@ function AppRoutes() {
                 <Route path="/billing-payment/payment-status" element={<PaymentStatus />} />
                 <Route path="/billing-payment/payment-details/:residentId" element={<PaymentDetails />} />
                 <Route path="/billing-payment/collection-report" element={<CollectionReport />} />
+                <Route path="/billing-payment/collection" element={<Collection />} />
+                <Route path="/billing-payment/add-collection" element={<AddCollection />} />
                 <Route path="/community-hub" element={<CommunityHub />} />
                 <Route path="/complaints/general-complaints" element={<GeneralComplaints />} />
                 <Route path="/complaints/service-complaints" element={<ServiceComplaints />} />

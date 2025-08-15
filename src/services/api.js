@@ -439,10 +439,12 @@ class ApiService {
   }
 
   // Resident monthly due history
-  async getResidentMonthlyDueHistory(residentId, year = new Date().getFullYear(), defaultAmount = 200) {
+  async getResidentMonthlyDueHistory(residentId, year = new Date().getFullYear(), defaultAmount = null) {
     const params = new URLSearchParams();
     params.append('year', year);
-    params.append('default_amount', defaultAmount);
+    if (defaultAmount !== null && defaultAmount !== undefined) {
+      params.append('default_amount', defaultAmount);
+    }
     
     return this.request(`/admin/residents/${residentId}/monthly-dues/history?${params.toString()}`);
   }
@@ -454,8 +456,117 @@ class ApiService {
     
     return this.request(`/admin/residents/${residentId}/monthly-dues/available?${params.toString()}`);
   }
+
+  // Collection methods
+  async getCollections(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/collections?${params.toString()}`);
+  }
+
+  async getCollectionById(id) {
+    return this.request(`/admin/collections/${id}`);
+  }
+
+  async createCollection(collectionData) {
+    return this.request('/admin/collections', {
+      method: 'POST',
+      body: JSON.stringify(collectionData),
+    });
+  }
+
+  async updateCollection(id, collectionData) {
+    return this.request(`/admin/collections/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(collectionData),
+    });
+  }
+
+  async deleteCollection(id) {
+    return this.request(`/admin/collections/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getCollectionStreets() {
+    return this.request('/admin/collections-streets');
+  }
+
+  async getCollectionStats() {
+    return this.request('/admin/collections-stats');
+  }
+
+  async getCollectionYears() {
+    return this.request('/admin/collections-years');
+  }
+
+  async getCollectionMonths() {
+    return this.request('/admin/collections-months');
+  }
+
+  async updateCollectionAmount(id, amount) {
+    return this.request(`/admin/collections/${id}/amount`, {
+      method: 'PATCH',
+      body: JSON.stringify({ amount_per_resident: amount }),
+    });
+  }
+
+  // Collection Report methods
+  async getCollectionReports(year = null, month = null) {
+    const params = new URLSearchParams();
+    if (year) params.append('year', year);
+    if (month) params.append('month', month);
+    
+    return this.request(`/admin/collection-reports?${params.toString()}`);
+  }
+
+  async getCollectionReportById(id) {
+    return this.request(`/admin/collection-reports/${id}`);
+  }
+
+  async generateCollectionReport(year, month) {
+    return this.request('/admin/collection-reports/generate', {
+      method: 'POST',
+      body: JSON.stringify({ year, month }),
+    });
+  }
+
+  async generateCollectionReportRange(startYear, startMonth, endYear, endMonth) {
+    return this.request('/admin/collection-reports/generate-range', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        start_year: startYear, 
+        start_month: startMonth, 
+        end_year: endYear, 
+        end_month: endMonth 
+      }),
+    });
+  }
+
+  async getCollectionReportSummary(year = null) {
+    const params = new URLSearchParams();
+    if (year) params.append('year', year);
+    
+    return this.request(`/admin/collection-reports/summary?${params.toString()}`);
+  }
   
+  async getCollectionReportYears() {
+    return this.request('/admin/collection-reports/years');
+  }
+
   // Other API methods can be added here...
+  async getResidentMonthlyDueYears(residentId) {
+    return this.request(`/admin/residents/${residentId}/monthly-dues/years`);
+  }
 }
 
 // Create and export a singleton instance
