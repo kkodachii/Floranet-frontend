@@ -563,6 +563,143 @@ class ApiService {
     return this.request('/admin/collection-reports/years');
   }
 
+  // Complaint management methods
+  async getComplaints(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/complaints?${params.toString()}`);
+  }
+
+  async getComplaintsFiltered(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/complaints-filtered?${params.toString()}`);
+  }
+
+  async getComplaintById(id) {
+    return this.request(`/admin/complaints/${id}`);
+  }
+
+  async createComplaint(complaintData) {
+    return this.request('/admin/complaints', {
+      method: 'POST',
+      body: JSON.stringify(complaintData),
+    });
+  }
+
+  async updateComplaint(id, complaintData) {
+    return this.request(`/admin/complaints/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(complaintData),
+    });
+  }
+
+  async updateComplaintStatus(id, status) {
+    return this.request(`/admin/complaints/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async updateComplaintRemarks(id, remarks) {
+    return this.request(`/admin/complaints/${id}/remarks`, {
+      method: 'PATCH',
+      body: JSON.stringify({ remarks }),
+    });
+  }
+
+  async updateComplaintFollowups(id, followups) {
+    return this.request(`/admin/complaints/${id}/followups`, {
+      method: 'PATCH',
+      body: JSON.stringify({ followups }),
+    });
+  }
+
+  async updateComplaintPriority(id, priority) {
+    return this.request(`/admin/complaints/${id}/priority`, {
+      method: 'PATCH',
+      body: JSON.stringify({ priority }),
+    });
+  }
+
+  async deleteComplaint(id) {
+    return this.request(`/admin/complaints/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getComplaintStats() {
+    return this.request('/admin/complaints-stats');
+  }
+
+  // User complaint methods
+  async getUserComplaints(page = 1, filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/user/complaints?${params.toString()}`);
+  }
+
+  async createUserComplaint(complaintData) {
+    return this.request('/user/complaints', {
+      method: 'POST',
+      body: JSON.stringify(complaintData),
+    });
+  }
+
+  async updateUserComplaintStatus(id, status) {
+    return this.request(`/user/complaints/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async updateUserComplaintRemarks(id, remarks) {
+    return this.request(`/user/complaints/${id}/remarks`, {
+      method: 'PATCH',
+      body: JSON.stringify({ remarks }),
+    });
+  }
+
+  async updateUserComplaintFollowups(id, followups) {
+    return this.request(`/user/complaints/${id}/followups`, {
+      method: 'PATCH',
+      body: JSON.stringify({ followups }),
+    });
+  }
+
+  async updateUserComplaintPriority(id, priority) {
+    return this.request(`/user/complaints/${id}/priority`, {
+      method: 'PATCH',
+      body: JSON.stringify({ priority }),
+    });
+  }
+
   // Other API methods can be added here...
   async getResidentMonthlyDueYears(residentId) {
     return this.request(`/admin/residents/${residentId}/monthly-dues/years`);
