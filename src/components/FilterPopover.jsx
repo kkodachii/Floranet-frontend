@@ -34,6 +34,26 @@ const FilterPopover = ({
   onApply,
   onReset
 }) => {
+  // Helper function to get display text for status and priority
+  const getDisplayText = (value, fieldName) => {
+    if (fieldName === 'status') {
+      return value === 'open' ? 'OPEN' :
+             value === 'in_progress' ? 'IN PROGRESS' :
+             value === 'resolved' ? 'RESOLVED' :
+             value === 'closed' ? 'CLOSED' : value.toUpperCase();
+    } else if (fieldName === 'priority') {
+      return value === 'high' ? 'HIGH' :
+             value === 'medium' ? 'MEDIUM' : 'LOW';
+    }
+    return value;
+  };
+
+  // Helper function to get current display text for selected value
+  const getCurrentDisplayText = (fieldName, currentValue) => {
+    if (!currentValue) return 'All';
+    return getDisplayText(currentValue, fieldName);
+  };
+
   return (
     <Popover
       open={open}
@@ -41,15 +61,26 @@ const FilterPopover = ({
       onClose={onClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-      PaperProps={{ sx: { p: 2, minWidth: 260, borderRadius: 2 } }}
+      PaperProps={{ 
+        sx: { 
+          p: 3, 
+          minWidth: 300, 
+          borderRadius: 2,
+          boxShadow: 3,
+          border: '1px solid',
+          borderColor: 'divider'
+        } 
+      }}
     >
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-        <Typography variant="subtitle1" fontWeight={600}>Filter</Typography>
-        <IconButton size="small" onClick={onClose}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+        <Typography variant="h6" fontWeight={600} color="primary.main">
+          Filter Options
+        </Typography>
+        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
-      <Stack spacing={2}>
+      <Stack spacing={3}>
         {fields.map((field) => (
           field.type === 'select' ? (
             <TextField
@@ -58,12 +89,48 @@ const FilterPopover = ({
               label={field.label}
               value={values[field.name] || ''}
               onChange={e => onChange(field.name, e.target.value)}
-              size="small"
+              size="medium"
               fullWidth
+              placeholder="Select option"
+              SelectProps={{
+                displayEmpty: false,
+                MenuProps: {
+                  PaperProps: {
+                    sx: {
+                      maxHeight: 300
+                    }
+                  }
+                }
+              }}
+              sx={{
+                '& .MuiInputLabel-root': {
+                  '&.Mui-focused': {
+                    color: 'primary.main'
+                  },
+                  '&.MuiInputLabel-shrink': {
+                    color: 'primary.main'
+                  }
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main'
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main'
+                  }
+                },
+                '& .MuiSelect-select': {
+                  color: values[field.name] ? 'text.primary' : 'text.secondary'
+                }
+              }}
             >
-              <MenuItem value="">All</MenuItem>
+              <MenuItem value="" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                All {field.label}
+              </MenuItem>
               {field.options && field.options.map(opt => (
-                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                <MenuItem key={opt} value={opt}>
+                  {getDisplayText(opt, field.name)}
+                </MenuItem>
               ))}
             </TextField>
           ) : (
@@ -72,15 +139,53 @@ const FilterPopover = ({
               label={field.label}
               value={values[field.name] || ''}
               onChange={e => onChange(field.name, e.target.value)}
-              size="small"
+              size="medium"
               fullWidth
+              sx={{
+                '& .MuiInputLabel-root': {
+                  '&.Mui-focused': {
+                    color: 'primary.main'
+                  }
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main'
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main'
+                  }
+                }
+              }}
             />
           )
         ))}
       </Stack>
-      <Stack direction="row" spacing={1} mt={2} justifyContent="flex-end">
-        <Button onClick={onReset} size="small" color="inherit">Reset</Button>
-        <Button onClick={onApply} size="small" variant="contained">Apply</Button>
+      <Stack direction="row" spacing={2} mt={3} justifyContent="flex-end">
+        <Button 
+          onClick={onReset} 
+          size="medium" 
+          color="inherit"
+          sx={{ 
+            px: 3,
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          Reset
+        </Button>
+        <Button 
+          onClick={onApply} 
+          size="medium" 
+          variant="contained"
+          sx={{ 
+            px: 3,
+            borderRadius: 2,
+            fontWeight: 'bold'
+          }}
+        >
+          Apply Filters
+        </Button>
       </Stack>
     </Popover>
   );

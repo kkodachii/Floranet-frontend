@@ -1,0 +1,240 @@
+import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
+  Paper,
+  Box,
+  IconButton,
+  useTheme,
+  Typography,
+  Collapse
+} from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+
+const ExpandableFloraTable = ({ 
+  columns, 
+  rows, 
+  actions, 
+  page, 
+  rowsPerPage, 
+  zebra = true, 
+  maxHeight = '60vh', 
+  emptyMessage = 'No data found.', 
+  loading = false, 
+  disableInternalPagination = false,
+  paginationInfo = null,
+  onPageChange = null,
+  PrevIcon = null,
+  NextIcon = null
+}) => {
+  const theme = useTheme();
+  // Always slice the data for pagination, regardless of disableInternalPagination
+  const paginatedRows = rows.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+
+  return (
+    <Box>
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          maxHeight, 
+          borderRadius: 1, 
+          background: theme.palette.mode === 'light' ? '#fff' : theme.palette.background.paper,
+          px: 0, 
+          py: 0,
+          transition: 'background-color 0.3s ease-in-out'
+        }}
+      >
+        <Table stickyHeader size="small">
+          <TableHead>
+            <TableRow sx={{ background: theme.palette.primary.main }}>
+              {columns.map((col) => (
+                <TableCell
+                  key={col.id}
+                  align={col.align || 'left'}
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: 13,
+                    background: theme.palette.primary.main,
+                    color: '#fff',
+                    borderBottom: '2px solid ' + theme.palette.primary.main,
+                    whiteSpace: 'nowrap',
+                    py: 0.5,
+                    px: 1,
+                    // Special handling for specific columns
+                    ...(col.id === 'log_id' && { minWidth: 100, maxWidth: 120 }),
+                    ...(col.id === 'complained_at' && { minWidth: 140, maxWidth: 160 }),
+                    ...(col.id === 'resident_name' && { minWidth: 120, maxWidth: 150 }),
+                    ...(col.id === 'complained_title' && { minWidth: 200, maxWidth: 300 }),
+                    ...(col.id === 'priority' && { minWidth: 80, maxWidth: 100 }),
+                    ...(col.id === 'status' && { minWidth: 100, maxWidth: 120 }),
+                    ...(col.id === 'remarks' && { minWidth: 200, maxWidth: 300 }),
+                    ...(col.id === 'actions' && { minWidth: 120, maxWidth: 140 }),
+                  }}
+                >
+                  {col.label}
+                </TableCell>
+              ))}
+              {actions && actions.length > 0 && (
+                <TableCell align="right" sx={{ fontWeight: 700, fontSize: 13, background: theme.palette.primary.main, color: '#fff', borderBottom: '2px solid ' + theme.palette.primary.main, py: 0.5, px: 1 }}>
+                  Actions
+                </TableCell>
+              )}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedRows.map((row, idx) => (
+              <React.Fragment key={row.id || row.residentId || idx}>
+                <TableRow
+                  hover
+                  sx={{
+                    backgroundColor: zebra && idx % 2 === 0 
+                      ? theme.palette.mode === 'light' 
+                        ? theme.palette.action.hover 
+                        : theme.palette.action.hover
+                      : theme.palette.mode === 'light'
+                        ? '#fff'
+                        : theme.palette.background.paper,
+                    transition: 'background-color 0.3s ease-in-out',
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    }
+                  }}
+                >
+                  {columns.map((col) => (
+                    <TableCell
+                      key={col.id}
+                      align={col.align || 'left'}
+                      sx={{
+                        maxWidth: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 250 : 120,
+                        overflow: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'visible' : 'hidden',
+                        textOverflow: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'clip' : 'ellipsis',
+                        whiteSpace: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'normal' : 'nowrap',
+                        fontSize: 13,
+                        py: 0.5,
+                        px: 1,
+                        color: theme.palette.text.primary,
+                        transition: 'color 0.3s ease-in-out',
+                        wordBreak: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'break-word' : 'normal',
+                        minHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'auto' : '32px',
+                        // Special handling for specific columns
+                        ...(col.id === 'log_id' && { minWidth: 100, maxWidth: 120 }),
+                        ...(col.id === 'complained_at' && { minWidth: 140, maxWidth: 160 }),
+                        ...(col.id === 'resident_name' && { minWidth: 120, maxWidth: 150 }),
+                        ...(col.id === 'complained_title' && { minWidth: 200, maxWidth: 300 }),
+                        ...(col.id === 'priority' && { minWidth: 80, maxWidth: 100 }),
+                        ...(col.id === 'status' && { minWidth: 100, maxWidth: 120 }),
+                        ...(col.id === 'remarks' && { minWidth: 200, maxWidth: 300 }),
+                        ...(col.id === 'actions' && { minWidth: 120, maxWidth: 140 }),
+                      }}
+                    >
+                      {col.id === 'priority' || col.id === 'status' || col.id === 'remarks' || col.id === 'actions' ? (
+                        <span style={{ 
+                          display: 'block',
+                          lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
+                          maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
+                          overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
+                          textOverflow: col.id === 'complained_title' || col.id === 'remarks' ? 'ellipsis' : 'clip',
+                          display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
+                          WebkitLineClamp: col.id === 'complained_title' || col.id === 'remarks' ? '3' : 'unset',
+                          WebkitBoxOrient: col.id === 'complained_title' || col.id === 'remarks' ? 'vertical' : 'unset',
+                        }}>
+                          {col.render ? col.render(row[col.id], row) : row[col.id]}
+                        </span>
+                      ) : (
+                        <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
+                          <span style={{ 
+                            display: 'block',
+                            lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
+                            maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
+                            overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
+                            textOverflow: col.id === 'complained_title' || col.id === 'remarks' ? 'ellipsis' : 'clip',
+                            display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
+                            WebkitLineClamp: col.id === 'complained_title' || col.id === 'remarks' ? '3' : 'unset',
+                            WebkitBoxOrient: col.id === 'complained_title' || col.id === 'remarks' ? 'vertical' : 'unset',
+                          }}>
+                            {col.render ? col.render(row[col.id], row) : row[col.id]}
+                          </span>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                  ))}
+                  {actions && actions.length > 0 && (
+                    <TableCell align="right" sx={{ py: 0.5, px: 1 }}>
+                      {actions.map((action, i) => (
+                        <Tooltip title={action.label} key={action.label}>
+                          <IconButton
+                            size="small"
+                            color={action.color || 'default'}
+                            onClick={() => action.onClick(row)}
+                            sx={{
+                              ...action.sx,
+                              '&:hover': {
+                                backgroundColor: theme.palette.action.hover,
+                              }
+                            }}
+                          >
+                            {action.icon}
+                          </IconButton>
+                        </Tooltip>
+                      ))}
+                    </TableCell>
+                  )}
+                </TableRow>
+                
+                {/* Expandable accordion row */}
+                {row.accordion && (
+                  <TableRow>
+                    <TableCell 
+                      colSpan={columns.length + (actions && actions.length > 0 ? 1 : 0)} 
+                      sx={{ 
+                        p: 0, 
+                        border: 'none',
+                        backgroundColor: theme.palette.mode === 'light' ? '#fafafa' : theme.palette.background.default
+                      }}
+                    >
+                      <Collapse in={row.isExpanded} timeout="auto" unmountOnExit>
+                        <Box sx={{ p: 2 }}>
+                          {row.accordion}
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+            {paginatedRows.length === 0 && (
+              <TableRow>
+                <TableCell 
+                  colSpan={columns.length + (actions && actions.length > 0 ? 1 : 0)} 
+                  align="center" 
+                  sx={{ 
+                    py: 4,
+                    color: theme.palette.text.secondary,
+                    transition: 'color 0.3s ease-in-out'
+                  }}
+                >
+                  <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                    {loading ? (
+                      <CircularProgress color="primary" />
+                    ) : (
+                      <>
+                        <span>{emptyMessage}</span>
+                      </>
+                    )}
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+};
+
+export default ExpandableFloraTable; 

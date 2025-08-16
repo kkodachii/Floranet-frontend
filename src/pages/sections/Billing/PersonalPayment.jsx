@@ -52,7 +52,7 @@ function PersonalPayment() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     houseNumber: '',
-    homeownerName: '',
+    residentName: '',
     paymentMethod: '',
     amount: '',
     contactNumber: '',
@@ -112,6 +112,12 @@ function PersonalPayment() {
     loadAvailableMonthlyDues();
   }, [formData.residentId]);
 
+  // Debug: Monitor form data changes
+  useEffect(() => {
+    console.log('Form data changed:', formData);
+    console.log('Resident name:', formData.residentName);
+  }, [formData]);
+
   const handleNext = () => {
     if (validateStep()) {
       setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -133,10 +139,13 @@ function PersonalPayment() {
   const handleResidentSelect = (residentId) => {
     const selectedResident = existingResidents.find(resident => resident.resident_id === residentId);
     if (selectedResident) {
+      console.log('Selected resident data:', selectedResident);
+      const residentName = selectedResident.house_owner_name || selectedResident.name;
+      console.log('Resident name to be set:', residentName);
       setFormData(prev => ({
         ...prev,
         residentId: selectedResident.resident_id,
-        homeownerName: selectedResident.house_owner_name || selectedResident.name,
+        residentName: residentName,
         houseNumber: selectedResident.house?.house_number || 'N/A',
         contactNumber: selectedResident.contact_no || '',
         email: selectedResident.email || ''
@@ -250,7 +259,7 @@ function PersonalPayment() {
       setTimeout(() => {
         setFormData({
           houseNumber: '',
-          homeownerName: '',
+          residentName: '',
           paymentMethod: '',
           amount: '',
           contactNumber: '',
@@ -295,15 +304,15 @@ function PersonalPayment() {
                   if (newValue) {
                     handleResidentSelect(newValue.resident_id);
                   } else {
-                    // Clear form data when no resident is selected
-                    setFormData(prev => ({
-                      ...prev,
-                      residentId: '',
-                      homeownerName: '',
-                      houseNumber: '',
-                      contactNumber: '',
-                      email: ''
-                    }));
+                                      // Clear form data when no resident is selected
+                  setFormData(prev => ({
+                    ...prev,
+                    residentId: '',
+                    residentName: '',
+                    houseNumber: '',
+                    contactNumber: '',
+                    email: ''
+                  }));
                   }
                 }}
                 renderInput={(params) => (
@@ -348,15 +357,15 @@ function PersonalPayment() {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Homeowner Name"
-                value={formData.homeownerName}
+                label="Resident Name"
+                value={formData.residentName}
                 disabled
                 helperText="Auto-filled from resident selection"
-                placeholder="Enter homeowner name"
+                placeholder="Enter resident name"
                 inputProps={{ maxLength: 50 }}
                 sx={{ minWidth: 300 }}
                 InputLabelProps={{
-                  shrink: Boolean(formData.homeownerName) || formData.homeownerName === '',
+                  shrink: Boolean(formData.residentName) || formData.residentName === '',
                 }}
               />
             </Grid>
@@ -394,23 +403,6 @@ function PersonalPayment() {
                     {errors.paymentMethod && <FormHelperText>{errors.paymentMethod}</FormHelperText>}
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Amount"
-                    value={formData.amount}
-                    disabled
-                    helperText="Auto-filled from selected monthly due"
-                    placeholder="0.00"
-                    type="number"
-                    inputProps={{ 
-                      min: 0,
-                      step: 0.01,
-                      maxLength: 10
-                    }}
-                    sx={{ minWidth: 300 }}
-                  />
-                </Grid>
                 <Grid item xs={12}>
                   <FormControl fullWidth error={!!errors.paymentMonth} required sx={{ minWidth: 300 }}>
                     <InputLabel shrink={Boolean(formData.paymentMonth) || formData.paymentMonth === ''}>Payment Month</InputLabel>
@@ -438,6 +430,24 @@ function PersonalPayment() {
                     )}
                   </FormControl>
                 </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Amount"
+                    value={formData.amount}
+                    disabled
+                    helperText="Auto-filled from selected monthly due"
+                    placeholder="0.00"
+                    type="number"
+                    inputProps={{ 
+                      min: 0,
+                      step: 0.01,
+                      maxLength: 10
+                    }}
+                    sx={{ minWidth: 300 }}
+                  />
+                </Grid>
+
               </Grid>
             </Box>
 
@@ -487,7 +497,6 @@ function PersonalPayment() {
               <FloraTable
                 columns={[
                   { id: 'houseNumber', label: 'House Number' },
-                  { id: 'homeownerName', label: 'Homeowner Name' },
                   { id: 'paymentMethod', label: 'Payment Method' },
                   { id: 'amount', label: 'Amount' },
                   { id: 'paymentMonth', label: 'Payment Month' },
@@ -497,7 +506,6 @@ function PersonalPayment() {
                 rows={[
                   {
                     houseNumber: formData.houseNumber,
-                    homeownerName: formData.homeownerName,
                     paymentMethod: formData.paymentMethod,
                     amount: `₱${parseFloat(formData.amount || 0).toFixed(2)}`,
                     paymentMonth: formData.paymentMonth,
@@ -505,6 +513,7 @@ function PersonalPayment() {
                     email: formData.email || 'Not provided',
                   },
                 ]}
+
                 actions={[]}
                 page={1}
                 rowsPerPage={1}

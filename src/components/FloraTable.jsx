@@ -65,6 +65,15 @@ const FloraTable = ({
                     whiteSpace: 'nowrap',
                     py: 0.5,
                     px: 1,
+                    // Special handling for specific columns
+                    ...(col.id === 'log_id' && { minWidth: 100, maxWidth: 120 }),
+                    ...(col.id === 'complained_at' && { minWidth: 140, maxWidth: 160 }),
+                    ...(col.id === 'resident_name' && { minWidth: 120, maxWidth: 150 }),
+                    ...(col.id === 'complained_title' && { minWidth: 200, maxWidth: 300 }),
+                    ...(col.id === 'priority' && { minWidth: 80, maxWidth: 100 }),
+                    ...(col.id === 'status' && { minWidth: 100, maxWidth: 120 }),
+                    ...(col.id === 'remarks' && { minWidth: 200, maxWidth: 300 }),
+                    ...(col.id === 'actions' && { minWidth: 100, maxWidth: 120 }),
                   }}
                 >
                   {col.label}
@@ -101,27 +110,57 @@ const FloraTable = ({
                     key={col.id}
                     align={col.align || 'left'}
                     sx={{
-                      maxWidth: col.id === 'businessName' ? 250 : 120,
-                      overflow: col.id === 'businessName' ? 'visible' : 'hidden',
-                      textOverflow: col.id === 'businessName' ? 'clip' : 'ellipsis',
-                      whiteSpace: col.id === 'businessName' ? 'normal' : 'nowrap',
+                      maxWidth: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 250 : 120,
+                      overflow: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'visible' : 'hidden',
+                      textOverflow: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'clip' : 'ellipsis',
+                      whiteSpace: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'normal' : 'nowrap',
                       fontSize: 13,
                       py: 0.5,
                       px: 1,
                       color: theme.palette.text.primary,
                       transition: 'color 0.3s ease-in-out',
-                      wordBreak: col.id === 'businessName' ? 'break-word' : 'normal',
-                      minHeight: col.id === 'businessName' ? 'auto' : '32px'
+                      wordBreak: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'break-word' : 'normal',
+                      minHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? 'auto' : '32px',
+                      // Special handling for specific columns
+                      ...(col.id === 'log_id' && { minWidth: 100, maxWidth: 120 }),
+                      ...(col.id === 'complained_at' && { minWidth: 140, maxWidth: 160 }),
+                      ...(col.id === 'resident_name' && { minWidth: 120, maxWidth: 150 }),
+                      ...(col.id === 'complained_title' && { minWidth: 200, maxWidth: 300 }),
+                      ...(col.id === 'priority' && { minWidth: 80, maxWidth: 100 }),
+                      ...(col.id === 'status' && { minWidth: 100, maxWidth: 120 }),
+                      ...(col.id === 'remarks' && { minWidth: 200, maxWidth: 300 }),
+                      ...(col.id === 'actions' && { minWidth: 100, maxWidth: 120 }),
                     }}
                   >
-                    <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
+                    {col.id === 'priority' || col.id === 'status' || col.id === 'remarks' || col.id === 'actions' ? (
                       <span style={{ 
                         display: 'block',
-                        lineHeight: col.id === 'businessName' ? '1.4' : '1.2'
+                        lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
+                        maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
+                        overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
+                        textOverflow: col.id === 'complained_title' || col.id === 'remarks' ? 'ellipsis' : 'clip',
+                        display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
+                        WebkitLineClamp: col.id === 'complained_title' || col.id === 'remarks' ? '3' : 'unset',
+                        WebkitBoxOrient: col.id === 'complained_title' || col.id === 'remarks' ? 'vertical' : 'unset',
                       }}>
                         {col.render ? col.render(row[col.id], row) : row[col.id]}
                       </span>
-                    </Tooltip>
+                    ) : (
+                      <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
+                        <span style={{ 
+                          display: 'block',
+                          lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
+                          maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
+                          overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
+                          textOverflow: col.id === 'complained_title' || col.id === 'remarks' ? 'ellipsis' : 'clip',
+                          display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
+                          WebkitLineClamp: col.id === 'complained_title' || col.id === 'remarks' ? '3' : 'unset',
+                          WebkitBoxOrient: col.id === 'complained_title' || col.id === 'remarks' ? 'vertical' : 'unset',
+                        }}>
+                          {col.render ? col.render(row[col.id], row) : row[col.id]}
+                        </span>
+                      </Tooltip>
+                    )}
                   </TableCell>
                 ))}
                 {actions && actions.length > 0 && (
