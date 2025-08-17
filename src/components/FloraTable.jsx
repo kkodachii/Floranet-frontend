@@ -136,7 +136,6 @@ const FloraTable = ({
                   >
                     {col.id === 'priority' || col.id === 'status' || col.id === 'remarks' || col.id === 'actions' ? (
                       <span style={{ 
-                        display: 'block',
                         lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
                         maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
                         overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
@@ -150,7 +149,6 @@ const FloraTable = ({
                     ) : (
                       <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
                         <span style={{ 
-                          display: 'block',
                           lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
                           maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
                           overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
