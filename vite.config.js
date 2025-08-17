@@ -7,6 +7,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
   resolve: {
     alias: {
@@ -16,5 +21,8 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react-router-dom'],
     exclude: ['@remix-run/router'],
+  },
+  define: {
+    global: 'globalThis',
   },
 })
