@@ -4,7 +4,6 @@ import Login from "./pages/Login";
 import MainLayout from './MainLayout'
 import CommunityHub from './pages/CommunityHub'
 import Settings from './pages/Settings'
-import CORSTestPage from './pages/CORSTestPage'
 import Alerts from './pages/sections/Alert/Alerts'
 
 import CCTV from './pages/sections/Alert/CCTV'
@@ -90,7 +89,6 @@ function AppRoutes() {
                 <Route path="/complaints/general-complaints" element={<GeneralComplaints />} />
                 <Route path="/complaints/service-complaints" element={<ServiceComplaints />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/cors-test" element={<CORSTestPage />} />
               </Routes>
             </MainLayout>
           </ProtectedRoute>

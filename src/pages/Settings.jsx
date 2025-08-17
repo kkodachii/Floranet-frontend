@@ -16,7 +16,6 @@ import {
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import config from '../config/env';
 import { useAuth } from '../AuthContext';
-import CORSTest from '../components/CORSTest';
 
 function Settings() {
   const theme = useTheme();
@@ -61,7 +60,6 @@ function Settings() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -104,7 +102,6 @@ function Settings() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(profileData),
       });
 
@@ -164,7 +161,6 @@ function Settings() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify({
           password: passwordData.password,
           current_password: passwordData.current_password,
@@ -208,7 +204,6 @@ function Settings() {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: formData,
       });
 
@@ -515,17 +510,6 @@ function Settings() {
             {loading ? 'Saving...' : 'Save'}
           </Button>
         </Stack>
-      </Paper>
-
-      {/* CORS Test Section */}
-      <Paper sx={{ p: 3, width: '100%', mb: 4 }} elevation={2}>
-        <Typography variant="h6" sx={{ mb: 1, fontWeight: 700 }}>
-          CORS Test
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Test the CORS configuration between frontend and backend.
-        </Typography>
-        <CORSTest />
       </Paper>
 
       {/* Deactivate Account Section */}
