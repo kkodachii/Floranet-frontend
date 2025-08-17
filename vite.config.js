@@ -7,19 +7,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          mui: ['@mui/material', '@mui/icons-material', '@mui/lab'],
-        },
-      },
-    },
   },
   resolve: {
     alias: {
       '@': '/src',
     },
+  },
+  optimizeDeps: {
+    include: ['react-router-dom'],
   },
 }) 
