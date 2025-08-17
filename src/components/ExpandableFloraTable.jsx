@@ -136,11 +136,12 @@ const ExpandableFloraTable = ({
                     >
                       {col.id === 'priority' || col.id === 'status' || col.id === 'remarks' || col.id === 'actions' ? (
                         <span style={{ 
-                          display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
+                          display: 'block',
                           lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
                           maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
                           overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
                           textOverflow: col.id === 'complained_title' || col.id === 'remarks' ? 'ellipsis' : 'clip',
+                          display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
                           WebkitLineClamp: col.id === 'complained_title' || col.id === 'remarks' ? '3' : 'unset',
                           WebkitBoxOrient: col.id === 'complained_title' || col.id === 'remarks' ? 'vertical' : 'unset',
                         }}>
@@ -149,11 +150,12 @@ const ExpandableFloraTable = ({
                       ) : (
                         <Tooltip title={row[col.id]} placement="top" arrow disableInteractive>
                           <span style={{ 
-                            display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
+                            display: 'block',
                             lineHeight: col.id === 'businessName' || col.id === 'complained_title' || col.id === 'remarks' ? '1.4' : '1.2',
                             maxHeight: col.id === 'complained_title' || col.id === 'remarks' ? '60px' : 'auto',
                             overflow: col.id === 'complained_title' || col.id === 'remarks' ? 'hidden' : 'visible',
                             textOverflow: col.id === 'complained_title' || col.id === 'remarks' ? 'ellipsis' : 'clip',
+                            display: col.id === 'complained_title' || col.id === 'remarks' ? '-webkit-box' : 'block',
                             WebkitLineClamp: col.id === 'complained_title' || col.id === 'remarks' ? '3' : 'unset',
                             WebkitBoxOrient: col.id === 'complained_title' || col.id === 'remarks' ? 'vertical' : 'unset',
                           }}>
