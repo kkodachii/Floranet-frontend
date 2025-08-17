@@ -46,20 +46,121 @@ const CORSTest = () => {
     }
   };
 
+  const testStorage = async () => {
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/api/storage-test`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setResult({
+          success: true,
+          data,
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+      } else {
+        setResult({
+          success: false,
+          error: `HTTP ${response.status}: ${response.statusText}`,
+          status: response.status
+        });
+      }
+    } catch (error) {
+      setResult({
+        success: false,
+        error: error.message,
+        type: error.name
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const testUpload = async () => {
+    setLoading(true);
+    setResult(null);
+
+    try {
+      // Create a simple test file
+      const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
+      const formData = new FormData();
+      formData.append('file', testFile);
+
+      const response = await fetch(`${config.API_BASE_URL}/api/upload-test`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setResult({
+          success: true,
+          data,
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setResult({
+          success: false,
+          error: errorData.error || `HTTP ${response.status}: ${response.statusText}`,
+          status: response.status
+        });
+      }
+    } catch (error) {
+      setResult({
+        success: false,
+        error: error.message,
+        type: error.name
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
         CORS Test
       </Typography>
       
-      <Button 
-        variant="contained" 
-        onClick={testCORS} 
-        disabled={loading}
-        sx={{ mb: 2 }}
-      >
-        {loading ? 'Testing...' : 'Test CORS'}
-      </Button>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+        <Button 
+          variant="contained" 
+          onClick={testCORS} 
+          disabled={loading}
+        >
+          {loading ? 'Testing...' : 'Test CORS'}
+        </Button>
+        <Button 
+          variant="outlined" 
+          onClick={testStorage} 
+          disabled={loading}
+        >
+          {loading ? 'Testing...' : 'Test Storage'}
+        </Button>
+        <Button 
+          variant="outlined" 
+          onClick={testUpload} 
+          disabled={loading}
+        >
+          {loading ? 'Testing...' : 'Test Upload'}
+        </Button>
+      </Box>
 
       {result && (
         <Box sx={{ mt: 2 }}>
