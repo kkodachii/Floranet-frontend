@@ -42,7 +42,10 @@ const StatusPriorityDropdown = ({
       return value === 'open' ? 'OPEN' :
              value === 'in_progress' ? 'IN PROGRESS' :
              value === 'resolved' ? 'RESOLVED' :
-             value === 'closed' ? 'CLOSED' : value.toUpperCase();
+             value === 'completed' ? 'COMPLETED' :
+             value === 'closed' ? 'CLOSED' :
+             value === 'pending' ? 'PENDING' :
+             value === 'cancelled' ? 'CANCELLED' : value.toUpperCase();
     } else if (type === 'priority') {
       return value === 'high' ? 'HIGH' :
              value === 'medium' ? 'MEDIUM' : 'LOW';
@@ -55,6 +58,9 @@ const StatusPriorityDropdown = ({
       return value === 'open' ? 'info.light' :
              value === 'in_progress' ? 'warning.light' :
              value === 'resolved' ? 'success.light' :
+             value === 'completed' ? 'success.light' :
+             value === 'pending' ? 'warning.light' :
+             value === 'cancelled' ? 'error.light' :
              value === 'closed' ? 'grey.300' : 'grey.300';
     } else if (type === 'priority') {
       return value === 'high' ? 'error.light' :
@@ -68,6 +74,9 @@ const StatusPriorityDropdown = ({
       return value === 'open' ? 'info.contrastText' :
              value === 'in_progress' ? 'warning.contrastText' :
              value === 'resolved' ? 'success.contrastText' :
+             value === 'completed' ? 'success.contrastText' :
+             value === 'pending' ? 'warning.contrastText' :
+             value === 'cancelled' ? 'error.contrastText' :
              value === 'closed' ? 'grey.700' : 'grey.700';
     } else if (type === 'priority') {
       return value === 'high' ? 'error.contrastText' :

@@ -23,6 +23,7 @@ import ExpandableFloraTable from '../../../components/ExpandableFloraTable';
 import FilterPopover from '../../../components/FilterPopover';
 import CCTVAccordion from '../../../components/CCTVAccordion';
 import StatusPriorityDropdown from '../../../components/StatusPriorityDropdown';
+import StatusBadge from '../../../components/StatusBadge';
 import apiService from '../../../services/api';
 
 const columns = [

@@ -25,6 +25,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import DeleteIcon from '@mui/icons-material/Delete';
 import apiService from '../services/api';
 import config from '../config/env';
+import MediaViewerModal from './MediaViewerModal';
 
 const CCTVAccordion = ({ 
   cctvRequest, 
@@ -34,10 +35,14 @@ const CCTVAccordion = ({
   loading = false 
 }) => {
   const [newFollowup, setNewFollowup] = useState('');
+  const [footageDescription, setFootageDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   const [footageError, setFootageError] = useState('');
   const [uploadingFootage, setUploadingFootage] = useState(false);
   const [addingFollowup, setAddingFollowup] = useState(false);
   const [deletingFootage, setDeletingFootage] = useState(null);
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [selectedMediaFile, setSelectedMediaFile] = useState(null);
   
   const theme = useTheme();
 
@@ -117,20 +122,16 @@ const CCTVAccordion = ({
       return;
     }
 
-    // Validate file size (100MB limit)
-    if (file.size > 100 * 1024 * 1024) {
-      setFootageError('File size must be less than 100MB');
+    // Validate file size (500MB limit)
+    if (file.size > 500 * 1024 * 1024) {
+      setFootageError('File size must be less than 500MB');
       return;
     }
 
     setFootageError('');
     
-    // Auto-upload the file immediately after selection (like profile picture)
-    const footageData = {
-      file: file,
-      description: '' // No description field in simplified version
-    };
-    handleUploadFootage(footageData);
+    // Store the file and show description input
+    setSelectedFile(file);
   };
 
   const handleUploadFootage = async (footageData) => {
@@ -142,6 +143,8 @@ const CCTVAccordion = ({
       await onUpdateFootage(cctvRequest.id, footageData);
       
       // Clear the form
+      setSelectedFile(null);
+      setFootageDescription('');
       const fileInput = document.getElementById('footage-upload');
       if (fileInput) fileInput.value = '';
     } catch (error) {
@@ -162,6 +165,46 @@ const CCTVAccordion = ({
     } finally {
       setDeletingFootage(null);
     }
+  };
+
+  const handleDownloadFootage = async (file) => {
+    try {
+      // Use the dedicated download endpoint
+      const response = await fetch(`${config.API_BASE_URL}/api/admin/cctv-requests/${cctvRequest.id}/footage/${file.id}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.file_name || file.cctv_footage.split('/').pop() || 'cctv_footage';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      // Fallback to opening in new tab if download fails
+      window.open(`${config.API_BASE_URL}/storage/${file.cctv_footage}`, '_blank');
+    }
+  };
+
+  const handleOpenMediaModal = (file) => {
+    setSelectedMediaFile(file);
+    setMediaModalOpen(true);
+  };
+
+  const handleCloseMediaModal = () => {
+    setMediaModalOpen(false);
+    setSelectedMediaFile(null);
   };
 
   const formatFileSize = (bytes) => {
@@ -242,7 +285,7 @@ const CCTVAccordion = ({
                   Upload CCTV footage or images
                 </Typography>
                 <Typography variant="caption" color="text.secondary" textAlign="center">
-                  Supported formats: MP4, AVI, MOV, WMV, JPG, PNG, GIF (Max: 100MB)
+                  Supported formats: MP4, AVI, MOV, WMV, JPG, PNG, GIF (Max: 500MB)
                 </Typography>
                 
                 <input
@@ -257,11 +300,58 @@ const CCTVAccordion = ({
                   variant="outlined"
                   component="label"
                   htmlFor="footage-upload"
-                  startIcon={uploadingFootage ? <CircularProgress size={16} /> : <UploadIcon />}
+                  startIcon={<UploadIcon />}
                   disabled={loading || uploadingFootage}
                 >
-                  {uploadingFootage ? 'Uploading...' : 'Select File'}
+                  Select File
                 </Button>
+                
+                {selectedFile && (
+                  <Box sx={{ width: '100%', textAlign: 'center' }}>
+                    <Typography variant="body2" color="primary" sx={{ mb: 2 }}>
+                      Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </Typography>
+                    
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Description (optional)"
+                      value={footageDescription}
+                      onChange={(e) => setFootageDescription(e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+                    
+                    <Stack direction="row" spacing={1} justifyContent="center">
+                      <Button
+                        variant="contained"
+                        onClick={() => {
+                          const footageData = {
+                            file: selectedFile,
+                            description: footageDescription.trim()
+                          };
+                          handleUploadFootage(footageData);
+                        }}
+                        startIcon={uploadingFootage ? <CircularProgress size={16} /> : <UploadIcon />}
+                        disabled={uploadingFootage}
+                      >
+                        {uploadingFootage ? 'Uploading...' : 'Upload'}
+                      </Button>
+                      
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setFootageDescription('');
+                          const fileInput = document.getElementById('footage-upload');
+                          if (fileInput) fileInput.value = '';
+                        }}
+                        disabled={uploadingFootage}
+                      >
+                        Cancel
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
                 
                 {footageError && (
                   <Alert severity="error" sx={{ width: '100%' }}>
@@ -332,9 +422,20 @@ const CCTVAccordion = ({
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => window.open(`${config.API_BASE_URL}/storage/${file.cctv_footage}`, '_blank')}
+                            onClick={() => handleOpenMediaModal(file)}
                           >
                             <PlayArrowIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {isImageFile(file.cctv_footage) && (
+                        <Tooltip title="View Image">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleOpenMediaModal(file)}
+                          >
+                            <ImageIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                       )}
@@ -342,7 +443,7 @@ const CCTVAccordion = ({
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => window.open(`${config.API_BASE_URL}/storage/${file.cctv_footage}`, '_blank')}
+                          onClick={() => handleDownloadFootage(file)}
                         >
                           <DownloadIcon fontSize="small" />
                         </IconButton>
@@ -369,28 +470,6 @@ const CCTVAccordion = ({
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={2}>
-            {/* Add new followup */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Add a new followup..."
-                value={newFollowup}
-                onChange={(e) => setNewFollowup(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddFollowup()}
-                disabled={loading || addingFollowup}
-              />
-              <Button
-                variant="contained"
-                startIcon={addingFollowup ? <CircularProgress size={16} /> : <AddIcon />}
-                onClick={handleAddFollowup}
-                disabled={!newFollowup.trim() || loading || addingFollowup}
-                sx={{ minWidth: 'auto', px: 2 }}
-              >
-                {addingFollowup ? 'Adding...' : 'Add'}
-              </Button>
-            </Box>
-
             {/* Existing followups */}
             {cctvRequest.followups && cctvRequest.followups.length > 0 ? (
               <Stack spacing={1}>
@@ -425,12 +504,41 @@ const CCTVAccordion = ({
               </Stack>
             ) : (
               <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                No followups yet. Add the first one above.
+                No followups yet. Add the first one below.
               </Typography>
             )}
+
+            {/* Add new followup */}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Add a new followup..."
+                value={newFollowup}
+                onChange={(e) => setNewFollowup(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddFollowup()}
+                disabled={loading || addingFollowup}
+              />
+              <Button
+                variant="contained"
+                startIcon={addingFollowup ? <CircularProgress size={16} /> : <AddIcon />}
+                onClick={handleAddFollowup}
+                disabled={!newFollowup.trim() || loading || addingFollowup}
+                sx={{ minWidth: 'auto', px: 2 }}
+              >
+                {addingFollowup ? 'Adding...' : 'Add'}
+              </Button>
+            </Box>
           </Stack>
         </AccordionDetails>
       </Accordion>
+
+      {/* Media Viewer Modal */}
+      <MediaViewerModal
+        open={mediaModalOpen}
+        onClose={handleCloseMediaModal}
+        mediaFile={selectedMediaFile}
+      />
     </Box>
   );
 };
