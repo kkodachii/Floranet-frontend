@@ -38,6 +38,9 @@ const CCTVAccordion = ({
   const [uploadingFootage, setUploadingFootage] = useState(false);
   const [addingFollowup, setAddingFollowup] = useState(false);
   const [deletingFootage, setDeletingFootage] = useState(null);
+  const [downloadingFootage, setDownloadingFootage] = useState(null);
+  const [footageDescription, setFootageDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   
   const theme = useTheme();
 
@@ -124,24 +127,25 @@ const CCTVAccordion = ({
     }
 
     setFootageError('');
-    
-    // Auto-upload the file immediately after selection (like profile picture)
-    const footageData = {
-      file: file,
-      description: '' // No description field in simplified version
-    };
-    handleUploadFootage(footageData);
+    setSelectedFile(file);
   };
 
-  const handleUploadFootage = async (footageData) => {
-    if (!footageData || !footageData.file) return;
+  const handleUploadFootage = async () => {
+    if (!selectedFile) return;
 
     try {
       setUploadingFootage(true);
       
+      const footageData = {
+        file: selectedFile,
+        description: footageDescription.trim()
+      };
+      
       await onUpdateFootage(cctvRequest.id, footageData);
       
       // Clear the form
+      setSelectedFile(null);
+      setFootageDescription('');
       const fileInput = document.getElementById('footage-upload');
       if (fileInput) fileInput.value = '';
     } catch (error) {
@@ -161,6 +165,18 @@ const CCTVAccordion = ({
       // You might want to show an error message here
     } finally {
       setDeletingFootage(null);
+    }
+  };
+
+  const handleDownloadFootage = async (footageId) => {
+    try {
+      setDownloadingFootage(footageId);
+      await apiService.downloadCCTVFootage(cctvRequest.id, footageId);
+    } catch (error) {
+      console.error('Error downloading footage:', error);
+      // You might want to show an error message here
+    } finally {
+      setDownloadingFootage(null);
     }
   };
 
@@ -257,11 +273,37 @@ const CCTVAccordion = ({
                   variant="outlined"
                   component="label"
                   htmlFor="footage-upload"
-                  startIcon={uploadingFootage ? <CircularProgress size={16} /> : <UploadIcon />}
+                  startIcon={<UploadIcon />}
                   disabled={loading || uploadingFootage}
                 >
-                  {uploadingFootage ? 'Uploading...' : 'Select File'}
+                  Select File
                 </Button>
+                
+                {selectedFile && (
+                  <Box sx={{ width: '100%', textAlign: 'center' }}>
+                    <Typography variant="body2" color="primary" sx={{ mb: 1 }}>
+                      Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </Typography>
+                    
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Description (optional)"
+                      value={footageDescription}
+                      onChange={(e) => setFootageDescription(e.target.value)}
+                      sx={{ mb: 1 }}
+                    />
+                    
+                    <Button
+                      variant="contained"
+                      onClick={handleUploadFootage}
+                      startIcon={uploadingFootage ? <CircularProgress size={16} /> : <UploadIcon />}
+                      disabled={uploadingFootage}
+                    >
+                      {uploadingFootage ? 'Uploading...' : 'Upload'}
+                    </Button>
+                  </Box>
+                )}
                 
                 {footageError && (
                   <Alert severity="error" sx={{ width: '100%' }}>
@@ -342,9 +384,14 @@ const CCTVAccordion = ({
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => window.open(`${config.API_BASE_URL}/storage/${file.cctv_footage}`, '_blank')}
+                          onClick={() => handleDownloadFootage(file.id)}
+                          disabled={downloadingFootage === file.id}
                         >
-                          <DownloadIcon fontSize="small" />
+                          {downloadingFootage === file.id ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <DownloadIcon fontSize="small" />
+                          )}
                         </IconButton>
                       </Tooltip>
                     </Stack>
@@ -369,28 +416,6 @@ const CCTVAccordion = ({
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={2}>
-            {/* Add new followup */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Add a new followup..."
-                value={newFollowup}
-                onChange={(e) => setNewFollowup(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddFollowup()}
-                disabled={loading || addingFollowup}
-              />
-              <Button
-                variant="contained"
-                startIcon={addingFollowup ? <CircularProgress size={16} /> : <AddIcon />}
-                onClick={handleAddFollowup}
-                disabled={!newFollowup.trim() || loading || addingFollowup}
-                sx={{ minWidth: 'auto', px: 2 }}
-              >
-                {addingFollowup ? 'Adding...' : 'Add'}
-              </Button>
-            </Box>
-
             {/* Existing followups */}
             {cctvRequest.followups && cctvRequest.followups.length > 0 ? (
               <Stack spacing={1}>
@@ -425,9 +450,31 @@ const CCTVAccordion = ({
               </Stack>
             ) : (
               <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                No followups yet. Add the first one above.
+                No followups yet. Add the first one below.
               </Typography>
             )}
+
+            {/* Add new followup - moved to bottom */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Add a new followup..."
+                value={newFollowup}
+                onChange={(e) => setNewFollowup(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddFollowup()}
+                disabled={loading || addingFollowup}
+              />
+              <Button
+                variant="contained"
+                startIcon={addingFollowup ? <CircularProgress size={16} /> : <AddIcon />}
+                onClick={handleAddFollowup}
+                disabled={!newFollowup.trim() || loading || addingFollowup}
+                sx={{ minWidth: 'auto', px: 2 }}
+              >
+                {addingFollowup ? 'Adding...' : 'Add'}
+              </Button>
+            </Box>
           </Stack>
         </AccordionDetails>
       </Accordion>

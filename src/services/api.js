@@ -794,8 +794,106 @@ class ApiService {
     });
   }
 
+  async downloadCCTVFootage(cctvId, footageId) {
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/cctv-requests/${cctvId}/footage/${footageId}/download`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Download failed with status: ${response.status}`);
+      }
+      
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'cctv-footage';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      // Create a blob from the response and trigger download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      return { success: true, message: 'Download started successfully' };
+    } catch (error) {
+      console.error('CCTV footage download failed:', error);
+      throw error;
+    }
+  }
+
   async getCCTVStats() {
     return this.request('/admin/cctv-stats');
+  }
+
+  // User CCTV footage download
+  async userDownloadCCTVFootage(cctvId, footageId) {
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/user/cctv-requests/${cctvId}/footage/${footageId}/download`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Download failed with status: ${response.status}`);
+      }
+      
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'cctv-footage';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      // Create a blob from the response and trigger download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      return { success: true, message: 'Download started successfully' };
+    } catch (error) {
+      console.error('User CCTV footage download failed:', error);
+      throw error;
+    }
+  }
+
+  // User CCTV request methods
+  async getUserCCTVRequestById(id) {
+    return this.request(`/user/cctv-requests/${id}`);
   }
 }
 

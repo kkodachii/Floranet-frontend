@@ -39,6 +39,13 @@ const StatusPriorityDropdown = ({
 
   const getDisplayText = (value) => {
     if (type === 'status') {
+      // CCTV Status display text
+      if (value === 'pending') return 'PENDING';
+      if (value === 'in_progress') return 'IN PROGRESS';
+      if (value === 'completed') return 'COMPLETED';
+      if (value === 'cancelled') return 'CANCELLED';
+      
+      // Fallback for other statuses
       return value === 'open' ? 'OPEN' :
              value === 'in_progress' ? 'IN PROGRESS' :
              value === 'resolved' ? 'RESOLVED' :
@@ -52,10 +59,20 @@ const StatusPriorityDropdown = ({
 
   const getColor = (value) => {
     if (type === 'status') {
-      return value === 'open' ? 'info.light' :
-             value === 'in_progress' ? 'warning.light' :
-             value === 'resolved' ? 'success.light' :
-             value === 'closed' ? 'grey.300' : 'grey.300';
+      // CCTV Status colors
+      if (value === 'pending') return '#ff9800'; // Orange background
+      if (value === 'in_progress') return '#2196f3'; // Blue background
+      if (value === 'completed') return '#4caf50'; // Green background
+      if (value === 'cancelled') return '#f44336'; // Red background
+      
+      // Complaint Status colors (same color scheme)
+      if (value === 'open') return '#ff9800'; // Orange background (same as pending)
+      if (value === 'in_progress') return '#2196f3'; // Blue background
+      if (value === 'resolved') return '#4caf50'; // Green background (same as completed)
+      if (value === 'closed') return '#9e9e9e'; // Grey background
+      
+      // Fallback for other statuses
+      return 'grey.300';
     } else if (type === 'priority') {
       return value === 'high' ? 'error.light' :
              value === 'medium' ? 'warning.light' : 'success.light';
@@ -65,10 +82,20 @@ const StatusPriorityDropdown = ({
 
   const getTextColor = (value) => {
     if (type === 'status') {
-      return value === 'open' ? 'info.contrastText' :
-             value === 'in_progress' ? 'warning.contrastText' :
-             value === 'resolved' ? 'success.contrastText' :
-             value === 'closed' ? 'grey.700' : 'grey.700';
+      // CCTV Status text colors
+      if (value === 'pending') return '#ffffff'; // White text
+      if (value === 'in_progress') return '#ffffff'; // White text
+      if (value === 'completed') return '#ffffff'; // White text
+      if (value === 'cancelled') return '#ffffff'; // White text
+      
+      // Complaint Status text colors (same color scheme)
+      if (value === 'open') return '#ffffff'; // White text (same as pending)
+      if (value === 'in_progress') return '#ffffff'; // White text
+      if (value === 'resolved') return '#ffffff'; // White text (same as completed)
+      if (value === 'closed') return '#ffffff'; // White text
+      
+      // Fallback for other statuses
+      return 'grey.700';
     } else if (type === 'priority') {
       return value === 'high' ? 'error.contrastText' :
              value === 'medium' ? 'warning.contrastText' : 'success.contrastText';
