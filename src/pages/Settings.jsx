@@ -60,6 +60,7 @@ function Settings() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -102,6 +103,7 @@ function Settings() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(profileData),
       });
 
@@ -161,6 +163,7 @@ function Settings() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           password: passwordData.password,
           current_password: passwordData.current_password,
@@ -204,6 +207,7 @@ function Settings() {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: formData,
       });
 
