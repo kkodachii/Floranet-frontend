@@ -117,9 +117,9 @@ const CCTVAccordion = ({
       return;
     }
 
-    // Validate file size (500MB limit)
-    if (file.size > 500 * 1024 * 1024) {
-      setFootageError('File size must be less than 500MB');
+    // Validate file size (100MB limit)
+    if (file.size > 100 * 1024 * 1024) {
+      setFootageError('File size must be less than 100MB');
       return;
     }
 
@@ -242,7 +242,7 @@ const CCTVAccordion = ({
                   Upload CCTV footage or images
                 </Typography>
                 <Typography variant="caption" color="text.secondary" textAlign="center">
-                  Supported formats: MP4, AVI, MOV, WMV, JPG, PNG, GIF (Max: 500MB)
+                  Supported formats: MP4, AVI, MOV, WMV, JPG, PNG, GIF (Max: 100MB)
                 </Typography>
                 
                 <input
