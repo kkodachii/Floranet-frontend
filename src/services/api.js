@@ -869,6 +869,10 @@ class ApiService {
     }
   }
 
+  async getCCTVFootage(cctvId) {
+    return this.request(`/admin/cctv-requests/${cctvId}/footage`);
+  }
+
   async deleteCCTVFootage(cctvId, footageId) {
     return this.request(`/admin/cctv-requests/${cctvId}/footage/${footageId}`, {
       method: 'DELETE',
