@@ -766,6 +766,15 @@ class ApiService {
     const token = localStorage.getItem('token');
     const url = `${this.baseURL}/api/admin/cctv-requests/${id}/footage`;
     
+    // Debug: Log file details
+    console.log('Uploading CCTV footage:', {
+      fileName: footageData.file.name,
+      fileSize: footageData.file.size,
+      fileSizeMB: (footageData.file.size / (1024 * 1024)).toFixed(2) + ' MB',
+      fileType: footageData.file.type,
+      url: url
+    });
+    
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -778,6 +787,11 @@ class ApiService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Upload failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData: errorData
+        });
         throw new Error(errorData.message || `Upload failed with status: ${response.status}`);
       }
       
