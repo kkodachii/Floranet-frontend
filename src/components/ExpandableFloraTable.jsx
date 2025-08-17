@@ -74,6 +74,7 @@ const ExpandableFloraTable = ({
                     ...(col.id === 'status' && { minWidth: 100, maxWidth: 120 }),
                     ...(col.id === 'remarks' && { minWidth: 200, maxWidth: 300 }),
                     ...(col.id === 'actions' && { minWidth: 120, maxWidth: 140 }),
+                    ...(col.id === 'location' && { minWidth: 250, maxWidth: 350 }),
                   }}
                 >
                   {col.label}
@@ -130,6 +131,7 @@ const ExpandableFloraTable = ({
                         ...(col.id === 'status' && { minWidth: 100, maxWidth: 120 }),
                         ...(col.id === 'remarks' && { minWidth: 200, maxWidth: 300 }),
                         ...(col.id === 'actions' && { minWidth: 120, maxWidth: 140 }),
+                        ...(col.id === 'location' && { minWidth: 250, maxWidth: 350 }),
                       }}
                     >
                       {col.id === 'priority' || col.id === 'status' || col.id === 'remarks' || col.id === 'actions' ? (
