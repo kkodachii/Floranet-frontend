@@ -781,7 +781,6 @@ class ApiService {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
-        credentials: 'include', // Add this for CORS with credentials
         body: formData,
       });
       
@@ -848,7 +847,6 @@ class ApiService {
             'Accept': 'application/json',
             ...(token && { Authorization: `Bearer ${token}` }),
           },
-          credentials: 'include', // Add this for CORS with credentials
           body: formData,
         });
         
@@ -879,61 +877,6 @@ class ApiService {
 
   async getCCTVStats() {
     return this.request('/admin/cctv-stats');
-  }
-
-  // Test methods for debugging
-  async testFileUpload(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const url = `${this.baseURL}/api/test-file-upload`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-        },
-        credentials: 'include',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Upload failed with status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Test file upload failed:', error);
-      throw error;
-    }
-  }
-
-  async testCorsPost(data) {
-    const url = `${this.baseURL}/api/test-cors-post`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Request failed with status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Test CORS POST failed:', error);
-      throw error;
-    }
   }
 }
 
