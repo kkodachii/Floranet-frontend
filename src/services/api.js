@@ -704,6 +704,180 @@ class ApiService {
   async getResidentMonthlyDueYears(residentId) {
     return this.request(`/admin/residents/${residentId}/monthly-dues/years`);
   }
+
+  // CCTV Request methods
+  async getCCTVRequestsFiltered(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/cctv-requests?${params.toString()}`);
+  }
+
+  async getCCTVRequestById(id) {
+    return this.request(`/admin/cctv-requests/${id}`);
+  }
+
+  async createCCTVRequest(requestData) {
+    return this.request('/admin/cctv-requests', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    });
+  }
+
+  async updateCCTVRequest(id, requestData) {
+    return this.request(`/admin/cctv-requests/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(requestData),
+    });
+  }
+
+  async updateCCTVStatus(id, status) {
+    return this.request(`/admin/cctv-requests/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async updateCCTVFollowups(id, followups) {
+    return this.request(`/admin/cctv-requests/${id}/followups`, {
+      method: 'PATCH',
+      body: JSON.stringify({ followups }),
+    });
+  }
+
+  async updateCCTVFootage(id, footageData) {
+    const formData = new FormData();
+    formData.append('footage', footageData.file);
+    if (footageData.description) {
+      formData.append('description', footageData.description);
+    }
+
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/cctv-requests/${id}/footage`;
+    
+    try {
+      // Log file details for debugging
+      console.log('Uploading file:', {
+        name: footageData.file.name,
+        size: footageData.file.size,
+        type: footageData.file.type,
+        sizeInMB: (footageData.file.size / (1024 * 1024)).toFixed(2) + ' MB'
+      });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `Upload failed with status: ${response.status}`;
+        
+        // If file is too large for regular upload, try chunked upload
+        if (response.status === 400 && errorMessage.includes('exceeds server limits')) {
+          console.log('File too large for regular upload, trying chunked upload...');
+          return await this.uploadCCTVFootageChunked(id, footageData);
+        }
+        
+        // Provide more specific error messages
+        if (response.status === 413) {
+          throw new Error('File too large. Please try a smaller file (max 100MB).');
+        } else if (response.status === 400) {
+          throw new Error(errorMessage || 'Invalid file format or upload error. Please check your file and try again.');
+        } else {
+          throw new Error(errorMessage);
+        }
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('CCTV footage upload failed:', error);
+      
+      // Check if it's a network error
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        throw new Error('Network error. Please check your connection and try again.');
+      }
+      
+      throw error;
+    }
+  }
+
+  async uploadCCTVFootageChunked(id, footageData) {
+    const token = localStorage.getItem('token');
+    const chunkSize = 1024 * 1024; // 1MB chunks
+    const file = footageData.file;
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    
+    console.log(`Starting chunked upload: ${totalChunks} chunks of ${chunkSize} bytes each`);
+    
+    try {
+      for (let chunkNumber = 0; chunkNumber < totalChunks; chunkNumber++) {
+        const start = chunkNumber * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunk = file.slice(start, end);
+        
+        const formData = new FormData();
+        formData.append('chunk', chunk, file.name);
+        formData.append('chunk_number', chunkNumber);
+        formData.append('total_chunks', totalChunks);
+        formData.append('file_name', file.name);
+        formData.append('file_size', file.size);
+        if (footageData.description) {
+          formData.append('description', footageData.description);
+        }
+        
+        const response = await fetch(`${this.baseURL}/api/admin/cctv-requests/${id}/footage-chunk`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Chunk ${chunkNumber + 1} upload failed: ${errorData.message || 'Unknown error'}`);
+        }
+        
+        const result = await response.json();
+        console.log(`Chunk ${chunkNumber + 1}/${totalChunks} uploaded successfully`);
+        
+        // If this was the last chunk, return the final result
+        if (chunkNumber === totalChunks - 1) {
+          return result;
+        }
+      }
+    } catch (error) {
+      console.error('Chunked upload failed:', error);
+      throw new Error(`Chunked upload failed: ${error.message}`);
+    }
+  }
+
+  async deleteCCTVFootage(cctvId, footageId) {
+    return this.request(`/admin/cctv-requests/${cctvId}/footage/${footageId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getCCTVStats() {
+    return this.request('/admin/cctv-stats');
+  }
 }
 
 // Create and export a singleton instance
