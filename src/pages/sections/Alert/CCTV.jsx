@@ -231,7 +231,7 @@ export default function CCTV() {
 
   const handleUpdateFootage = async (cctvId, footageData) => {
     try {
-      const response = await apiService.updateCCTVFootage(cctvId, footageData);
+      await apiService.updateCCTVFootage(cctvId, footageData);
       
       // Refresh the CCTV request data to get the updated footage array
       const updatedRequest = await apiService.getCCTVRequestById(cctvId);
@@ -246,11 +246,11 @@ export default function CCTV() {
       
       setSnackbar({
         open: true,
-        message: 'Footage updated successfully',
+        message: 'Footage uploaded successfully',
         severity: 'success'
       });
     } catch (err) {
-      console.error('Error updating footage:', err);
+      console.error('Error uploading footage:', err);
       throw err;
     }
   };

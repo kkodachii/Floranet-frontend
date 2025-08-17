@@ -24,6 +24,7 @@ import VideoFileIcon from '@mui/icons-material/VideoFile';
 import ImageIcon from '@mui/icons-material/Image';
 import DeleteIcon from '@mui/icons-material/Delete';
 import apiService from '../services/api';
+import config from '../config/env';
 
 const CCTVAccordion = ({ 
   cctvRequest, 
@@ -33,8 +34,6 @@ const CCTVAccordion = ({
   loading = false 
 }) => {
   const [newFollowup, setNewFollowup] = useState('');
-  const [newFootage, setNewFootage] = useState(null);
-  const [footageDescription, setFootageDescription] = useState('');
   const [footageError, setFootageError] = useState('');
   const [uploadingFootage, setUploadingFootage] = useState(false);
   const [addingFollowup, setAddingFollowup] = useState(false);
@@ -125,25 +124,24 @@ const CCTVAccordion = ({
     }
 
     setFootageError('');
-    setNewFootage(file);
+    
+    // Auto-upload the file immediately after selection (like profile picture)
+    const footageData = {
+      file: file,
+      description: '' // No description field in simplified version
+    };
+    handleUploadFootage(footageData);
   };
 
-  const handleUploadFootage = async () => {
-    if (!newFootage) return;
+  const handleUploadFootage = async (footageData) => {
+    if (!footageData || !footageData.file) return;
 
     try {
       setUploadingFootage(true);
       
-      const footageData = {
-        file: newFootage,
-        description: footageDescription.trim()
-      };
-      
       await onUpdateFootage(cctvRequest.id, footageData);
       
       // Clear the form
-      setNewFootage(null);
-      setFootageDescription('');
       const fileInput = document.getElementById('footage-upload');
       if (fileInput) fileInput.value = '';
     } catch (error) {
@@ -259,38 +257,11 @@ const CCTVAccordion = ({
                   variant="outlined"
                   component="label"
                   htmlFor="footage-upload"
-                  startIcon={<UploadIcon />}
+                  startIcon={uploadingFootage ? <CircularProgress size={16} /> : <UploadIcon />}
                   disabled={loading || uploadingFootage}
                 >
-                  Select File
+                  {uploadingFootage ? 'Uploading...' : 'Select File'}
                 </Button>
-                
-                {newFootage && (
-                  <Box sx={{ width: '100%', textAlign: 'center' }}>
-                    <Typography variant="body2" color="primary">
-                      Selected: {newFootage.name} ({formatFileSize(newFootage.size)})
-                    </Typography>
-                    
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Description (optional)"
-                      value={footageDescription}
-                      onChange={(e) => setFootageDescription(e.target.value)}
-                      sx={{ mt: 1 }}
-                    />
-                    
-                    <Button
-                      variant="contained"
-                      onClick={handleUploadFootage}
-                      startIcon={uploadingFootage ? <CircularProgress size={16} /> : <UploadIcon />}
-                      disabled={uploadingFootage}
-                      sx={{ mt: 1 }}
-                    >
-                      {uploadingFootage ? 'Uploading...' : 'Upload'}
-                    </Button>
-                  </Box>
-                )}
                 
                 {footageError && (
                   <Alert severity="error" sx={{ width: '100%' }}>
@@ -361,7 +332,7 @@ const CCTVAccordion = ({
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => window.open(file.cctv_footage, '_blank')}
+                            onClick={() => window.open(`${config.API_BASE_URL}/storage/${file.cctv_footage}`, '_blank')}
                           >
                             <PlayArrowIcon fontSize="small" />
                           </IconButton>
@@ -371,7 +342,7 @@ const CCTVAccordion = ({
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => window.open(file.cctv_footage, '_blank')}
+                          onClick={() => window.open(`${config.API_BASE_URL}/storage/${file.cctv_footage}`, '_blank')}
                         >
                           <DownloadIcon fontSize="small" />
                         </IconButton>
