@@ -51,6 +51,23 @@ const months = [
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 6 }, (_, i) => currentYear + i);
 
+// Default streets to always include
+const defaultStreets = [
+  'Adelfa',
+  'Bougainvillea',
+  'Champaca',
+  'Dahlia',
+  'Gumamela',
+  'Ilang-ilang',
+  'Jasmin',
+  'Kalachuchi',
+  'Lilac',
+  'Rosal',
+  'Sampaguita',
+  'Santan',
+  'Waling-waling'
+];
+
 function AddCollection() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -72,11 +89,14 @@ function AddCollection() {
   const fetchStreets = async () => {
     try {
       const response = await apiService.getCollectionStreets();
-      if (response.success) {
-        setStreets(response.data);
-      }
+      const apiStreets = response && response.success ? (response.data || []) : [];
+      // Merge API streets with defaults, preserving default order first
+      const merged = [...defaultStreets, ...apiStreets.filter(s => !defaultStreets.includes(s))];
+      setStreets(merged);
     } catch (error) {
       console.error('Error fetching streets:', error);
+      // Fallback to defaults if API fails
+      setStreets(defaultStreets);
     }
   };
 
