@@ -139,9 +139,7 @@ function EditVehicle() {
         if (!formData.vehicleType.trim()) {
           newErrors.vehicleType = 'Vehicle type is required';
         }
-        if (!formData.vehiclePassId.trim()) {
-          newErrors.vehiclePassId = 'Vehicle Pass ID is required';
-        }
+        // Vehicle Pass ID is immutable/auto-generated; no validation required here
         if (!formData.plateNumber.trim()) {
           newErrors.plateNumber = 'Plate number is required';
         }
@@ -328,11 +326,10 @@ function EditVehicle() {
                 fullWidth
                 label="Vehicle Pass ID"
                 value={formData.vehiclePassId}
-                onChange={(e) => handleInputChange('vehiclePassId', e.target.value)}
                 error={!!errors.vehiclePassId}
-                helperText={errors.vehiclePassId || 'Enter the vehicle pass ID'}
+                helperText={errors.vehiclePassId || 'Auto-generated (immutable)'}
                 required
-                inputProps={{ maxLength: 20 }}
+                inputProps={{ maxLength: 20, readOnly: true }}
                 sx={{ minWidth: 350, maxWidth: 500 }}
               />
             </Grid>

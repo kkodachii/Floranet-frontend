@@ -66,7 +66,7 @@ function AddVehicle() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
-  // Fetch all residents for dropdown
+  // Fetch all residents for dropdown and prefetch next Vehicle Pass ID
   useEffect(() => {
     const fetchResidents = async () => {
       try {
@@ -86,7 +86,21 @@ function AddVehicle() {
         setResidentsLoading(false);
       }
     };
+
+    const fetchNextVehiclePassId = async () => {
+      try {
+        const resp = await apiService.getNextVehiclePassId();
+        const nextId = resp?.next_id || resp?.nextId || '';
+        if (nextId) {
+          setFormData(prev => ({ ...prev, vehiclePassId: nextId }));
+        }
+      } catch (e) {
+        console.error('Failed to fetch next Vehicle Pass ID:', e);
+      }
+    };
+
     fetchResidents();
+    fetchNextVehiclePassId();
   }, []);
 
   // Handle resident selection
@@ -98,9 +112,9 @@ function AddVehicle() {
         residentId: resident.resident_id || '',
         houseNumber: resident.house?.house_number || '',
         street: resident.house?.street || '',
-        vehicleType: '',
-        vehiclePassId: '',
-        plateNumber: ''
+        vehicleType: formData.vehicleType || '',
+        vehiclePassId: formData.vehiclePassId || '',
+        plateNumber: formData.plateNumber || ''
       });
       // Clear errors when resident is selected
       setErrors({});
@@ -138,8 +152,9 @@ function AddVehicle() {
         if (!formData.vehicleType.trim()) {
           newErrors.vehicleType = 'Vehicle type is required';
         }
+        // vehiclePassId is auto-generated; ensure it exists
         if (!formData.vehiclePassId.trim()) {
-          newErrors.vehiclePassId = 'Vehicle Pass ID is required';
+          newErrors.vehiclePassId = 'Vehicle Pass ID will be generated automatically';
         }
         if (!formData.plateNumber.trim()) {
           newErrors.plateNumber = 'Plate number is required';
@@ -163,7 +178,7 @@ function AddVehicle() {
       const vehiclePayload = {
         resident_id: formData.residentId,
         vehicle_type: formData.vehicleType,
-        vehicle_pass_id: formData.vehiclePassId,
+        vehicle_pass_id: formData.vehiclePassId, // backend will generate if empty
         plate_number: formData.plateNumber,
         isArchived: false,
         isAccepted: true
@@ -342,9 +357,9 @@ function AddVehicle() {
                 value={formData.vehiclePassId}
                 onChange={(e) => handleInputChange('vehiclePassId', e.target.value)}
                 error={!!errors.vehiclePassId}
-                helperText={errors.vehiclePassId || 'Enter the vehicle pass ID'}
+                helperText={errors.vehiclePassId || 'Auto-generated (e.g., VP0001)'}
                 required
-                inputProps={{ maxLength: 20 }}
+                inputProps={{ maxLength: 20, readOnly: true }}
                 sx={{ minWidth: 350, maxWidth: 500 }}
               />
             </Grid>
