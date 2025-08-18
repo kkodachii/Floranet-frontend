@@ -33,8 +33,10 @@ const FloraTable = ({
   NextIcon = null
 }) => {
   const theme = useTheme();
-  // Always slice the data for pagination, regardless of disableInternalPagination
-  const paginatedRows = rows.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  // Slice only when internal pagination is enabled; otherwise, use rows as provided (e.g., server-side paginated)
+  const paginatedRows = disableInternalPagination
+    ? rows
+    : rows.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   return (
     <Box>
