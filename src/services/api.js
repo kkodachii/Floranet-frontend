@@ -293,6 +293,101 @@ class ApiService {
     });
   }
 
+  // Vehicle management methods
+  async getVehicles(queryParams = '') {
+    return this.request(`/admin/vehicle-passes${queryParams}`);
+  }
+
+  async getVehiclesWithDetails(search = '', filters = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/vehicle-passes-with-details?${params.toString()}`);
+  }
+
+  async getVehicleRequests(search = '', filters = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/vehicle-pass-requests?${params.toString()}`);
+  }
+
+  async getArchivedVehicles(search = '', filters = {}) {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/archived-vehicle-passes?${params.toString()}`);
+  }
+
+  async getVehicleById(id) {
+    return this.request(`/admin/vehicle-passes/${id}`);
+  }
+
+  async createVehicle(vehicleData) {
+    return this.request('/admin/vehicle-passes', {
+      method: 'POST',
+      body: JSON.stringify(vehicleData),
+    });
+  }
+
+  async updateVehicle(id, vehicleData) {
+    return this.request(`/admin/vehicle-passes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(vehicleData),
+    });
+  }
+
+  async archiveVehicle(id) {
+    return this.request(`/admin/vehicle-passes/${id}/archive`, {
+      method: 'POST',
+    });
+  }
+
+  async unarchiveVehicle(id) {
+    return this.request(`/admin/vehicle-passes/${id}/unarchive`, {
+      method: 'POST',
+    });
+  }
+
+  async deleteVehicle(id) {
+    return this.request(`/admin/vehicle-passes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async acceptVehicle(id) {
+    return this.request(`/admin/vehicle-passes/${id}/accept`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectVehicle(id) {
+    return this.request(`/admin/vehicle-passes/${id}/reject`, {
+      method: 'POST',
+    });
+  }
+
   // Alert management methods
   async getAlerts(page = 1, search = '', filters = {}) {
     const params = new URLSearchParams();

@@ -34,18 +34,19 @@ const steps = [
 ];
 
 const streets = [
-  'Camia',
-  'Bouganvilla',
-  'Dahlia',
-  'Champaca',
-  'Sampaguita',
   'Adelfa',
+  'Bougainvillea',
+  'Champaca',
+  'Dahlia',
   'Gumamela',
-  'Santan',
-  'Jasmine',
   'Ilang-ilang',
+  'Jasmin',
+  'Kalachuchi',
+  'Lilac',
   'Rosal',
-  'Kalachuchi'
+  'Sampaguita',
+  'Santan',
+  'Waling-waling'
 ];
 
 function EditVendors() {

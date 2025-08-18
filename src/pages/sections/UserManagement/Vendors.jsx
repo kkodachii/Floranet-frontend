@@ -263,10 +263,24 @@ function Vendors() {
   const statusOptions = ['pending'];
   const currentData = showRequests ? requests : showArchived ? archivedVendors : users;
   
-  // Generate filter options from current data, handling empty data gracefully
-  const streetOptions = currentData.length > 0 ? 
-    Array.from(new Set(currentData.map(u => u.street || u.resident?.house?.street))).filter(Boolean) : [];
+  // Hardcoded street options as requested
+  const streetOptions = [
+    'Adelfa',
+    'Bougainvillea',
+    'Champaca',
+    'Dahlia',
+    'Gumamela',
+    'Ilang-ilang',
+    'Jasmin',
+    'Kalachuchi',
+    'Lilac',
+    'Rosal',
+    'Sampaguita',
+    'Santan',
+    'Waling-waling'
+  ];
   
+  // Generate filter options from current data, handling empty data gracefully
   const residentOptions = currentData.length > 0 ? 
     Array.from(new Set(currentData.map(u => u.residentName || u.resident?.name))).filter(Boolean) : [];
   

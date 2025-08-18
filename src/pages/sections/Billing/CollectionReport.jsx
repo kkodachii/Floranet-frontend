@@ -33,17 +33,21 @@ export default function CollectionReport() {
   const loadYearOptions = async () => {
     try {
       const resp = await apiService.getCollectionReportYears();
-      if (resp.success) {
+      if (resp.success && resp.data && resp.data.length > 0) {
         const yrs = resp.data.map((y) => Number(y)).sort((a, b) => b - a);
         setYearOptions(['all', ...yrs]);
         if (selectedYear !== 'all' && !yrs.includes(Number(selectedYear))) {
           setSelectedYear('all');
         }
       } else {
-        console.error('Failed to load year options:', resp.message);
+        // If no years with data, only show 'all' option
+        setYearOptions(['all']);
+        setSelectedYear('all');
       }
     } catch (e) {
       console.error('Error loading year options:', e);
+      setYearOptions(['all']);
+      setSelectedYear('all');
     }
   };
 

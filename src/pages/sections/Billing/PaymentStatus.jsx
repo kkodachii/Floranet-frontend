@@ -135,7 +135,22 @@ function PaymentStatus() {
   }, [search, selectedStreet]);
 
   // Get unique streets for dropdown
-  const uniqueStreets = ['all', ...Array.from(new Set(residents.map(r => r.street)))];
+  const hardcodedStreets = [
+    'Adelfa',
+    'Bougainvillea',
+    'Champaca',
+    'Dahlia',
+    'Gumamela',
+    'Ilang-ilang',
+    'Jasmin',
+    'Kalachuchi',
+    'Lilac',
+    'Rosal',
+    'Sampaguita',
+    'Santan',
+    'Waling-waling'
+  ];
+  const uniqueStreets = ['all', ...hardcodedStreets];
 
   // Filter residents based on street selection (search is handled by server)
   const filteredResidents = residents.filter((resident) => {

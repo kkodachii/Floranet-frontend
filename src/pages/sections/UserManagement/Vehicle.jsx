@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -10,13 +9,13 @@ import {
   InputAdornment,
   IconButton,
   useMediaQuery,
+  Alert,
+  Snackbar,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  Alert,
-  Snackbar
+  Button
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -35,195 +34,175 @@ import ClearIcon from '@mui/icons-material/Clear';
 import FloraTable from '../../../components/FloraTable';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { useNavigate } from 'react-router-dom';
 import FilterPopover from '../../../components/FilterPopover';
 import apiService from '../../../services/api';
 
-function Residents() {
-  const [users, setUsers] = useState([]);
+
+// API functions
+const fetchVehicles = async (search = '', filters = {}) => {
+  try {
+    const response = await apiService.getVehiclesWithDetails(search, filters);
+    return response || [];
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    return [];
+  }
+};
+
+const fetchVehicleRequests = async (search = '', filters = {}) => {
+  try {
+    const response = await apiService.getVehicleRequests(search, filters);
+    return response || [];
+  } catch (error) {
+    console.error('Error fetching vehicle requests:', error);
+    return [];
+  }
+};
+
+const fetchArchivedVehicles = async (search = '', filters = {}) => {
+  try {
+    const response = await apiService.getArchivedVehicles(search, filters);
+    return response || [];
+  } catch (error) {
+    console.error('Error fetching archived vehicles:', error);
+    return [];
+  }
+};
+
+function Vehicle() {
+  const [vehicles, setVehicles] = useState([]);
   const [requests, setRequests] = useState([]);
-  const [archivedUsers, setArchivedUsers] = useState([]);
+  const [archivedVehicles, setArchivedVehicles] = useState([]);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [filterLoading, setFilterLoading] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [filterValues, setFilterValues] = useState({ 
     status: '', 
-    street: '', 
-    homeownerName: '', 
+    vehicleType: '', 
     residentName: '', 
-    houseNumber: '', 
-    contactNumber: '', 
-    email: '' 
-  });
-  const [pagination, setPagination] = useState({
-    current_page: 1,
-    last_page: 1,
-    per_page: 9,
-    total: 0,
-    from: 0,
-    to: 0
+    vehiclePassId: '', 
+    plateNumber: ''
   });
   const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', data: null });
+  const [error, setError] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const rowsPerPage = 9;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
-  const fetchData = async (pageNum = 1, viewType = 'users') => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Add effect to handle view changes
+  useEffect(() => {
+    loadData();
+  }, [showRequests, showArchived]);
+
+  // Add effect to handle search and filter changes
+  useEffect(() => {
+    setPage(1); // Reset to first page when search or filters change
+    loadData(search, filterValues);
+  }, [search, filterValues]);
+
+  // Add effect to reload data after successful actions
+  useEffect(() => {
+    if (snackbar.open && snackbar.severity === 'success') {
+      // Reload data after successful actions
+      const timer = setTimeout(() => {
+        loadData(search, filterValues);
+      }, 1000); // Wait 1 second for the snackbar to show
+      return () => clearTimeout(timer);
+    }
+  }, [snackbar.open, snackbar.severity]);
+
+  const loadData = async (searchTerm = '', filterValues = {}) => {
     try {
-      if (pageNum === 1) {
+      if (searchTerm) {
         setSearchLoading(true);
+      } else if (Object.values(filterValues).some(v => v !== '')) {
+        setFilterLoading(true);
       } else {
         setLoading(true);
       }
-      if (viewType === 'requests') {
-        const response = await apiService.getResidentRequests(pageNum, search, filterValues);
-        setRequests(response.data || []);
-        setPagination(response.pagination || {});
-      } else if (viewType === 'archived') {
-        const response = await apiService.getArchivedResidents(pageNum, search, filterValues);
-        setArchivedUsers(response.data || []);
-        setPagination(response.pagination || {});
-      } else {
-        const response = await apiService.getResidents(pageNum, search, filterValues);
-        setUsers(response.data || []);
-        setPagination(response.pagination || {});
+      setError('');
+      
+      // Fetch data with better error handling
+      let vehiclesData = [];
+      let requestsData = [];
+      let archivedData = [];
+      
+      try {
+        vehiclesData = await fetchVehicles(searchTerm, filterValues);
+      } catch (error) {
+        console.error('Error fetching vehicles:', error);
+        vehiclesData = [];
       }
+      
+      try {
+        requestsData = await fetchVehicleRequests(searchTerm, filterValues);
+      } catch (error) {
+        console.error('Error fetching vehicle requests:', error);
+        requestsData = [];
+      }
+      
+      try {
+        archivedData = await fetchArchivedVehicles(searchTerm, filterValues);
+      } catch (error) {
+        console.error('Error fetching archived vehicles:', error);
+        archivedData = [];
+      }
+      
+      setVehicles(vehiclesData);
+      setRequests(requestsData);
+      setArchivedVehicles(archivedData);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error loading data:', error);
+      setError('Failed to load data. Please try again.');
       // Set empty data on error
-      if (viewType === 'requests') {
-        setRequests([]);
-      } else if (viewType === 'archived') {
-        setArchivedUsers([]);
-      } else {
-        setUsers([]);
-      }
+      setVehicles([]);
+      setRequests([]);
+      setArchivedVehicles([]);
     } finally {
       setLoading(false);
       setSearchLoading(false);
+      setFilterLoading(false);
     }
   };
 
-  const handleAccept = async (resident) => {
+  const handleArchive = async (vehicle) => {
     try {
-      await apiService.acceptResidentRequest(resident.originalData.id);
-      setSnackbar({ open: true, message: 'Resident request accepted successfully', severity: 'success' });
-      
-      // Remove the accepted request from the current requests list
-      setRequests(prevRequests => 
-        prevRequests.filter(req => req.id !== resident.originalData.id)
-      );
-      
-      // Update pagination if needed
-      if (pagination.total > 0) {
-        setPagination(prev => ({
-          ...prev,
-          total: prev.total - 1,
-          to: Math.max(prev.from, prev.to - 1)
-        }));
-      }
-      
-      // If we're on a page that might be empty now, go to previous page
-      if (requests.length === 1 && page > 1) {
-        setPage(page - 1);
-      }
+      await apiService.archiveVehicle(vehicle.id);
+      setSnackbar({ open: true, message: 'Vehicle archived successfully', severity: 'success' });
     } catch (error) {
-      console.error('Error accepting resident request:', error);
-      setSnackbar({ open: true, message: error.message || 'Failed to accept resident request', severity: 'error' });
+      console.error('Error archiving vehicle:', error);
+      setSnackbar({ open: true, message: 'Failed to archive vehicle', severity: 'error' });
     }
   };
 
-  const handleDelete = async (resident) => {
+  const handleUnarchive = async (vehicle) => {
     try {
-      await apiService.deleteResidentRequest(resident.originalData.id);
-      setSnackbar({ open: true, message: 'Resident request deleted successfully', severity: 'success' });
-      
-      // Remove the deleted request from the current requests list
-      setRequests(prevRequests => 
-        prevRequests.filter(req => req.id !== resident.originalData.id)
-      );
-      
-      // Update pagination if needed
-      if (pagination.total > 0) {
-        setPagination(prev => ({
-          ...prev,
-          total: prev.total - 1,
-          to: Math.max(prev.from, prev.to - 1)
-        }));
-      }
-      
-      // If we're on a page that might be empty now, go to previous page
-      if (requests.length === 1 && page > 1) {
-        setPage(page - 1);
-      }
+      await apiService.unarchiveVehicle(vehicle.id);
+      setSnackbar({ open: true, message: 'Vehicle unarchived successfully', severity: 'success' });
     } catch (error) {
-      console.error('Error deleting resident request:', error);
-      setSnackbar({ open: true, message: error.message || 'Failed to delete resident request', severity: 'error' });
-    }
-  };
-
-  const handleArchive = async (resident) => {
-    try {
-      await apiService.archiveResident(resident.originalData.id);
-      setSnackbar({ open: true, message: 'Resident archived successfully', severity: 'success' });
-      // Refresh the data
-      fetchData(page, getCurrentViewType());
-    } catch (error) {
-      console.error('Error archiving resident:', error);
-      setSnackbar({ open: true, message: error.message || 'Failed to archive resident', severity: 'error' });
-    }
-  };
-
-  const handleUnarchive = async (resident) => {
-    try {
-      await apiService.unarchiveResident(resident.originalData.id);
-      setSnackbar({ open: true, message: 'Resident unarchived successfully', severity: 'success' });
-      // Refresh the data
-      fetchData(page, getCurrentViewType());
-    } catch (error) {
-      console.error('Error unarchiving resident:', error);
-      setSnackbar({ open: true, message: error.message || 'Failed to unarchive resident', severity: 'error' });
+      console.error('Error unarchiving vehicle:', error);
+      return;
     }
   };
 
   const getCurrentViewType = () => {
     if (showRequests) return 'requests';
     if (showArchived) return 'archived';
-    return 'users';
+    return 'vehicles';
   };
-
-  const handleConfirmAction = () => {
-    if (confirmDialog.type === 'accept') {
-      handleAccept(confirmDialog.data);
-    } else if (confirmDialog.type === 'delete') {
-      handleDelete(confirmDialog.data);
-    } else if (confirmDialog.type === 'archive') {
-      handleArchive(confirmDialog.data);
-    } else if (confirmDialog.type === 'unarchive') {
-      handleUnarchive(confirmDialog.data);
-    }
-    setConfirmDialog({ open: false, type: '', data: null });
-  };
-
-  useEffect(() => {
-    fetchData(1, getCurrentViewType());
-  }, [showRequests, showArchived]);
-
-  useEffect(() => {
-    fetchData(page, getCurrentViewType());
-  }, [page, showRequests, showArchived]);
-
-  // Add effect to handle search and filter changes
-  useEffect(() => {
-    setPage(1); // Reset to first page when search or filters change
-    fetchData(1, getCurrentViewType());
-  }, [search, filterValues]);
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -233,6 +212,7 @@ function Residents() {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
           setSearch(value);
+          setError(''); // Clear any previous errors
         }, 500); // 500ms delay
       };
     })(),
@@ -250,68 +230,120 @@ function Residents() {
     setSearch('');
   };
 
-  // Get filter options from current data
-  const currentData = showRequests ? requests : showArchived ? archivedUsers : users;
-  const statusOptions = ['pending'];
-  // Hardcoded street options as requested
-  const streetOptions = [
-    'Adelfa',
-    'Bougainvillea',
-    'Champaca',
-    'Dahlia',
-    'Gumamela',
-    'Ilang-ilang',
-    'Jasmin',
-    'Kalachuchi',
-    'Lilac',
-    'Rosal',
-    'Sampaguita',
-    'Santan',
-    'Waling-waling'
-  ];
-  const homeownerOptions = Array.from(new Set(currentData.map(u => u.house_owner_name || u.homeownerName))).filter(Boolean);
-  const residentOptions = Array.from(new Set(currentData.map(u => u.name || u.residentName))).filter(Boolean);
-  const houseNumberOptions = Array.from(new Set(currentData.map(u => u.house?.house_number || u.houseNumber))).filter(Boolean);
-  const contactOptions = Array.from(new Set(currentData.map(u => u.contact_no || u.contactNumber))).filter(Boolean);
-  const emailOptions = Array.from(new Set(currentData.map(u => u.email))).filter(Boolean);
+  const handleConfirmAction = async () => {
+    try {
+      if (confirmDialog.type === 'accept') {
+        await apiService.acceptVehicle(confirmDialog.data.id);
+        setSnackbar({ open: true, message: 'Vehicle request accepted successfully', severity: 'success' });
+      } else if (confirmDialog.type === 'reject') {
+        await apiService.rejectVehicle(confirmDialog.data.id);
+        setSnackbar({ open: true, message: 'Vehicle request rejected', severity: 'success' });
+      } else if (confirmDialog.type === 'archive') {
+        handleArchive(confirmDialog.data);
+      } else if (confirmDialog.type === 'unarchive') {
+        handleUnarchive(confirmDialog.data);
+      }
+    } catch (error) {
+      console.error('Error performing action:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Failed to perform action. Please try again.', 
+        severity: 'error' 
+      });
+    } finally {
+      setConfirmDialog({ open: false, type: '', data: null });
+    }
+  };
 
-  // Check if any filters are active
-  const hasActiveFilters = Object.values(filterValues).some(value => value && value !== '');
+  const statusOptions = ['pending', 'active', 'archived'];
+  const vehicleTypeOptions = ['Car', 'Motorcycle', 'SUV', 'Truck', 'Bus', 'Tricycle'];
+  const currentData = showRequests ? requests : showArchived ? archivedVehicles : vehicles;
+  
+  // Generate filter options from current data, handling empty data gracefully
+  const residentOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(v => v.residentName))).filter(Boolean) : [];
+  
+  const vehiclePassIdOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(v => v.vehiclePassId))).filter(Boolean) : [];
+  
+  const plateNumberOptions = currentData.length > 0 ? 
+    Array.from(new Set(currentData.map(v => v.plateNumber))).filter(Boolean) : [];
 
   const handleFilterOpen = (e) => setFilterAnchorEl(e.currentTarget);
   const handleFilterClose = () => setFilterAnchorEl(null);
-  const handleFilterChange = (name, value) => setFilterValues(f => ({ ...f, [name]: value }));
-  const handleFilterReset = () => {
-    setFilterValues({ status: '', street: '', homeownerName: '', residentName: '', houseNumber: '', contactNumber: '', email: '' });
-    // The useEffect will handle the data fetching when filterValues changes
-  };
-  const handleFilterApply = () => {
-    handleFilterClose();
-    // The useEffect will handle the data fetching when filterValues changes
+  const handleFilterChange = (name, value) => {
+    const newFilterValues = { ...filterValues, [name]: value };
+    setFilterValues(newFilterValues);
+    console.log('Applying filters:', newFilterValues); // Debug log
+    setError(''); // Clear any previous errors
   };
 
-  // Transform backend data to match frontend expectations
+  const handleFilterReset = () => {
+    const resetFilters = { status: '', vehicleType: '', residentName: '', vehiclePassId: '', plateNumber: '' };
+    setFilterValues(resetFilters);
+    console.log('Resetting filters'); // Debug log
+    setError(''); // Clear any previous errors
+  };
+
+  const handleFilterApply = () => {
+    handleFilterClose();
+    // Filters are already applied in handleFilterChange
+  };
+
+  // Clear search when switching views
+  const handleViewSwitch = (viewType) => {
+    console.log('Switching to view:', viewType); // Debug log
+    if (viewType === 'requests') {
+      setShowRequests(true);
+      setShowArchived(false);
+    } else if (viewType === 'archived') {
+      setShowArchived(true);
+      setShowRequests(false);
+    } else if (viewType === 'vehicles') {
+      setShowRequests(false);
+      setShowArchived(false);
+    }
+    console.log('New state - showRequests:', !showRequests && viewType === 'requests', 'showArchived:', !showArchived && viewType === 'archived'); // Debug log
+    setPage(1); // Reset to first page when switching views
+    setSearch(''); // Clear search when switching views
+    setSearchInput(''); // Clear search input
+    setFilterValues({ status: '', vehicleType: '', residentName: '', vehiclePassId: '', plateNumber: '' }); // Reset filters
+    setError(''); // Clear any previous errors
+  };
+
+  // Transform data to include additional fields
   const transformData = (data) => {
     return data.map(item => ({
-      id: item.id,
-      homeownerName: item.house_owner_name || 'N/A',
-      residentName: item.name || 'N/A',
-      residentId: item.resident_id || 'N/A',
-      houseNumber: item.house?.house_number || 'N/A',
-      street: item.house?.street || 'N/A',
-      contactNumber: item.contact_no || 'N/A',
-      email: item.email || 'N/A',
-      requestType: item.request_type || 'New Resident Registration',
-      status: item.status || 'pending',
-      dateSubmitted: item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+      ...item,
+      // Map API response fields to expected structure
+      residentName: item.residentName || 'N/A',
+      vehicleType: item.vehicleType || 'N/A',
+      vehiclePassId: item.vehiclePassId || 'N/A',
+      plateNumber: item.plateNumber || 'N/A',
       dateArchived: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'N/A',
       // Keep original data for actions
       originalData: item
     }));
   };
 
-  const filteredData = showRequests ? requests : showArchived ? archivedUsers : users;
-  const transformedData = transformData(filteredData);
+  // Transform archived vehicles to match the expected structure
+  const transformArchivedData = (data) => {
+    return data.map(item => ({
+      ...item,
+      // Map API response fields to expected structure
+      residentName: item.residentName || 'N/A',
+      vehicleType: item.vehicleType || 'N/A',
+      vehiclePassId: item.vehiclePassId || 'N/A',
+      plateNumber: item.plateNumber || 'N/A',
+      dateArchived: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'N/A',
+      // Keep original data for actions
+      originalData: item
+    }));
+  };
+
+  const filteredData = showRequests ? requests : showArchived ? archivedVehicles : vehicles;
+  const transformedData = showArchived ? transformArchivedData(filteredData) : transformData(filteredData);
+  const filteredItems = transformedData;
 
   // Actions for each row
   const actions = showRequests ? [
@@ -339,7 +371,7 @@ function Residents() {
       onClick: (row) => {
         setConfirmDialog({ 
           open: true, 
-          type: 'delete', 
+          type: 'reject', 
           data: row 
         });
       },
@@ -367,7 +399,7 @@ function Residents() {
       icon: <EditIcon fontSize="small" />,
       color: 'default',
       sx: { '&:hover': { bgcolor: 'primary.main', color: '#fff' } },
-      onClick: (row) => navigate(`/user-management/edit-resident/${row.residentId}`),
+      onClick: (row) => navigate(`/user-management/edit-vehicle/${row.id}`),
     },
     {
       label: 'Archive',
@@ -388,43 +420,44 @@ function Residents() {
   ];
 
   const columns = showRequests ? [
-    { id: 'homeownerName', label: 'Homeowner Name' },
     { id: 'residentName', label: 'Resident Name' },
-    { id: 'residentId', label: 'Resident ID' },
-    { id: 'houseNumber', label: 'House Number' },
-    { id: 'street', label: 'Street' },
+    { id: 'vehicleType', label: 'Vehicle Type' },
+    { id: 'vehiclePassId', label: 'Vehicle Pass ID' },
+    { id: 'plateNumber', label: 'Plate Number' },
     { id: 'requestType', label: 'Request Type' },
     { id: 'dateSubmitted', label: 'Date Submitted' },
   ] : showArchived ? [
-    { id: 'homeownerName', label: 'Homeowner Name' },
     { id: 'residentName', label: 'Resident Name' },
-    { id: 'residentId', label: 'Resident ID' },
-    { id: 'houseNumber', label: 'House Number' },
-    { id: 'street', label: 'Street' },
-    { id: 'contactNumber', label: 'Contact Number' },
-    { id: 'email', label: 'Email Address' },
+    { id: 'vehicleType', label: 'Vehicle Type' },
+    { id: 'vehiclePassId', label: 'Vehicle Pass ID' },
+    { id: 'plateNumber', label: 'Plate Number' },
     { id: 'dateArchived', label: 'Date Archived' },
   ] : [
-    { id: 'homeownerName', label: 'Homeowner Name' },
     { id: 'residentName', label: 'Resident Name' },
-    { id: 'residentId', label: 'Resident ID' },
-    { id: 'houseNumber', label: 'House Number' },
-    { id: 'street', label: 'Street' },
-    { id: 'contactNumber', label: 'Contact Number' },
-    { id: 'email', label: 'Email Address' },
+    { id: 'vehicleType', label: 'Vehicle Type' },
+    { id: 'vehiclePassId', label: 'Vehicle Pass ID' },
+    { id: 'plateNumber', label: 'Plate Number' },
   ];
 
-  // Handle page change
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-  };
+  // Pagination logic
+  const total = filteredItems.length;
+  const from = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
+  const to = Math.min(page * rowsPerPage, total);
 
   // Table max height
   const tableMaxHeight = isMobile ? '40vh' : '60vh';
 
+  // Check if any filters are active
+  const hasActiveFilters = Object.values(filterValues).some(value => value && value !== '');
+
   return (
     <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
       <Box maxWidth="xl" mx="auto">
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+            {error}
+          </Alert>
+        )}
         <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 0.5, sm: 1 }, boxShadow: 3, minHeight: 300 }}>
           <Box
             sx={{
@@ -441,7 +474,7 @@ function Residents() {
             <TextField
               variant="outlined"
               size="small"
-              placeholder={`Search ${showRequests ? 'requests' : showArchived ? 'archived users' : 'users'}...`}
+              placeholder={`Search ${showRequests ? 'requests' : showArchived ? 'archived vehicles' : 'vehicles'}...`}
               value={searchInput}
               onChange={handleSearch}
               sx={{
@@ -484,12 +517,12 @@ function Residents() {
             />
             <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
               {!showRequests && (
-                <Tooltip title="Add User">
+                <Tooltip title="Add Vehicle">
                   <IconButton 
                     color="primary" 
                     size="small" 
-                    onClick={() => navigate('/user-management/add-resident')}
                     sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
+                    onClick={() => navigate('/user-management/add-vehicle')}
                   >
                     <AddIcon fontSize="small" />
                   </IconButton>
@@ -514,19 +547,17 @@ function Residents() {
                 onClose={handleFilterClose}
                 fields={[
                   ...(showRequests ? [{ name: 'status', label: 'Status', type: 'select', options: statusOptions }] : []),
-                  { name: 'street', label: 'Street', type: 'select', options: streetOptions },
-                  { name: 'homeownerName', label: 'Homeowner Name', type: 'select', options: homeownerOptions },
+                  { name: 'vehicleType', label: 'Vehicle Type', type: 'select', options: vehicleTypeOptions },
                   { name: 'residentName', label: 'Resident Name', type: 'select', options: residentOptions },
-                  { name: 'houseNumber', label: 'House Number', type: 'select', options: houseNumberOptions },
-                  { name: 'contactNumber', label: 'Contact Number', type: 'select', options: contactOptions },
-                  ...(!showRequests ? [{ name: 'email', label: 'Email', type: 'select', options: emailOptions }] : []),
+                  { name: 'vehiclePassId', label: 'Vehicle Pass ID', type: 'select', options: vehiclePassIdOptions },
+                  { name: 'plateNumber', label: 'Plate Number', type: 'select', options: plateNumberOptions },
                 ]}
                 values={filterValues}
                 onChange={handleFilterChange}
                 onApply={handleFilterApply}
                 onReset={handleFilterReset}
               />
-              <Tooltip title={showRequests ? "Show Users" : "Show Requests"}>
+              <Tooltip title={showRequests ? "Show Vehicles" : "Show Requests"}>
                 <Badge 
                   color="error" 
                   variant="dot" 
@@ -537,41 +568,33 @@ function Residents() {
                   <IconButton 
                     color={showRequests ? "primary" : "default"} 
                     size="small" 
-                    onClick={() => {
-                      setShowRequests(!showRequests);
-                      setShowArchived(false);
-                      setPage(1); // Reset to first page when switching views
-                    }}
+                    onClick={() => handleViewSwitch(showRequests ? 'vehicles' : 'requests')}
                     sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
                   >
                     {showRequests ? <PeopleIcon fontSize="small" /> : <MarkEmailUnreadIcon fontSize="small" />}
                   </IconButton>
                 </Badge>
               </Tooltip>
-              <Tooltip title={showArchived ? "Show Users" : "Show Archived"}>
+              <Tooltip title={showArchived ? "Show Vehicles" : "Show Archived"}>
                 <IconButton 
                   color={showArchived ? "primary" : "default"} 
                   size="small" 
-                  onClick={() => {
-                    setShowArchived(!showArchived);
-                    setShowRequests(false);
-                    setPage(1); // Reset to first page when switching views
-                  }}
+                  onClick={() => handleViewSwitch(showArchived ? 'vehicles' : 'archived')}
                   sx={{ '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}
                 >
                   <ArchiveIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             </Stack>
-                    </Box>
+          </Box>
           
           {/* Active filters and search summary */}
-          {(search || hasActiveFilters) && (
+          {(search || Object.values(filterValues).some(v => v !== '')) && (
             <Box sx={{ px: 1, py: 0.5, mb: 1 }}>
               <Typography variant="caption" color="text.secondary">
                 {search && `Search: "${search}"`}
-                {search && hasActiveFilters && ' | '}
-                {hasActiveFilters && `Filters: ${Object.entries(filterValues)
+                {search && Object.values(filterValues).some(v => v !== '') && ' | '}
+                {Object.values(filterValues).some(v => v !== '') && `Filters: ${Object.entries(filterValues)
                   .filter(([key, value]) => value && value !== '')
                   .map(([key, value]) => `${key}: ${value}`)
                   .join(', ')}`}
@@ -580,16 +603,15 @@ function Residents() {
           )}
           
           <FloraTable
-              columns={columns}
-              rows={transformedData}
-              actions={actions}
-              page={page}
-              rowsPerPage={rowsPerPage}
-              maxHeight={tableMaxHeight}
-              emptyMessage={`No ${showRequests ? 'requests' : showArchived ? 'archived users' : 'users'} found.`}
-              loading={loading || searchLoading}
-              disableInternalPagination={true}
-            />
+            columns={columns}
+            rows={filteredItems}
+            actions={actions}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            maxHeight={tableMaxHeight}
+            emptyMessage={`No ${showRequests ? 'requests' : showArchived ? 'archived vehicles' : 'vehicles'} found.`}
+            loading={loading || searchLoading || filterLoading}
+          />
           <Box
             sx={{
               display: 'flex',
@@ -605,11 +627,11 @@ function Residents() {
               color="text.secondary"
               sx={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', minHeight: 32 }}
             >
-              {pagination.total === 0 ? '0 of 0' : `${pagination.from}–${pagination.to} of ${pagination.total}`}
+              {total === 0 ? '0 of 0' : `${from}–${to} of ${total}`}
             </Typography>
             <Box width="100%" display="flex" justifyContent={{ xs: 'center', md: 'flex-end' }}>
               <IconButton
-                onClick={() => handlePageChange(page - 1)}
+                onClick={() => setPage(page - 1)}
                 disabled={page === 1}
                 sx={{
                   border: '1.5px solid',
@@ -633,15 +655,15 @@ function Residents() {
                 <ChevronLeftIcon sx={{ color: page === 1 ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
               <IconButton
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page >= pagination.last_page}
+                onClick={() => setPage(page + 1)}
+                disabled={page * rowsPerPage >= total}
                 sx={{
                   border: '1.5px solid',
-                  borderColor: page >= pagination.last_page ? 'divider' : 'primary.main',
+                  borderColor: page * rowsPerPage >= total ? 'divider' : 'primary.main',
                   borderRadius: 2,
                   mx: 0.5,
                   bgcolor: 'background.paper',
-                  color: page >= pagination.last_page ? 'text.disabled' : 'primary.main',
+                  color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main',
                   transition: 'all 0.2s',
                   '&:hover': {
                     bgcolor: 'primary.main',
@@ -654,13 +676,13 @@ function Residents() {
                 }}
                 size="small"
               >
-                <ChevronRightIcon sx={{ color: page >= pagination.last_page ? 'text.disabled' : 'primary.main' }} />
+                <ChevronRightIcon sx={{ color: page * rowsPerPage >= total ? 'text.disabled' : 'primary.main' }} />
               </IconButton>
             </Box>
           </Box>
         </Paper>
       </Box>
-
+      
       {/* Confirmation Dialog */}
       <Dialog
         open={confirmDialog.open}
@@ -669,19 +691,22 @@ function Residents() {
         fullWidth
       >
         <DialogTitle>
-          {confirmDialog.type === 'accept' ? 'Accept Resident Request' : 
-           confirmDialog.type === 'archive' ? 'Archive Resident' : 
-           confirmDialog.type === 'unarchive' ? 'Unarchive Resident' : 'Delete Resident Request'}
+          {confirmDialog.type === 'accept' ? 'Accept Vehicle Request' : 
+           confirmDialog.type === 'reject' ? 'Reject Vehicle Request' :
+           confirmDialog.type === 'archive' ? 'Archive Vehicle' : 
+           confirmDialog.type === 'unarchive' ? 'Unarchive Vehicle' : 'Confirm Action'}
         </DialogTitle>
         <DialogContent>
           <Typography>
             {confirmDialog.type === 'accept' 
-              ? `Are you sure you want to accept the resident request for ${confirmDialog.data?.residentName || 'this resident'}?`
-              : confirmDialog.type === 'archive'
-              ? `Are you sure you want to archive ${confirmDialog.data?.residentName || 'this resident'}? This will remove them from the active residents list.`
+              ? `Are you sure you want to accept the vehicle request for ${confirmDialog.data?.residentName || 'this vehicle'}?`
+              : confirmDialog.type === 'reject'
+              ? `Are you sure you want to reject the vehicle request for ${confirmDialog.data?.residentName || 'this vehicle'}? This action cannot be undone.`
+              : confirmDialog.type === 'archive' 
+              ? `Are you sure you want to archive ${confirmDialog.data?.residentName || 'this vehicle'}? This will remove them from the active vehicles list.`
               : confirmDialog.type === 'unarchive'
-              ? `Are you sure you want to unarchive ${confirmDialog.data?.residentName || 'this resident'}? This will restore them to the active residents list.`
-              : `Are you sure you want to delete the resident request for ${confirmDialog.data?.residentName || 'this resident'}? This action cannot be undone.`
+              ? `Are you sure you want to unarchive ${confirmDialog.data?.residentName || 'this vehicle'}? This will restore them to the active vehicles list.`
+              : 'Are you sure you want to perform this action?'
             }
           </Typography>
         </DialogContent>
@@ -694,10 +719,16 @@ function Residents() {
           </Button>
           <Button 
             onClick={handleConfirmAction}
-            color={confirmDialog.type === 'accept' ? 'success' : confirmDialog.type === 'archive' ? 'error' : confirmDialog.type === 'unarchive' ? 'success' : 'error'}
+            color={confirmDialog.type === 'accept' ? 'success' : 
+                   confirmDialog.type === 'reject' ? 'error' :
+                   confirmDialog.type === 'unarchive' ? 'success' : 
+                   confirmDialog.type === 'archive' ? 'error' : 'primary'}
             variant="contained"
           >
-            {confirmDialog.type === 'accept' ? 'Accept' : confirmDialog.type === 'archive' ? 'Archive' : confirmDialog.type === 'unarchive' ? 'Unarchive' : 'Delete'}
+            {confirmDialog.type === 'accept' ? 'Accept' : 
+             confirmDialog.type === 'reject' ? 'Reject' :
+             confirmDialog.type === 'archive' ? 'Archive' : 
+             confirmDialog.type === 'unarchive' ? 'Unarchive' : 'Confirm'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -706,12 +737,12 @@ function Residents() {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
-        onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert 
-          onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })} 
-          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity} 
           sx={{ width: '100%' }}
         >
           {snackbar.message}
@@ -721,4 +752,4 @@ function Residents() {
   );
 }
 
-export default Residents; 
+export default Vehicle; 

@@ -22,6 +22,9 @@ import AddResidents from './pages/sections/UserManagement/AddResidents'
 import EditResidents from './pages/sections/UserManagement/EditResidents'
 import AddVendors from './pages/sections/UserManagement/AddVendors'
 import EditVendors from './pages/sections/UserManagement/EditVendors'
+import Vehicle from './pages/sections/UserManagement/Vehicle'
+import AddVehicle from './pages/sections/UserManagement/AddVehicle'
+import EditVehicle from './pages/sections/UserManagement/EditVehicle'
 import { AuthProvider, useAuth } from './AuthContext'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -75,6 +78,9 @@ function AppRoutes() {
                 <Route path="/user-management/edit-resident/:id" element={<EditResidents />} />
                 <Route path="/user-management/add-vendors" element={<AddVendors />} />
                 <Route path="/user-management/edit-vendor/:id" element={<EditVendors />} />
+                <Route path="/user-management/vehicle" element={<Vehicle />} />
+                <Route path="/user-management/add-vehicle" element={<AddVehicle />} />
+                <Route path="/user-management/edit-vehicle/:id" element={<EditVehicle />} />
                 <Route path="/alerts-security/alerts" element={<Alerts />} />
 
                 <Route path="/alerts-security/cctv" element={<CCTV />} />

@@ -34,18 +34,19 @@ const steps = [
 ];
 
 const streets = [
-  'Camia',
-  'Bouganvilla',
-  'Dahlia',
-  'Champaca',
-  'Sampaguita',
   'Adelfa',
+  'Bougainvillea',
+  'Champaca',
+  'Dahlia',
   'Gumamela',
-  'Santan',
-  'Jasmine',
   'Ilang-ilang',
+  'Jasmin',
+  'Kalachuchi',
+  'Lilac',
   'Rosal',
-  'Kalachuchi'
+  'Sampaguita',
+  'Santan',
+  'Waling-waling'
 ];
 
 // Deprecated mock. Fetch next ID from API instead.
@@ -58,7 +59,7 @@ const fetchExistingUsers = () =>
       residentId: 'MHH0001',
       block: 'B3A',
       lot: 'L23',
-      street: 'Camia',
+      street: 'Lilac',
       contactNumber: '09171234567',
       email: 'carlos@gmail.com',
     },
@@ -69,7 +70,7 @@ const fetchExistingUsers = () =>
       residentId: 'MHH0002',
       block: 'B1B',
       lot: 'L17',
-      street: 'Bouganvilla',
+      street: 'Bougainvillea',
       contactNumber: '09281234567',
       email: 'anna@gmail.com',
     },
@@ -157,7 +158,7 @@ const fetchExistingUsers = () =>
       residentId: 'MHH0010',
       block: 'B5B',
       lot: 'L05',
-      street: 'Jasmine',
+      street: 'Jasmin',
       contactNumber: '09209234567',
       email: 'allan@gmail.com',
     },
@@ -201,7 +202,7 @@ const fetchExistingUsers = () =>
       residentId: 'MHH0014',
       block: 'B4B',
       lot: 'L13',
-      street: 'Camia',
+      street: 'Waling-waling',
       contactNumber: '09221122334',
       email: 'francis@gmail.com',
     },
@@ -212,7 +213,7 @@ const fetchExistingUsers = () =>
       residentId: 'MHH0015',
       block: 'B5C',
       lot: 'L07',
-      street: 'Bouganvilla',
+      street: 'Bougainvillea',
       contactNumber: '09351122334',
       email: 'vincent@gmail.com',
     },

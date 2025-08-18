@@ -33,6 +33,7 @@ const sidebarItems = [
     children: [
       { label: "Residents", to: "/user-management/residents" },
       { label: "Vendors", to: "/user-management/vendors" },
+      { label: "Vehicles", to: "/user-management/vehicle" },
     ],
   },
   {

@@ -30,35 +30,30 @@ import apiService from '../../../services/api';
 const steps = [
   'Select Resident',
   'Residence Details (Read-only)',
-  'Business Information',
+  'Vehicle Information',
   'Review & Submit'
 ];
 
-const streets = [
-  'Adelfa',
-  'Bougainvillea',
-  'Champaca',
-  'Dahlia',
-  'Gumamela',
-  'Ilang-ilang',
-  'Jasmin',
-  'Kalachuchi',
-  'Lilac',
-  'Rosal',
-  'Sampaguita',
-  'Santan',
-  'Waling-waling'
+const vehicleTypes = [
+  'Car',
+  'Motorcycle',
+  'SUV',
+  'Truck',
+  'Bus',
+  'Tricycle'
 ];
 
-function AddVendors() {
+
+function AddVehicle() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     residentName: '',
     residentId: '',
     houseNumber: '',
     street: '',
-    businessName: '',
-    contactNumber: ''
+    vehicleType: '',
+    vehiclePassId: '',
+    plateNumber: ''
   });
   const [errors, setErrors] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -77,14 +72,14 @@ function AddVendors() {
       try {
         setResidentsLoading(true);
         const response = await apiService.getResidents(1, '', {});
-        if (response.data) {
-          setResidents(response.data);
-        }
+        const items = response.data || response;
+        setResidents(items?.data || items || []);
       } catch (error) {
         console.error('Error fetching residents:', error);
+        setResidents([]);
         setSnackbar({
           open: true,
-          message: 'Failed to load residents. Please try again.',
+          message: 'Failed to load residents.',
           severity: 'error'
         });
       } finally {
@@ -103,8 +98,9 @@ function AddVendors() {
         residentId: resident.resident_id || '',
         houseNumber: resident.house?.house_number || '',
         street: resident.house?.street || '',
-        businessName: '',
-        contactNumber: resident.contact_no || ''
+        vehicleType: '',
+        vehiclePassId: '',
+        plateNumber: ''
       });
       // Clear errors when resident is selected
       setErrors({});
@@ -138,12 +134,18 @@ function AddVendors() {
         break;
       case 1: // Residence Details - no validation needed (read-only)
         break;
-      case 2: // Business Information
-        if (!formData.businessName.trim()) {
-          newErrors.businessName = 'Business name is required';
+      case 2: // Vehicle Information
+        if (!formData.vehicleType.trim()) {
+          newErrors.vehicleType = 'Vehicle type is required';
         }
-        if (formData.contactNumber && !/^(\+63|0)?9\d{9}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
-          newErrors.contactNumber = 'Please enter a valid Philippine mobile number';
+        if (!formData.vehiclePassId.trim()) {
+          newErrors.vehiclePassId = 'Vehicle Pass ID is required';
+        }
+        if (!formData.plateNumber.trim()) {
+          newErrors.plateNumber = 'Plate number is required';
+        }
+        if (formData.plateNumber && !/^[A-Z]{3}[0-9]{4}$/.test(formData.plateNumber.replace(/\s/g, ''))) {
+          newErrors.plateNumber = 'Please enter a valid plate number (e.g., ABC1234)';
         }
         break;
       default:
@@ -157,30 +159,32 @@ function AddVendors() {
     try {
       setLoading(true);
 
-      // Create the vendor using existing resident
-      const vendorPayload = {
+      // Create the vehicle using existing resident
+      const vehiclePayload = {
         resident_id: formData.residentId,
-        business_name: formData.businessName,
+        vehicle_type: formData.vehicleType,
+        vehicle_pass_id: formData.vehiclePassId,
+        plate_number: formData.plateNumber,
         isArchived: false,
         isAccepted: true
       };
 
-      await apiService.createVendor(vendorPayload);
+      await apiService.createVehicle(vehiclePayload);
       
       setSnackbar({
         open: true,
-        message: 'Vendor added successfully!',
+        message: 'Vehicle added successfully!',
         severity: 'success'
       });
       
       setTimeout(() => {
-        navigate('/user-management/vendors');
+        navigate('/user-management/vehicle');
       }, 1500);
     } catch (error) {
-      console.error('Error adding vendor:', error);
+      console.error('Error adding vehicle:', error);
       setSnackbar({
         open: true,
-        message: error.message || 'Failed to add vendor. Please try again.',
+        message: error.message || 'Failed to add vehicle. Please try again.',
         severity: 'error'
       });
     } finally {
@@ -210,7 +214,7 @@ function AddVendors() {
                       {...params}
                       label="Select Resident"
                       placeholder="Search for resident by name or street"
-                      helperText={errors.resident || "Select an existing resident to add as vendor"}
+                      helperText={errors.resident || "Select an existing resident to add vehicle"}
                       required
                     />
                   )}
@@ -307,27 +311,53 @@ function AddVendors() {
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
+              <FormControl fullWidth error={!!errors.vehicleType} required>
+                <InputLabel id="vehicle-type-label" shrink>Vehicle Type</InputLabel>
+                <Select
+                  labelId="vehicle-type-label"
+                  value={formData.vehicleType || ''}
+                  label="Vehicle Type"
+                  onChange={(e) => handleInputChange('vehicleType', e.target.value)}
+                  displayEmpty
+                  renderValue={(selected) => selected || <span style={{ color: '#9e9e9e' }}>Select vehicle type</span>}
+                >
+                  <MenuItem value="" disabled>
+                    <em>Select vehicle type</em>
+                  </MenuItem>
+                  {vehicleTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.vehicleType && (
+                  <FormHelperText>{errors.vehicleType}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Business Name"
-                value={formData.businessName}
-                onChange={(e) => handleInputChange('businessName', e.target.value)}
-                error={!!errors.businessName}
-                helperText={errors.businessName}
+                label="Vehicle Pass ID"
+                value={formData.vehiclePassId}
+                onChange={(e) => handleInputChange('vehiclePassId', e.target.value)}
+                error={!!errors.vehiclePassId}
+                helperText={errors.vehiclePassId || 'Enter the vehicle pass ID'}
                 required
-                inputProps={{ maxLength: 50 }}
+                inputProps={{ maxLength: 20 }}
                 sx={{ minWidth: 350, maxWidth: 500 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Contact Number"
-                value={formData.contactNumber}
-                onChange={(e) => handleInputChange('contactNumber', e.target.value)}
-                error={!!errors.contactNumber}
-                helperText={errors.contactNumber || 'Optional: Philippine mobile number'}
-                placeholder="09171234567"
+                label="Plate Number"
+                value={formData.plateNumber}
+                onChange={(e) => handleInputChange('plateNumber', e.target.value.toUpperCase())}
+                error={!!errors.plateNumber}
+                helperText={errors.plateNumber || 'Enter the vehicle plate number'}
+                required
+                placeholder="ABC1234"
                 inputProps={{ maxLength: 15 }}
                 sx={{ minWidth: 350, maxWidth: 500 }}
               />
@@ -347,8 +377,9 @@ function AddVendors() {
                   { id: 'residentId', label: 'Resident ID' },
                   { id: 'houseNumber', label: 'House Number' },
                   { id: 'street', label: 'Street' },
-                  { id: 'businessName', label: 'Business Name' },
-                  { id: 'contactNumber', label: 'Contact Number' },
+                  { id: 'vehicleType', label: 'Vehicle Type' },
+                  { id: 'vehiclePassId', label: 'Vehicle Pass ID' },
+                  { id: 'plateNumber', label: 'Plate Number' },
                 ]}
                 rows={[
                   {
@@ -356,8 +387,9 @@ function AddVendors() {
                     residentId: formData.residentId,
                     houseNumber: formData.houseNumber,
                     street: formData.street,
-                    businessName: formData.businessName,
-                    contactNumber: formData.contactNumber || 'Not provided',
+                    vehicleType: formData.vehicleType,
+                    vehiclePassId: formData.vehiclePassId,
+                    plateNumber: formData.plateNumber,
                   },
                 ]}
                 actions={[]}
@@ -382,10 +414,10 @@ function AddVendors() {
         <Paper elevation={3} sx={{ borderRadius: 1, overflow: 'hidden', p: { xs: 1, sm: 2 }, boxShadow: 3, width: '100%', minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" gutterBottom>
-              Add New Vendor
+              Add New Vehicle
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Select an existing resident and add business information to register as vendor
+              Select an existing resident and add vehicle information to register a vehicle
             </Typography>
           </Box>
 
@@ -463,4 +495,4 @@ function AddVendors() {
   );
 }
 
-export default AddVendors; 
+export default AddVehicle; 
