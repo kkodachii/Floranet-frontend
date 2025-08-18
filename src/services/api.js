@@ -800,7 +800,74 @@ class ApiService {
     });
   }
 
-  // User CCTV methods and others remain unchanged...
+  // CCTV Request methods
+  async getCCTVRequestsFiltered(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    return this.request(`/admin/cctv-requests?${params.toString()}`);
+  }
+
+  async getCCTVRequestById(id) {
+    return this.request(`/admin/cctv-requests/${id}`);
+  }
+
+  async updateCCTVStatus(id, status) {
+    return this.request(`/admin/cctv-requests/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async updateCCTVFollowups(id, followups) {
+    return this.request(`/admin/cctv-requests/${id}/followups`, {
+      method: 'PATCH',
+      body: JSON.stringify({ followups }),
+    });
+  }
+
+  async updateCCTVFootage(id, footageData) {
+    const formData = new FormData();
+    formData.append('footage', footageData.file);
+    if (footageData.description) {
+      formData.append('description', footageData.description);
+    }
+
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/cctv-requests/${id}/footage`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Upload failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('CCTV footage upload failed:', error);
+      throw error;
+    }
+  }
+
+  async deleteCCTVFootage(cctvId, footageId) {
+    return this.request(`/admin/cctv-requests/${cctvId}/footage/${footageId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Create and export a singleton instance
