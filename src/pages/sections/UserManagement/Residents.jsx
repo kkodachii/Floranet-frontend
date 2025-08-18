@@ -170,7 +170,7 @@ function Residents() {
 
   const handleArchive = async (resident) => {
     try {
-      await apiService.archiveResident(resident.originalData.id);
+      await apiService.archiveResident(resident.originalData.resident_id);
       setSnackbar({ open: true, message: 'Resident archived successfully', severity: 'success' });
       // Refresh the data
       fetchData(page, getCurrentViewType());
@@ -182,7 +182,7 @@ function Residents() {
 
   const handleUnarchive = async (resident) => {
     try {
-      await apiService.unarchiveResident(resident.originalData.id);
+      await apiService.unarchiveResident(resident.originalData.resident_id);
       setSnackbar({ open: true, message: 'Resident unarchived successfully', severity: 'success' });
       // Refresh the data
       fetchData(page, getCurrentViewType());
