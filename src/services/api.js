@@ -868,6 +868,165 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Community Post methods
+  async getCommunityPosts(page = 1, search = '', filters = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    if (search) params.append('search', search);
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    return this.request(`/admin/community-posts?${params.toString()}`);
+  }
+
+  async getCommunityPostById(id) {
+    return this.request(`/admin/community-posts/${id}`);
+  }
+
+  async createCommunityPost(postData) {
+    const formData = new FormData();
+    
+    // Add text fields
+    formData.append('type', postData.type || 'text');
+    formData.append('category', postData.category || 'general');
+    formData.append('content', postData.content || '');
+    formData.append('visibility', postData.visibility || 'public');
+    
+    // Add images if any
+    if (postData.images && postData.images.length > 0) {
+      postData.images.forEach((image, index) => {
+        formData.append('images[]', image);
+      });
+    }
+
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/community-posts`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Validation errors:', errorData.errors); // Debug log
+        throw new Error(errorData.message || `Post creation failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Community post creation failed:', error);
+      throw error;
+    }
+  }
+
+  async updateCommunityPost(id, postData) {
+    const formData = new FormData();
+    
+    // Add _method field to simulate PUT request
+    formData.append('_method', 'PUT');
+    
+    // Always add all fields, even if they're null/empty
+    formData.append('type', postData.type || 'text');
+    formData.append('category', postData.category || 'general');
+    formData.append('content', postData.content || '');
+    formData.append('visibility', postData.visibility || 'public');
+    
+    // Add existing images that should be kept
+    if (postData.existingImages && postData.existingImages.length > 0) {
+      postData.existingImages.forEach((image, index) => {
+        formData.append('existing_images[]', image);
+      });
+    }
+    
+    // Add new images if any
+    if (postData.images && postData.images.length > 0) {
+      postData.images.forEach((image, index) => {
+        formData.append('images[]', image);
+      });
+    }
+
+    // Debug logging
+    console.log('Frontend sending update data:', {
+      type: postData.type || 'text',
+      category: postData.category || 'general',
+      content: postData.content || '',
+      visibility: postData.visibility || 'public',
+      existingImages: postData.existingImages || [],
+      newImages: postData.images || []
+    });
+
+    // Debug FormData contents
+    console.log('FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/community-posts/${id}`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST', // Changed from PUT to POST
+        headers: {
+          'Accept': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Post update failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Community post update failed:', error);
+      throw error;
+    }
+  }
+
+  async deleteCommunityPost(id) {
+    return this.request(`/admin/community-posts/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async likeCommunityPost(id, reaction = 'like') {
+    return this.request(`/admin/community-posts/${id}/like`, {
+      method: 'POST',
+      body: JSON.stringify({ reaction }),
+    });
+  }
+
+  async addCommentToPost(postId, commentData) {
+    return this.request(`/admin/community-posts/${postId}/comment`, {
+      method: 'POST',
+      body: JSON.stringify(commentData),
+    });
+  }
+
+  async getComments(postId) {
+    return this.request(`/admin/community-posts/${postId}/comments`);
+  }
+
+  async deleteComment(postId, commentId) {
+    return this.request(`/admin/community-posts/${postId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Create and export a singleton instance

@@ -1,71 +1,225 @@
 import * as React from "react";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
+import { Box, Typography, Button, CircularProgress } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import CommunityPost from "../../../../src/components/CommunityPost";
+
+import CommunityPost from "../../../components/CommunityPost";
+import CreatePostModal from "../../../components/CreatePostModal";
+import DeleteConfirmationModal from "../../../components/DeleteConfirmationModal";
+import apiService from "../../../services/api";
 
 function ResidentsHub() {
   const theme = useTheme();
+  const [posts, setPosts] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [showCreateModal, setShowCreateModal] = React.useState(false);
+  const [editingPost, setEditingPost] = React.useState(null);
+  const [deletingPost, setDeletingPost] = React.useState(null);
+  const [openCommentsPostId, setOpenCommentsPostId] = React.useState(null);
 
-  const handleBanUser = (userName) => {
-    console.log(`Ban user: ${userName}`);
+  const fetchPosts = async (pageNum = 1) => {
+    try {
+      setLoading(true);
+      // Fetch posts by residents (non-admin users)
+      const response = await apiService.getCommunityPosts(pageNum, '', { resident_only: 'true' });
+      
+      if (pageNum === 1) {
+        setPosts(response.data.data || []);
+      } else {
+        setPosts(prev => [...prev, ...(response.data.data || [])]);
+      }
+      
+      setHasMore(response.data.next_page_url !== null);
+      setPage(pageNum);
+    } catch (error) {
+      setError('Failed to fetch resident posts');
+      console.error('Error fetching resident posts:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVisitUser = (userName) => {
-    console.log(`Visit user profile: ${userName}`);
+  React.useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handlePostCreated = (newPost) => {
+    setPosts(prev => [newPost, ...prev]);
+    setShowCreateModal(false);
   };
 
-  const handleDeletePost = (postId) => {
-    console.log(`Delete post: ${postId}`);
+  const handleEditPost = (post) => {
+    setEditingPost(post);
+    setShowCreateModal(true);
   };
 
-  const sampleResidentPosts = [
-    {
-      avatarSrc: "https://via.placeholder.com/40", 
-      userName: "User1",
-      timestamp: "07/05/2025 03:00 PM",
-      title: "Neighborhood Potluck",
-      content: "Excited for the annual neighborhood potluck this Saturday! Please bring your favorite dish to share. Looking forward to seeing everyone there!",
-      images: [
-        "https://via.placeholder.com/164x100?text=Potluck+Image+1",
-        "https://via.placeholder.com/164x100?text=Potluck+Image+2",
-      ],
-      onBanUser: () => handleBanUser("User1"),
-      onVisitUser: () => handleVisitUser("User1"),
-      onDeletePost: () => handleDeletePost("resident_post_1"),
-    },
-    {
-      avatarSrc: "https://via.placeholder.com/40", 
-      userName: "VendorX",
-      timestamp: "07/04/2025 01:00 PM",
-      // title: "New Laundry Services",
-      content: "VendorX is now offering convenient laundry pickup and delivery services for residents. Check out our competitive rates and flexible scheduling!",
-      images: [],
-      onBanUser: () => handleBanUser("VendorX"),
-      onVisitUser: () => handleVisitUser("VendorX"),
-      onDeletePost: () => handleDeletePost("resident_post_2"),
-    },
-    {
-      avatarSrc: "https://via.placeholder.com/40", 
-      userName: "User2",
-      timestamp: "07/03/2025 11:00 AM",
-      // title: "Lost Cat",
-      content: "Our cat, Whiskers, went missing yesterday near the park. She's a small tabby with a white patch on her chest. Please call if you see her!",
-      images: [
-        "https://via.placeholder.com/164x100?text=Lost+Cat",
-      ],
-      onBanUser: () => handleBanUser("User2"),
-      onVisitUser: () => handleVisitUser("User2"),
-      onDeletePost: () => handleDeletePost("resident_post_3"),
-    },
-  ];
+  const handlePostUpdated = (updatedPost) => {
+    setPosts(prev => prev.map(post => post.id === updatedPost.id ? updatedPost : post));
+    setEditingPost(null);
+    setShowCreateModal(false);
+  };
+
+  const handleDeletePost = async (postId) => {
+    try {
+      await apiService.deleteCommunityPost(postId);
+      // Remove the deleted post from the list
+      setPosts(prev => prev.filter(post => post.id !== postId));
+      setDeletingPost(null); // Close confirmation modal
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      setDeletingPost(null); // Close confirmation modal
+    }
+  };
+
+  // Show delete confirmation
+  const showDeleteConfirmation = (post) => {
+    setDeletingPost(post);
+  };
+
+  // Cancel delete
+  const cancelDelete = () => {
+    setDeletingPost(null);
+  };
+
+  // Handle comment toggle
+  const handleCommentToggle = (postId) => {
+    if (openCommentsPostId === postId) {
+      // Close comments for this post
+      setOpenCommentsPostId(null);
+    } else {
+      // Open comments for this post (closes any other open comments)
+      setOpenCommentsPostId(postId);
+    }
+  };
+
+  const handleLikePost = async (postId) => {
+    try {
+      await apiService.likeCommunityPost(postId);
+      // Refresh posts to get updated like count
+      fetchPosts(1);
+    } catch (error) {
+      console.error('Failed to like post:', error);
+    }
+  };
+
+  const handleAddComment = async (postId, commentContent) => {
+    try {
+      const response = await apiService.addCommentToPost(postId, {
+        content: commentContent
+      });
+      
+      if (response.success) {
+        // Update the post's comment count
+        setPosts(prev => prev.map(post => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              comments_count: post.comments_count + 1
+            };
+          }
+          return post;
+        }));
+        
+        // Return the response so the CommunityPost component can update its local state
+        return response;
+      }
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      throw error;
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (hasMore && !loading) {
+      fetchPosts(page + 1);
+    }
+  };
+
+  if (loading && posts.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error && posts.length === 0) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+        <Button onClick={() => fetchPosts()} variant="outlined">
+          Retry
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {sampleResidentPosts.map((post, index) => (
-        <CommunityPost key={index} {...post} />
+
+
+      {/* Posts */}
+      {posts.map((post) => (
+        <CommunityPost
+          key={post.id}
+          id={post.id}
+          avatarSrc={post.user?.profile_picture}
+          userName={post.user?.name || 'Unknown User'}
+          timestamp={post.created_at}
+          content={post.content && post.content !== 'null' ? post.content : null}
+          category={post.category}
+          visibility={post.visibility}
+          images={post.images}
+          likes_count={post.likes_count}
+          comments_count={post.comments_count}
+          is_liked={post.is_liked}
+          user_reaction={post.user_reaction}
+          onDeletePost={() => showDeleteConfirmation(post)}
+          onLikePost={() => handleLikePost(post.id)}
+          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onEditPost={() => handleEditPost(post)}
+          onCommentToggle={handleCommentToggle}
+          isCommentsOpen={openCommentsPostId === post.id}
+        />
       ))}
+
+      {/* Load More Button */}
+      {hasMore && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+          <Button 
+            onClick={handleLoadMore} 
+            variant="outlined"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Load More Posts'}
+          </Button>
+        </Box>
+      )}
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        open={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingPost(null);
+        }}
+        onPostCreated={handlePostCreated}
+        onPostUpdated={handlePostUpdated}
+        editPost={editingPost}
+        defaultCategory="general"
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        open={!!deletingPost}
+        onClose={cancelDelete}
+        onConfirm={() => handleDeletePost(deletingPost?.id)}
+        postTitle={deletingPost?.content && deletingPost.content !== 'null' ? deletingPost.content : 'this post'}
+      />
+
+
     </Box>
   );
 }

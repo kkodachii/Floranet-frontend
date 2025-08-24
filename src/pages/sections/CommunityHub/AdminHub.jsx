@@ -5,61 +5,203 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
 import CreatePostModal from "../../../../src/components/CreatePostModal";
 import CommunityPost from "../../../../src/components/CommunityPost";
+import apiService from "../../../../src/services/api";
+import DeleteConfirmationModal from "../../../../src/components/DeleteConfirmationModal";
 
 function AdminHub() {
   const theme = useTheme();
   const [openModal, setOpenModal] = React.useState(false);
+  const [posts, setPosts] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [editingPost, setEditingPost] = React.useState(null);
+  const [deletingPost, setDeletingPost] = React.useState(null);
+  const [openCommentsPostId, setOpenCommentsPostId] = React.useState(null);
 
   const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setEditingPost(null);
+  };
 
-  const samplePosts = [
-    {
-      avatarSrc: "https://via.placeholder.com/40", 
-      userName: "ADMIN",
-      timestamp: "07/04/2025 2:00 PM",
-      title: "BASKETBALL TOURNAMENT",
-      content: "Join us for our annual basketball tournament! Sign up now and show off your skills on the court. All community members are welcome to participate or cheer on their favorite teams.",
-      images: [
-        "https://via.placeholder.com/164x100?text=Image+1",
-        "https://via.placeholder.com/164x100?text=Image+2",
-        "https://via.placeholder.com/164x100?text=Image+3",
-        "https://via.placeholder.com/164x100?text=Image+4",
-        "https://via.placeholder.com/164x100?text=Image+5",
-      ],
-    },
-    {
-      avatarSrc: "https://via.placeholder.com/40", 
-      userName: "Announcement",
-      timestamp: "07/03/2025 10:30 AM",
-      // title: "Community Meeting Reminder",
-      content: "A friendly reminder that our monthly community meeting will be held tomorrow at 7 PM in the main hall. We will be discussing upcoming events and community improvements. Your input is valuable!",
-      images: [], 
-    },
-    {
-      avatarSrc: "https://via.placeholder.com/40", 
-      userName: "ADMIN",
-      timestamp: "07/02/2025 04:45 PM",
-      // title: "New Park Hours",
-      content: "Please note that the park hours have been updated. The park will now be open from 6 AM to 9 PM daily. We appreciate your cooperation in keeping our park clean and safe for everyone.",
-      images: [
-        "https://via.placeholder.com/164x100?text=Park+Image",
-      ],
-    },
-    {
-      avatarSrc: "https://via.placeholder.com/40", 
-      userName: "Announcement",
-      timestamp: "07/01/2025 09:00 AM",
-      // title: "Trash Collection Schedule Change",
-      content: "Due to the upcoming holiday, trash collection for this week will be shifted by one day. Please refer to the updated schedule on the community board for specific details. Thank you for your understanding.",
-      images: [], 
-    },
-  ];
+  // Handle edit post
+  const handleEditPost = (post) => {
+    setEditingPost(post);
+    setOpenModal(true);
+  };
+
+  // Handle post update
+  const handlePostUpdated = (updatedPost) => {
+    setPosts(prev => prev.map(post => 
+      post.id === updatedPost.id ? updatedPost : post
+    ));
+  };
+
+  // Fetch community posts from API
+  const fetchPosts = React.useCallback(async (pageNum = 1, append = false) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await apiService.getCommunityPosts(pageNum, '', { admin_only: 'true' });
+      console.log('API Response:', response); // Debug log
+      
+      if (response.success) {
+        const newPosts = response.data.data;
+        console.log('Posts data:', newPosts); // Debug log
+        
+        if (append) {
+          setPosts(prev => [...prev, ...newPosts]);
+        } else {
+          setPosts(newPosts);
+        }
+        
+        setHasMore(response.data.current_page < response.data.last_page);
+        setPage(response.data.current_page);
+      }
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+      setError('Failed to load community posts');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load posts on component mount
+  React.useEffect(() => {
+    fetchPosts(1, false);
+  }, [fetchPosts]);
+
+  // Handle post creation
+  const handlePostCreated = (newPost) => {
+    // Add the new post to the beginning of the list
+    setPosts(prev => [newPost, ...prev]);
+  };
+
+  // Handle post deletion
+  const handleDeletePost = async (postId) => {
+    try {
+      await apiService.deleteCommunityPost(postId);
+      // Remove the deleted post from the list
+      setPosts(prev => prev.filter(post => post.id !== postId));
+      setDeletingPost(null); // Close confirmation modal
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      setError('Failed to delete post');
+      setDeletingPost(null); // Close confirmation modal
+    }
+  };
+
+  // Show delete confirmation
+  const showDeleteConfirmation = (post) => {
+    setDeletingPost(post);
+  };
+
+  // Cancel delete
+  const cancelDelete = () => {
+    setDeletingPost(null);
+  };
+
+  // Handle comment toggle
+  const handleCommentToggle = (postId) => {
+    if (openCommentsPostId === postId) {
+      // Close comments for this post
+      setOpenCommentsPostId(null);
+    } else {
+      // Open comments for this post (closes any other open comments)
+      setOpenCommentsPostId(postId);
+    }
+  };
+
+  // Handle post like
+  const handleLikePost = async (postId, reaction = 'like') => {
+    try {
+      const response = await apiService.likeCommunityPost(postId, reaction);
+      if (response.success) {
+        // Update the post's like count and user reaction
+        setPosts(prev => prev.map(post => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              likes_count: response.data.likes_count,
+              is_liked: response.data.is_liked,
+              user_reaction: response.data.user_reaction
+            };
+          }
+          return post;
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to like post:', error);
+    }
+  };
+
+  // Handle comment addition
+  const handleAddComment = async (postId, commentContent) => {
+    try {
+      const response = await apiService.addCommentToPost(postId, {
+        content: commentContent
+      });
+      
+      if (response.success) {
+        // Update the post's comment count
+        setPosts(prev => prev.map(post => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              comments_count: post.comments_count + 1
+            };
+          }
+          return post;
+        }));
+        
+        // Return the response so the CommunityPost component can update its local state
+        return response;
+      }
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      throw error;
+    }
+  };
+
+  // Transform API data to match component props
+  const transformPostData = (apiPost) => ({
+    id: apiPost.id,
+    avatarSrc: apiPost.user?.profile_picture || null, // Let the component handle default avatar
+    userName: apiPost.user?.name || "Unknown User",
+    timestamp: new Date(apiPost.created_at).toLocaleString(),
+    content: apiPost.content && apiPost.content !== 'null' ? apiPost.content : null,
+    images: apiPost.images || [],
+    category: apiPost.category,
+    visibility: apiPost.visibility,
+    likes_count: apiPost.likes_count || 0,
+    comments_count: apiPost.comments_count || 0,
+    is_liked: apiPost.is_liked || false,
+    user_reaction: apiPost.user_reaction || null
+  });
+
+  if (loading && posts.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
@@ -88,10 +230,54 @@ function AdminHub() {
           Create Community Post
         </Button>
       </Box>
-      {samplePosts.map((post, index) => (
-        <CommunityPost key={index} {...post} />
-      ))}
-      <CreatePostModal open={openModal} handleClose={handleCloseModal} />
+
+      {posts.length === 0 && !loading ? (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" color="text.secondary">
+            No community posts yet. Be the first to create one!
+          </Typography>
+        </Box>
+      ) : (
+        posts.map((post) => (
+          <CommunityPost 
+            key={post.id} 
+            {...transformPostData(post)}
+            onDeletePost={() => showDeleteConfirmation(post)}
+            onLikePost={() => handleLikePost(post.id)}
+            onAddComment={(content) => handleAddComment(post.id, content)}
+            onEditPost={() => handleEditPost(post)}
+            onCommentToggle={handleCommentToggle}
+            isCommentsOpen={openCommentsPostId === post.id}
+          />
+        ))
+      )}
+
+      {hasMore && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => fetchPosts(page + 1, true)}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Load More Posts'}
+          </Button>
+        </Box>
+      )}
+
+      <CreatePostModal 
+        open={openModal} 
+        onClose={handleCloseModal}
+        onPostCreated={handlePostCreated}
+        editPost={editingPost}
+        onPostUpdated={handlePostUpdated}
+      />
+
+      <DeleteConfirmationModal
+        open={!!deletingPost}
+        onClose={cancelDelete}
+        onConfirm={() => handleDeletePost(deletingPost?.id)}
+        postTitle={deletingPost?.content && deletingPost.content !== 'null' ? deletingPost.content : 'this post'}
+      />
     </Box>
   );
 }

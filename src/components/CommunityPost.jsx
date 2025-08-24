@@ -1,30 +1,101 @@
 import * as React from "react";
-import { Box, Typography, Avatar, ImageList, ImageListItem, IconButton, Button, Menu, MenuItem } from "@mui/material";
+import { Box, Typography, Avatar, ImageList, ImageListItem, IconButton, Button, Menu, MenuItem, Chip, TextField, Divider, Tooltip } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import PublicIcon from '@mui/icons-material/Public';
+import GroupIcon from '@mui/icons-material/Group';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useTheme, useMediaQuery } from "@mui/material";
+import config from '../config/env';
+import apiService from '../services/api';
 
 function CommunityPost({
+  id,
   avatarSrc,
   userName,
   timestamp,
   title,
   images,
   content,
+  category,
+  visibility,
+  likes_count = 0,
+  comments_count = 0,
+  is_liked = false,
+  user_reaction = null,
   onBanUser, 
   onVisitUser, 
   onDeletePost,
+  onEditPost,
+  onLikePost,
+  onAddComment,
+  onCommentToggle,
+  isCommentsOpen = false,
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [liked, setLiked] = React.useState(false);
-  const [disliked, setDisliked] = React.useState(false);
-  const [likeCount, setLikeCount] = React.useState(0);
-  const [dislikeCount, setDislikeCount] = React.useState(0);
+  const [liked, setLiked] = React.useState(is_liked);
+  const [likeCount, setLikeCount] = React.useState(likes_count);
+  const [commentCount, setCommentCount] = React.useState(comments_count);
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [showCommentInput, setShowCommentInput] = React.useState(false);
+  const [commentText, setCommentText] = React.useState('');
+  const [comments, setComments] = React.useState([]);
+  const [loadingComments, setLoadingComments] = React.useState(false);
   const openMenu = Boolean(anchorEl);
+
+  // Update local state when props change
+  React.useEffect(() => {
+    setLiked(is_liked);
+    setLikeCount(likes_count);
+    setCommentCount(comments_count);
+  }, [is_liked, likes_count, comments_count]);
+
+  // Fetch comments when comment section is opened
+  React.useEffect(() => {
+    if (isCommentsOpen && comments.length === 0) {
+      fetchComments();
+    }
+  }, [isCommentsOpen]);
+
+  const fetchComments = async () => {
+    setLoadingComments(true);
+    try {
+      const response = await apiService.getComments(id);
+      if (response.success) {
+        setComments(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+      // If there's an error, set empty array to show "no comments" message
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Smart time formatting
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const now = new Date();
+    const postTime = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - postTime) / (1000 * 60));
+    
+    if (diffInMinutes < 1) {
+      return 'just now';
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`;
+    } else if (diffInMinutes < 1440) {
+      const hours = Math.floor(diffInMinutes / 60);
+      return `${hours}h ago`;
+    } else {
+      const days = Math.floor(diffInMinutes / 1440);
+      return `${days}d ago`;
+    }
+  };
 
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -35,181 +106,526 @@ function CommunityPost({
   };
 
   const handleBan = () => {
-    onBanUser();
+    if (onBanUser) onBanUser();
     handleMenuClose();
   };
 
   const handleVisit = () => {
-    onVisitUser();
+    if (onVisitUser) onVisitUser();
     handleMenuClose();
   };
 
   const handleDelete = () => {
-    onDeletePost();
+    if (onDeletePost) onDeletePost();
     handleMenuClose();
   };
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setDisliked(false);
-    setLikeCount(prevCount => liked ? prevCount - 1 : prevCount + 1);
-    if (disliked) {
-      setDislikeCount(prevCount => prevCount - 1);
+  const handleEdit = () => {
+    if (onEditPost) onEditPost();
+    handleMenuClose();
+  };
+
+  const handleLike = async () => {
+    if (onLikePost) {
+      try {
+        await onLikePost();
+        // The parent component will update the state
+      } catch (error) {
+        console.error('Failed to like post:', error);
+      }
+    } else {
+      // Fallback to local state if no API handler
+      setLiked(!liked);
+      setLikeCount(prevCount => liked ? prevCount - 1 : prevCount + 1);
     }
   };
 
-  const handleDislike = () => {
-    setDisliked(!disliked);
-    setLiked(false);
-    setDislikeCount(prevCount => disliked ? prevCount - 1 : prevCount + 1);
-    if (liked) {
-      setLikeCount(prevCount => prevCount - 1);
+  const handleComment = () => {
+    if (onCommentToggle) {
+      onCommentToggle(id);
+    } else {
+      setShowCommentInput(!showCommentInput);
     }
   };
+
+  const handleCommentSubmit = async () => {
+    if (!commentText.trim() || !onAddComment) return;
+    
+    try {
+      const response = await onAddComment(commentText.trim());
+      setCommentText('');
+      
+      // If the comment was successfully added, refresh the comments
+      if (response && response.success) {
+        // Fetch fresh comments from the API
+        await fetchComments();
+        // Update comment count
+        setCommentCount(prev => prev + 1);
+      }
+      
+      // Don't close the comment section - keep it open
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
+  };
+
+  // Get image URLs - handle both string URLs and File objects
+  const getImageUrls = () => {
+    if (!images || images.length === 0) return [];
+    
+    return images.map(image => {
+      if (typeof image === 'string') {
+        // If it's a URL string, construct the full URL
+        if (image.startsWith('http')) {
+          return image;
+        } else {
+          // Assume it's a relative path from the API
+          const fullUrl = `${config.API_BASE_URL}/storage/${image}`;
+          return fullUrl;
+        }
+      }
+      // If it's a File object, create a temporary URL
+      return URL.createObjectURL(image);
+    });
+  };
+
+  const imageUrls = getImageUrls();
+
+  // Get category color
+  const getCategoryColor = (cat) => {
+    switch (cat?.toLowerCase()) {
+      case 'announcement':
+        return '#e74c3c'; // Red
+      case 'events':
+        return '#3498db'; // Blue
+      case 'business':
+        return '#f39c12'; // Orange
+      case 'project':
+        return '#27ae60'; // Green
+      default:
+        return '#95a5a6'; // Light Gray
+    }
+  };
+
+  // Get visibility icon and tooltip
+  const getVisibilityInfo = (vis) => {
+    switch (vis?.toLowerCase()) {
+      case 'residents_only':
+        return { icon: <GroupIcon fontSize="small" />, tooltip: 'Residents Only' };
+      case 'admin_only':
+        return { icon: <AdminPanelSettingsIcon fontSize="small" />, tooltip: 'Admin Only' };
+      default:
+        return { icon: <PublicIcon fontSize="small" />, tooltip: 'Public' };
+    }
+  };
+
+  const visibilityInfo = getVisibilityInfo(visibility);
 
   return (
     <Box
       sx={{
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 2,
-        p: 2,
         backgroundColor: theme.palette.background.paper,
-        boxShadow: 1,
-        position: 'relative', // For positioning the dropdown
+        borderRadius: 1,
+        border: `1px solid ${theme.palette.divider}`,
+        mb: 2,
+        overflow: 'hidden',
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-        <Avatar src={avatarSrc} sx={{ width: 40, height: 40, mr: 1.5 }} />
-        <Box>
-          <Typography variant="subtitle1" fontWeight="bold">
-            {userName}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {timestamp}
-          </Typography>
-        </Box>
-        <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+      {/* Header */}
+      <Box sx={{ p: 2, pb: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
+            <Avatar 
+              src={avatarSrc} 
+              sx={{ 
+                width: 40, 
+                height: 40, 
+                mr: 1.5,
+                cursor: 'pointer'
+              }}
+            >
+              {!avatarSrc && userName?.charAt(0)?.toUpperCase()}
+            </Avatar>
+            
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
+                <Typography 
+                  variant="subtitle2" 
+                  fontWeight="600" 
+                  sx={{ 
+                    color: theme.palette.text.primary,
+                    cursor: 'pointer',
+                    '&:hover': { textDecoration: 'underline' }
+                  }}
+                >
+                  {userName}
+                </Typography>
+                
+                {/* Category badge */}
+                <Chip 
+                  label={category?.toUpperCase() || 'GENERAL'} 
+                  size="small" 
+                  sx={{
+                    backgroundColor: getCategoryColor(category),
+                    color: 'white',
+                    fontWeight: 600,
+                    fontSize: '0.65rem',
+                    height: 18,
+                    '& .MuiChip-label': {
+                      px: 0.6,
+                    }
+                  }}
+                />
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                  {formatTime(timestamp)}
+                </Typography>
+                
+                {/* Visibility icon */}
+                <Tooltip title={visibilityInfo.tooltip} arrow>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    color: theme.palette.text.secondary,
+                    cursor: 'help'
+                  }}>
+                    {visibilityInfo.icon}
+                  </Box>
+                </Tooltip>
+              </Box>
+            </Box>
+          </Box>
+
           <IconButton
             aria-label="more"
-            id="long-button"
-            aria-controls={openMenu ? 'long-menu' : undefined}
-            aria-expanded={openMenu ? 'true' : undefined}
-            aria-haspopup="true"
             onClick={handleMenuClick}
             size="small"
+            sx={{ 
+              mt: -0.5,
+              '&:hover': { backgroundColor: theme.palette.action.hover }
+            }}
           >
-            <MoreVertIcon />
+            <MoreVertIcon fontSize="small" />
           </IconButton>
-          <Menu
-            id="long-menu"
-            MenuListProps={{
-              'aria-labelledby': 'long-button',
-            }}
-            anchorEl={anchorEl}
-            open={openMenu}
-            onClose={handleMenuClose}
-            PaperProps={{
-              style: {
-                maxHeight: 48 * 4.5,
-                width: '20ch',
-              },
-            }}
-          >
-            {onBanUser && (
-              <MenuItem 
-                onClick={handleBan}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                    color: theme.palette.primary.main,
-                  },
-                }}
-              >
-                Ban User
-              </MenuItem>
-            )}
-            {onVisitUser && (
-              <MenuItem 
-                onClick={handleVisit}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                    color: theme.palette.primary.main,
-                  },
-                }}
-              >
-                Visit User
-              </MenuItem>
-            )}
-            {onDeletePost && (
-              <MenuItem 
-                onClick={handleDelete}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                    color: theme.palette.primary.main,
-                  },
-                }}
-              >
-                Delete Post
-              </MenuItem>
-            )}
-          </Menu>
         </Box>
-      </Box>
-      <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-        {title}
-      </Typography>
-      {content && (
-        <Typography variant="body1" sx={{ mb: 2 }}>
-          {content}
-        </Typography>
-      )}
-      {images && images.length > 0 && (
-        <ImageList 
-          sx={{
-            width: '100%', 
-            height: 'auto', 
-            // Adjust columns based on screen size
-            gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr)) !important',
-            [theme.breakpoints.up('sm')]: {
-              gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr)) !important',
-            },
-            [theme.breakpoints.up('md')]: {
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr)) !important',
+
+        <Menu
+          anchorEl={anchorEl}
+          open={openMenu}
+          onClose={handleMenuClose}
+          PaperProps={{
+            style: {
+              maxHeight: 48 * 4.5,
+              width: '20ch',
             },
           }}
-          cols={isMobile ? 2 : 5} 
-          rowHeight={isMobile ? 100 : 150} 
-          gap={8}
         >
-          {images.map((item, index) => (
-            <ImageListItem key={index}>
-              <img
-                srcSet={`${item}?w=164&h=164&fit=crop&auto=format 1x, ${item}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
-                src={`${item}?w=164&h=164&fit=crop&auto=format`}
-                alt={`Post image ${index + 1}`}
-                loading="lazy"
-                style={{ borderRadius: 8, objectFit: 'cover', width: '100%', height: '100%' }}
-              />
-            </ImageListItem>
-          ))}
-        </ImageList>
-      )}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        <IconButton onClick={handleLike} color={liked ? 'primary' : 'default'}>
-          {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-        </IconButton>
-        <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
-          {likeCount}
-        </Typography>
-        <IconButton onClick={handleDislike} color={disliked ? 'error' : 'default'}>
-          <ThumbDownAltIcon />
-        </IconButton>
-        <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
-          {dislikeCount}
-        </Typography>
+          {onBanUser && (
+            <MenuItem onClick={handleBan}>
+              Ban User
+            </MenuItem>
+          )}
+          {onVisitUser && (
+            <MenuItem onClick={handleVisit}>
+              Visit User
+            </MenuItem>
+          )}
+                    {onEditPost && (
+            <MenuItem onClick={handleEdit}>
+              Edit Post
+            </MenuItem>
+          )}
+          {onDeletePost && (
+            <MenuItem onClick={handleDelete}>
+              Delete Post
+            </MenuItem>
+          )}
+        </Menu>
       </Box>
+
+      {/* Content */}
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        {title && (
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: theme.palette.text.primary }}>
+            {title}
+          </Typography>
+        )}
+        
+        {content && content.trim() !== '' && content !== 'null' && (
+          <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.5, color: theme.palette.text.primary }}>
+            {content}
+          </Typography>
+        )}
+      </Box>
+
+      {/* Images */}
+      {imageUrls.length > 0 && (
+        <Box sx={{ px: 2, pb: 1.5 }}>
+          {imageUrls.length === 1 ? (
+            // Single image - fixed aspect ratio container with background padding
+            <Box 
+              sx={{ 
+                width: '100%', 
+                position: 'relative',
+                backgroundColor: theme.palette.background.paper, // Matches the card background for seamless integration
+                borderRadius: 2,
+                overflow: 'hidden'
+              }}
+            >
+              <Box
+                sx={{
+                  width: '100%',
+                  height: 0,
+                  paddingBottom: '56.25%', // 16:9 aspect ratio (9/16 = 0.5625) - adjust this value to change ratio
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <img
+                  src={imageUrls[0]}
+                  alt="Post image"
+                  loading="lazy"
+                  style={{ 
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain', // Changed from 'cover' to 'contain'
+                    objectPosition: 'center',
+                    borderRadius: 8,
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </Box>
+            </Box>
+          ) : (
+            // Multiple images - grid layout
+            <ImageList 
+              sx={{
+                width: '100%', 
+                height: 'auto', 
+                gridTemplateColumns: imageUrls.length === 2 
+                  ? 'repeat(2, 1fr) !important'
+                  : imageUrls.length === 3
+                  ? 'repeat(3, 1fr) !important'
+                  : 'repeat(2, 1fr) !important',
+                gap: 2,
+              }}
+              cols={imageUrls.length === 2 ? 2 : imageUrls.length === 3 ? 3 : 2} 
+              rowHeight={200} 
+            >
+              {imageUrls.map((imageUrl, index) => (
+                <ImageListItem key={index}>
+                  <img
+                    src={imageUrl}
+                    alt={`Post image ${index + 1}`}
+                    loading="lazy"
+                    style={{ 
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'top',
+                      borderRadius: 8,
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </ImageListItem>
+              ))}
+            </ImageList>
+          )}
+        </Box>
+      )}
+
+      {/* Divider */}
+      <Divider sx={{ mx: 2 }} />
+
+      {/* Actions */}
+      <Box sx={{ px: 2, py: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton 
+            onClick={handleLike} 
+            color={liked ? 'primary' : 'default'}
+            size="small"
+            sx={{ 
+              '&:hover': { backgroundColor: theme.palette.action.hover },
+              color: liked ? theme.palette.primary.main : theme.palette.text.secondary
+            }}
+          >
+            {liked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+          </IconButton>
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem', mr: 2 }}>
+            {likeCount}
+          </Typography>
+          
+          <IconButton 
+            onClick={handleComment} 
+            color={isCommentsOpen ? 'primary' : 'default'}
+            size="small"
+            sx={{ 
+              '&:hover': { backgroundColor: theme.palette.action.hover },
+              color: isCommentsOpen ? theme.palette.primary.main : theme.palette.text.secondary,
+              backgroundColor: isCommentsOpen ? theme.palette.primary.light + '20' : 'transparent'
+            }}
+          >
+            <ChatBubbleOutlineIcon fontSize="small" />
+          </IconButton>
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+            {commentCount}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Comments Display */}
+      {isCommentsOpen && (
+        <>
+          <Divider sx={{ mx: 2, my: 1 }} />
+          <Box sx={{ 
+            px: 2, 
+            pb: 1.5,
+            animation: 'slideDown 0.3s ease-out',
+            '@keyframes slideDown': {
+              '0%': {
+                opacity: 0,
+                transform: 'translateY(-10px)',
+              },
+              '100%': {
+                opacity: 1,
+                transform: 'translateY(0)',
+              },
+            },
+          }}>
+          {/* Existing Comments */}
+          {commentCount > 0 ? (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
+                Comments ({commentCount})
+              </Typography>
+              <Box sx={{ 
+                maxHeight: 300, 
+                overflowY: 'auto',
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: theme.palette.background.default,
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: theme.palette.divider,
+                  borderRadius: '3px',
+                },
+              }}>
+                {loadingComments ? (
+                  <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', display: 'block', py: 1.5 }}>
+                    Loading comments...
+                  </Typography>
+                ) : comments.length === 0 ? (
+                  <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', display: 'block', py: 1.5 }}>
+                    No comments yet. Be the first to comment!
+                  </Typography>
+                ) : (
+                  comments.map((comment) => (
+                    <Box key={comment.id} sx={{ 
+                      display: 'flex', 
+                      gap: 1.5, 
+                      mb: 1.5,
+                      p: 1.5,
+                      backgroundColor: theme.palette.background.default,
+                      borderRadius: 1.5,
+                      border: `1px solid ${theme.palette.divider}`,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.hover,
+                        borderColor: theme.palette.primary.light,
+                      }
+                    }}>
+                      <Avatar 
+                        src={comment.user.profile_picture}
+                        sx={{ 
+                          width: 32, 
+                          height: 32, 
+                          fontSize: '0.75rem',
+                          backgroundColor: comment.user.profile_picture ? 'transparent' : theme.palette.primary.main,
+                          border: comment.user.profile_picture ? 'none' : '2px solid',
+                          borderColor: theme.palette.primary.light
+                        }}
+                      >
+                        {!comment.user.profile_picture && comment.user.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                          <Typography variant="caption" fontWeight="600" color="text.primary">
+                            {comment.user.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {comment.time_ago}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.4 }}>
+                          {comment.content}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))
+                )}
+                {commentCount > 5 && comments.length > 0 && (
+                  <Typography variant="caption" color="text.secondary" sx={{ 
+                    textAlign: 'center', 
+                    display: 'block', 
+                    py: 1.5,
+                    fontStyle: 'italic'
+                  }}>
+                    ... and {commentCount - comments.length} more comments
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ mb: 2, textAlign: 'center', py: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                No comments yet. Be the first to comment!
+              </Typography>
+            </Box>
+          )}
+
+          {/* Comment Input */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <TextField
+              size="small"
+              placeholder="Write a comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              sx={{ flex: 1 }}
+              onKeyPress={(e) => e.key === 'Enter' && handleCommentSubmit()}
+              variant="outlined"
+              multiline
+              maxRows={3}
+            />
+            <Button 
+              size="small" 
+              variant="contained" 
+              onClick={handleCommentSubmit}
+              disabled={!commentText.trim()}
+              sx={{ 
+                minWidth: 80,
+                height: 40,
+                alignSelf: 'flex-end'
+              }}
+            >
+              Comment
+            </Button>
+          </Box>
+        </Box>
+      </>
+      )}
     </Box>
   );
 }
