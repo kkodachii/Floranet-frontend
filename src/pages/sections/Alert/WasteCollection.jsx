@@ -2,11 +2,37 @@ import React, { useState } from "react";
 import { Box, Paper, Typography, Button, Stack, TextField } from "@mui/material";
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { useTheme } from '@mui/material/styles';
+import axios from "axios";
+import config from "../../../config/env";
+import apiService from "../../../services/api";
 
 export default function WasteCollection() {
   const [collectionTime, setCollectionTime] = useState("07:30"); // 24h format for input type="time"
   const [collectionDate, setCollectionDate] = useState("2025-04-07"); // yyyy-mm-dd for input type="date"
+  const [isLoading, setIsLoading] = React.useState(false);
   const theme = useTheme();
+
+  const handleSendAlert = async () => {
+
+    const title = "Garbage Collection Alert";
+    const content = "Garbage Truck is on its way! Prepare your trash bags or container outside your homes.";
+    
+    setIsLoading(true);
+      try {
+        const response = await apiService.sendGarbageAlert(title,content);
+        
+        if (response.success) {
+          console.log("nasend na")
+        }
+      } catch (error) {
+        console.error('Alert error:', error);
+        if (error.response?.data?.message) {
+          setErrorMsg({ general: error.response.data.message });
+        } 
+      } finally {
+        setIsLoading(false);
+      }
+  };
 
   return (
     <Box
@@ -82,11 +108,12 @@ export default function WasteCollection() {
           </Stack>
           <Button
             variant="contained"
+            onClick={handleSendAlert}
             color="error"
             size="large"
             sx={{ mt: 2, px: 10, py: 2.5, fontWeight: 800, borderRadius: 2, textTransform: 'uppercase', letterSpacing: 2, fontSize: '1.5rem' }}
           >
-            Send Alert
+            {isLoading ? "Sending Alert..." : "Send Alert"}
           </Button>
         </Stack>
       </Paper>

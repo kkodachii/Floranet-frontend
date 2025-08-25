@@ -239,6 +239,9 @@ export default function FullForm() {
                 label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleLoginSubmit();
+                }}
                 error={!!errorMsg.email}
                 helperText={errorMsg.email}
                 sx={{
@@ -252,6 +255,9 @@ export default function FullForm() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleLoginSubmit();
+                }}
                 onFocus={() => setIsPasswordFocused(true)}
                 onBlur={() => setIsPasswordFocused(false)}
                 error={!!errorMsg.password}
