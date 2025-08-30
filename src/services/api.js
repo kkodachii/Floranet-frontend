@@ -908,23 +908,54 @@ class ApiService {
     const token = localStorage.getItem('token');
     const url = `${this.baseURL}/api/admin/community-posts`;
     
+    // Debug logging
+    console.log('Creating community post:', {
+      url,
+      token: token ? 'Present' : 'Missing',
+      postData: {
+        type: postData.type || 'text',
+        category: postData.category || 'general',
+        content: postData.content || '',
+        visibility: postData.visibility || 'public',
+        imagesCount: postData.images ? postData.images.length : 0
+      }
+    });
+    
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
       
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Validation errors:', errorData.errors); // Debug log
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          errorData = { message: `HTTP error! status: ${response.status}` };
+        }
+        
+        console.error('Community post creation failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          url
+        });
+        
         throw new Error(errorData.message || `Post creation failed with status: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log('Community post created successfully:', result);
+      return result;
     } catch (error) {
       console.error('Community post creation failed:', error);
       throw error;
@@ -972,26 +1003,65 @@ class ApiService {
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
-
+    
     const token = localStorage.getItem('token');
     const url = `${this.baseURL}/api/admin/community-posts/${id}`;
+    
+    // Debug logging
+    console.log('Updating community post:', {
+      url,
+      token: token ? 'Present' : 'Missing',
+      postData: {
+        type: postData.type || 'text',
+        category: postData.category || 'general',
+        content: postData.content || '',
+        visibility: postData.visibility || 'public',
+        existingImages: postData.existingImages || [],
+        newImages: postData.images || []
+      }
+    });
+
+    // Debug FormData contents
+    console.log('FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
     
     try {
       const response = await fetch(url, {
         method: 'POST', // Changed from PUT to POST
         headers: {
           'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
       
+      console.log('Update response status:', response.status);
+      console.log('Update response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (parseError) {
+          console.error('Failed to parse update error response:', parseError);
+          errorData = { message: `HTTP error! status: ${response.status}` };
+        }
+        
+        console.error('Community post update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          url
+        });
+        
         throw new Error(errorData.message || `Post update failed with status: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log('Community post updated successfully:', result);
+      return result;
     } catch (error) {
       console.error('Community post update failed:', error);
       throw error;
@@ -1026,6 +1096,72 @@ class ApiService {
     return this.request(`/admin/community-posts/${postId}/comments/${commentId}`, {
       method: 'DELETE',
     });
+  }
+
+  // Test API connection
+  async testConnection() {
+    try {
+      const response = await fetch(`${this.baseURL}/api/health`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      console.log('API connection test:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      return {
+        success: response.ok,
+        status: response.status,
+        statusText: response.statusText
+      };
+    } catch (error) {
+      console.error('API connection test failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Test admin authentication
+  async testAdminAuth() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return { success: false, error: 'No token found' };
+      }
+      
+      const response = await fetch(`${this.baseURL}/api/admin/profile`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      console.log('Admin auth test:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      return {
+        success: response.ok,
+        status: response.status,
+        statusText: response.statusText
+      };
+    } catch (error) {
+      console.error('Admin auth test failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 }
 
