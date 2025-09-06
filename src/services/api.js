@@ -25,6 +25,7 @@ class ApiService {
     const url = `${this.baseURL}/api${endpoint}`;
     const config = {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
       ...options,
     };
 
@@ -848,6 +849,7 @@ class ApiService {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
+        credentials: 'include',
         body: formData,
       });
       
@@ -915,6 +917,7 @@ class ApiService {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
+        credentials: 'include',
         body: formData,
       });
       
@@ -983,6 +986,7 @@ class ApiService {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
+        credentials: 'include',
         body: formData,
       });
       
