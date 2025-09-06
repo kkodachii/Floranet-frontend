@@ -52,19 +52,17 @@ function AdminHub() {
       const response = await apiService.getCommunityPosts(pageNum, '', { admin_only: 'true' });
       console.log('API Response:', response); // Debug log
       
-      if (response.success) {
-        const newPosts = response.data.data;
-        console.log('Posts data:', newPosts); // Debug log
-        
-        if (append) {
-          setPosts(prev => [...prev, ...newPosts]);
-        } else {
-          setPosts(newPosts);
-        }
-        
-        setHasMore(response.data.current_page < response.data.last_page);
-        setPage(response.data.current_page);
+      const newPosts = response.data;
+      console.log('Posts data:', newPosts); // Debug log
+      
+      if (append) {
+        setPosts(prev => [...prev, ...newPosts]);
+      } else {
+        setPosts(newPosts);
       }
+      
+      setHasMore(response.current_page < response.last_page);
+      setPage(response.current_page);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
       setError('Failed to load community posts');
@@ -123,20 +121,18 @@ function AdminHub() {
   const handleLikePost = async (postId, reaction = 'like') => {
     try {
       const response = await apiService.likeCommunityPost(postId, reaction);
-      if (response.success) {
-        // Update the post's like count and user reaction
-        setPosts(prev => prev.map(post => {
-          if (post.id === postId) {
-            return {
-              ...post,
-              likes_count: response.data.likes_count,
-              is_liked: response.data.is_liked,
-              user_reaction: response.data.user_reaction
-            };
-          }
-          return post;
-        }));
-      }
+      // Update the post's like count and user reaction
+      setPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            likes_count: response.likes_count,
+            is_liked: response.is_liked,
+            user_reaction: response.user_reaction
+          };
+        }
+        return post;
+      }));
     } catch (error) {
       console.error('Failed to like post:', error);
     }
@@ -149,21 +145,19 @@ function AdminHub() {
         content: commentContent
       });
       
-      if (response.success) {
-        // Update the post's comment count
-        setPosts(prev => prev.map(post => {
-          if (post.id === postId) {
-            return {
-              ...post,
-              comments_count: post.comments_count + 1
-            };
-          }
-          return post;
-        }));
-        
-        // Return the response so the CommunityPost component can update its local state
-        return response;
-      }
+      // Update the post's comment count
+      setPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments_count: post.comments_count + 1
+          };
+        }
+        return post;
+      }));
+      
+      // Return the response so the CommunityPost component can update its local state
+      return response;
     } catch (error) {
       console.error('Failed to add comment:', error);
       throw error;

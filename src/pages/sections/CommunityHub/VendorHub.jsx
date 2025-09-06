@@ -19,31 +19,36 @@ function VendorHub() {
   const [deletingPost, setDeletingPost] = React.useState(null);
   const [openCommentsPostId, setOpenCommentsPostId] = React.useState(null);
 
-  const fetchPosts = async (pageNum = 1) => {
+  const fetchPosts = React.useCallback(async (pageNum = 1, append = false) => {
     try {
       setLoading(true);
-      // Fetch posts with business category
-      const response = await apiService.getCommunityPosts(pageNum, '', { category: 'business' });
+      setError('');
       
-      if (pageNum === 1) {
-        setPosts(response.data.data || []);
+      const response = await apiService.getCommunityPosts(pageNum, '', { category: 'business' });
+      console.log('API Response:', response); // Debug log
+      
+      const newPosts = response.data;
+      console.log('Posts data:', newPosts); // Debug log
+      
+      if (append) {
+        setPosts(prev => [...prev, ...newPosts]);
       } else {
-        setPosts(prev => [...prev, ...(response.data.data || [])]);
+        setPosts(newPosts);
       }
       
-      setHasMore(response.data.next_page_url !== null);
-      setPage(pageNum);
+      setHasMore(response.current_page < response.last_page);
+      setPage(response.current_page);
     } catch (error) {
-      setError('Failed to fetch business posts');
-      console.error('Error fetching business posts:', error);
+      console.error('Failed to fetch posts:', error);
+      setError('Failed to load community posts');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   React.useEffect(() => {
-    fetchPosts();
-  }, []);
+    fetchPosts(1, false);
+  }, [fetchPosts]);
 
   const handlePostCreated = (newPost) => {
     setPosts(prev => [newPost, ...prev]);
@@ -109,21 +114,19 @@ function VendorHub() {
         content: commentContent
       });
       
-      if (response.success) {
-        // Update the post's comment count
-        setPosts(prev => prev.map(post => {
-          if (post.id === postId) {
-            return {
-              ...post,
-              comments_count: post.comments_count + 1
-            };
-          }
-          return post;
-        }));
-        
-        // Return the response so the CommunityPost component can update its local state
-        return response;
-      }
+      // Update the post's comment count
+      setPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments_count: post.comments_count + 1
+          };
+        }
+        return post;
+      }));
+      
+      // Return the response so the CommunityPost component can update its local state
+      return response;
     } catch (error) {
       console.error('Failed to add comment:', error);
       throw error;
@@ -132,7 +135,7 @@ function VendorHub() {
 
   const handleLoadMore = () => {
     if (hasMore && !loading) {
-      fetchPosts(page + 1);
+      fetchPosts(page + 1, true);
     }
   };
 

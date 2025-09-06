@@ -85,9 +85,7 @@ function CommunityPost({
     setLoadingComments(true);
     try {
       const response = await apiService.getComments(id);
-      if (response.success) {
-        setComments(response.data);
-      }
+      setComments(response);
     } catch (error) {
       console.error("Failed to fetch comments:", error);
       // If there's an error, set empty array to show "no comments" message
@@ -177,7 +175,7 @@ function CommunityPost({
       setCommentText("");
 
       // If the comment was successfully added, refresh the comments
-      if (response && response.success) {
+      if (response) {
         // Fetch fresh comments from the API
         await fetchComments();
         // Update comment count
