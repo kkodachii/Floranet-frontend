@@ -847,6 +847,7 @@ class ApiService {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: 'include',
@@ -915,6 +916,7 @@ class ApiService {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: 'include',
@@ -967,6 +969,7 @@ class ApiService {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: 'include',
