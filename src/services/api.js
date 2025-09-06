@@ -849,6 +849,7 @@ class ApiService {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
           ...(token && { Authorization: `Bearer ${token}` }),
+          // Note: Do NOT set Content-Type for FormData - let browser set it automatically
         },
         credentials: 'include',
         body: formData,
@@ -918,6 +919,7 @@ class ApiService {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
           ...(token && { Authorization: `Bearer ${token}` }),
+          // Note: Do NOT set Content-Type for FormData - let browser set it automatically
         },
         credentials: 'include',
         body: formData,
@@ -971,6 +973,7 @@ class ApiService {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
           ...(token && { Authorization: `Bearer ${token}` }),
+          // Note: Do NOT set Content-Type for FormData - let browser set it automatically
         },
         credentials: 'include',
         body: formData,
