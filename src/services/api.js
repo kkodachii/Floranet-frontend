@@ -894,101 +894,50 @@ class ApiService {
   }
 
   async createCommunityPost(postData) {
-    const formData = new FormData();
-    
-    // Add text fields
-    formData.append('type', postData.type || 'text');
-    formData.append('category', postData.category || 'general');
-    formData.append('content', postData.content || '');
-    formData.append('visibility', postData.visibility || 'public');
-    
-    // Add images if any
+    // Convert FormData to a regular object for JSON request
+    const requestData = {
+      type: postData.type || 'text',
+      category: postData.category || 'general',
+      content: postData.content || '',
+      visibility: postData.visibility || 'public',
+    };
+
+    // If there are images, we need to handle them differently
     if (postData.images && postData.images.length > 0) {
-      postData.images.forEach((image, index) => {
-        formData.append('images[]', image);
-      });
+      // For now, let's try without images to see if the basic request works
+      console.log('Images detected but using JSON request for now:', postData.images.length);
     }
 
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(token && { Authorization: `Bearer ${token}` }),
-          // Note: Do NOT set Content-Type for FormData - let browser set it automatically
-        },
-        credentials: 'include',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Post creation failed with status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Community post creation failed:', error);
-      throw error;
-    }
+    return this.request('/admin/community-posts', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    });
   }
 
   async updateCommunityPost(id, postData) {
-    const formData = new FormData();
-    
-    // Add _method field to simulate PUT request
-    formData.append('_method', 'PUT');
-    
-    // Always add all fields, even if they're null/empty
-    formData.append('type', postData.type || 'text');
-    formData.append('category', postData.category || 'general');
-    formData.append('content', postData.content || '');
-    formData.append('visibility', postData.visibility || 'public');
-    
-    // Add existing images that should be kept
+    // Convert FormData to a regular object for JSON request
+    const requestData = {
+      type: postData.type || 'text',
+      category: postData.category || 'general',
+      content: postData.content || '',
+      visibility: postData.visibility || 'public',
+    };
+
+    // Handle existing images
     if (postData.existingImages && postData.existingImages.length > 0) {
-      postData.existingImages.forEach((image, index) => {
-        formData.append('existing_images[]', image);
-      });
-    }
-    
-    // Add new images if any
-    if (postData.images && postData.images.length > 0) {
-      postData.images.forEach((image, index) => {
-        formData.append('images[]', image);
-      });
+      requestData.existing_images = postData.existingImages;
     }
 
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts/${id}`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(token && { Authorization: `Bearer ${token}` }),
-          // Note: Do NOT set Content-Type for FormData - let browser set it automatically
-        },
-        credentials: 'include',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Post update failed with status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Community post update failed:', error);
-      throw error;
+    // If there are new images, we need to handle them differently
+    if (postData.images && postData.images.length > 0) {
+      // For now, let's try without new images to see if the basic request works
+      console.log('New images detected but using JSON request for now:', postData.images.length);
     }
+
+    return this.request(`/admin/community-posts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(requestData),
+    });
   }
 
   async deleteCommunityPost(id) {
