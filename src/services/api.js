@@ -44,36 +44,6 @@ class ApiService {
     }
   }
 
-  // Generic FormData request method for file uploads
-  async requestFormData(endpoint, formData, method = 'POST') {
-    const url = `${this.baseURL}/api${endpoint}`;
-    const token = localStorage.getItem('token');
-    
-    const config = {
-      method,
-      headers: {
-        'Accept': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-      credentials: 'include',
-      body: formData,
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API FormData request failed:', error);
-      throw error;
-    }
-  }
-
   // Authentication methods
   async login(username, password) {
     return this.request('/admin/login', {
@@ -869,7 +839,30 @@ class ApiService {
       formData.append('description', footageData.description);
     }
 
-    return this.requestFormData(`/admin/cctv-requests/${id}/footage`, formData);
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/cctv-requests/${id}/footage`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Upload failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('CCTV footage upload failed:', error);
+      throw error;
+    }
   }
 
   async deleteCCTVFootage(cctvId, footageId) {
@@ -914,7 +907,31 @@ class ApiService {
       });
     }
 
-    return this.requestFormData('/admin/community-posts', formData);
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/community-posts`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Validation errors:', errorData.errors); // Debug log
+        throw new Error(errorData.message || `Post creation failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Community post creation failed:', error);
+      throw error;
+    }
   }
 
   async updateCommunityPost(id, postData) {
@@ -959,7 +976,30 @@ class ApiService {
       console.log(`${key}:`, value);
     }
 
-    return this.requestFormData(`/admin/community-posts/${id}`, formData);
+    const token = localStorage.getItem('token');
+    const url = `${this.baseURL}/api/admin/community-posts/${id}`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST', // Changed from PUT to POST
+        headers: {
+          'Accept': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Post update failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Community post update failed:', error);
+      throw error;
+    }
   }
 
   async deleteCommunityPost(id) {
