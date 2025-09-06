@@ -29,8 +29,21 @@ class ApiService {
       ...options,
     };
 
+    console.log('Making API request:', {
+      url,
+      method: config.method || 'GET',
+      headers: config.headers,
+      credentials: config.credentials
+    });
+
     try {
       const response = await fetch(url, config);
+      
+      console.log('API response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -884,6 +897,7 @@ class ApiService {
       }
     });
     
+    console.log('Making community posts request to:', `${this.baseURL}/api/admin/community-posts?${params.toString()}`);
     return this.request(`/admin/community-posts?${params.toString()}`);
   }
 
