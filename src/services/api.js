@@ -44,6 +44,36 @@ class ApiService {
     }
   }
 
+  // Generic FormData request method for file uploads
+  async requestFormData(endpoint, formData, method = 'POST') {
+    const url = `${this.baseURL}/api${endpoint}`;
+    const token = localStorage.getItem('token');
+    
+    const config = {
+      method,
+      headers: {
+        'Accept': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      credentials: 'include',
+      body: formData,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('API FormData request failed:', error);
+      throw error;
+    }
+  }
+
   // Authentication methods
   async login(username, password) {
     return this.request('/admin/login', {
@@ -839,32 +869,7 @@ class ApiService {
       formData.append('description', footageData.description);
     }
 
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/cctv-requests/${id}/footage`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          ...(token && { Authorization: `Bearer ${token}` }),
-          // Note: Do NOT set Content-Type for FormData - let browser set it automatically
-        },
-        credentials: 'include',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Upload failed with status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('CCTV footage upload failed:', error);
-      throw error;
-    }
+    return this.requestFormData(`/admin/cctv-requests/${id}/footage`, formData);
   }
 
   async deleteCCTVFootage(cctvId, footageId) {
@@ -894,50 +899,67 @@ class ApiService {
   }
 
   async createCommunityPost(postData) {
-    // Convert FormData to a regular object for JSON request
-    const requestData = {
-      type: postData.type || 'text',
-      category: postData.category || 'general',
-      content: postData.content || '',
-      visibility: postData.visibility || 'public',
-    };
-
-    // If there are images, we need to handle them differently
+    const formData = new FormData();
+    
+    // Add text fields
+    formData.append('type', postData.type || 'text');
+    formData.append('category', postData.category || 'general');
+    formData.append('content', postData.content || '');
+    formData.append('visibility', postData.visibility || 'public');
+    
+    // Add images if any
     if (postData.images && postData.images.length > 0) {
-      // For now, let's try without images to see if the basic request works
-      console.log('Images detected but using JSON request for now:', postData.images.length);
+      postData.images.forEach((image, index) => {
+        formData.append('images[]', image);
+      });
     }
 
-    return this.request('/admin/community-posts', {
-      method: 'POST',
-      body: JSON.stringify(requestData),
-    });
+    return this.requestFormData('/admin/community-posts', formData);
   }
 
   async updateCommunityPost(id, postData) {
-    // Convert FormData to a regular object for JSON request
-    const requestData = {
+    const formData = new FormData();
+    
+    // Add _method field to simulate PUT request
+    formData.append('_method', 'PUT');
+    
+    // Always add all fields, even if they're null/empty
+    formData.append('type', postData.type || 'text');
+    formData.append('category', postData.category || 'general');
+    formData.append('content', postData.content || '');
+    formData.append('visibility', postData.visibility || 'public');
+    
+    // Add existing images that should be kept
+    if (postData.existingImages && postData.existingImages.length > 0) {
+      postData.existingImages.forEach((image, index) => {
+        formData.append('existing_images[]', image);
+      });
+    }
+    
+    // Add new images if any
+    if (postData.images && postData.images.length > 0) {
+      postData.images.forEach((image, index) => {
+        formData.append('images[]', image);
+      });
+    }
+
+    // Debug logging
+    console.log('Frontend sending update data:', {
       type: postData.type || 'text',
       category: postData.category || 'general',
       content: postData.content || '',
       visibility: postData.visibility || 'public',
-    };
-
-    // Handle existing images
-    if (postData.existingImages && postData.existingImages.length > 0) {
-      requestData.existing_images = postData.existingImages;
-    }
-
-    // If there are new images, we need to handle them differently
-    if (postData.images && postData.images.length > 0) {
-      // For now, let's try without new images to see if the basic request works
-      console.log('New images detected but using JSON request for now:', postData.images.length);
-    }
-
-    return this.request(`/admin/community-posts/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(requestData),
+      existingImages: postData.existingImages || [],
+      newImages: postData.images || []
     });
+
+    // Debug FormData contents
+    console.log('FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    return this.requestFormData(`/admin/community-posts/${id}`, formData);
   }
 
   async deleteCommunityPost(id) {
