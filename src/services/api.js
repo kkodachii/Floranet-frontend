@@ -923,7 +923,6 @@ class ApiService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Validation errors:', errorData.errors); // Debug log
         throw new Error(errorData.message || `Post creation failed with status: ${response.status}`);
       }
       
@@ -960,28 +959,12 @@ class ApiService {
       });
     }
 
-    // Debug logging
-    console.log('Frontend sending update data:', {
-      type: postData.type || 'text',
-      category: postData.category || 'general',
-      content: postData.content || '',
-      visibility: postData.visibility || 'public',
-      existingImages: postData.existingImages || [],
-      newImages: postData.images || []
-    });
-
-    // Debug FormData contents
-    console.log('FormData contents:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
-
     const token = localStorage.getItem('token');
     const url = `${this.baseURL}/api/admin/community-posts/${id}`;
     
     try {
       const response = await fetch(url, {
-        method: 'POST', // Changed from PUT to POST
+        method: 'POST',
         headers: {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
