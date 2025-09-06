@@ -882,53 +882,11 @@ class ApiService {
       }
     });
     
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts?${params.toString()}`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
+    return this.request(`/admin/community-posts?${params.toString()}`);
   }
 
   async getCommunityPostById(id) {
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts/${id}`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
+    return this.request(`/admin/community-posts/${id}`);
   }
 
   async createCommunityPost(postData) {
@@ -999,12 +957,28 @@ class ApiService {
       });
     }
 
+    // Debug logging
+    console.log('Frontend sending update data:', {
+      type: postData.type || 'text',
+      category: postData.category || 'general',
+      content: postData.content || '',
+      visibility: postData.visibility || 'public',
+      existingImages: postData.existingImages || [],
+      newImages: postData.images || []
+    });
+
+    // Debug FormData contents
+    console.log('FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
     const token = localStorage.getItem('token');
     const url = `${this.baseURL}/api/admin/community-posts/${id}`;
     
     try {
       const response = await fetch(url, {
-        method: 'POST', // Using POST with _method field for Laravel
+        method: 'POST', // Changed from PUT to POST
         headers: {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -1025,132 +999,33 @@ class ApiService {
   }
 
   async deleteCommunityPost(id) {
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts/${id}`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
+    return this.request(`/admin/community-posts/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   async likeCommunityPost(id, reaction = 'like') {
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts/${id}/like`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({ reaction }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
+    return this.request(`/admin/community-posts/${id}/like`, {
+      method: 'POST',
+      body: JSON.stringify({ reaction }),
+    });
   }
 
   async addCommentToPost(postId, commentData) {
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts/${postId}/comment`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify(commentData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
+    return this.request(`/admin/community-posts/${postId}/comment`, {
+      method: 'POST',
+      body: JSON.stringify(commentData),
+    });
   }
 
   async getComments(postId) {
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts/${postId}/comments`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
+    return this.request(`/admin/community-posts/${postId}/comments`);
   }
 
   async deleteComment(postId, commentId) {
-    const token = localStorage.getItem('token');
-    const url = `${this.baseURL}/api/admin/community-posts/${postId}/comments/${commentId}`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
+    return this.request(`/admin/community-posts/${postId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
   }
 }
 
