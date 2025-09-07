@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import MainLayout from './MainLayout'
+import NotificationListerner from './services/NotificationListener'
 import CommunityHub from './pages/CommunityHub'
 import Settings from './pages/Settings'
 import Alerts from './pages/sections/Alert/Alerts'
@@ -70,6 +71,7 @@ function AppRoutes() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/*" element={
           <ProtectedRoute>
+              <NotificationListerner />
             <MainLayout>
               <Routes>
                 <Route path="/user-management/residents" element={<Residents />} />
