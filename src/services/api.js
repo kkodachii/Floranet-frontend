@@ -25,6 +25,7 @@ class ApiService {
     const url = `${this.baseURL}/api${endpoint}`;
     const config = {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
       ...options,
     };
 
@@ -458,12 +459,14 @@ class ApiService {
     return this.request(`/user/alerts?${params.toString()}`);
   }
 
+  //send garbage alert
   async sendGarbageAlert(title, content) {
     return this.request('/sendPush', {
       method: 'POST',
       body: JSON.stringify({ title, content }),
     });
   }
+
 
   // Payment management methods
   async getPayments(page = 1, search = '', filters = {}) {
@@ -855,6 +858,7 @@ class ApiService {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
+        credentials: 'include',
         body: formData,
       });
       
@@ -922,6 +926,7 @@ class ApiService {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
+        credentials: 'include',
         body: formData,
       });
       
@@ -990,6 +995,7 @@ class ApiService {
           'Accept': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
+        credentials: 'include',
         body: formData,
       });
       
