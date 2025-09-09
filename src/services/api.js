@@ -459,6 +459,15 @@ class ApiService {
     return this.request(`/user/alerts?${params.toString()}`);
   }
 
+  //send garbage alert
+  async sendGarbageAlert(title, content) {
+    return this.request('/sendPush', {
+      method: 'POST',
+      body: JSON.stringify({ title, content }),
+    });
+  }
+
+
   // Payment management methods
   async getPayments(page = 1, search = '', filters = {}) {
     const params = new URLSearchParams();
