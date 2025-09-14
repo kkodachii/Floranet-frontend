@@ -26,6 +26,9 @@ import EditVendors from './pages/sections/UserManagement/EditVendors'
 import Vehicle from './pages/sections/UserManagement/Vehicle'
 import AddVehicle from './pages/sections/UserManagement/AddVehicle'
 import EditVehicle from './pages/sections/UserManagement/EditVehicle'
+import CCTVRequest from './pages/sections/Reports/CCTVRequest'
+import ComplaintRequest from './pages/sections/Reports/ComplaintRequest'
+import MonthlyCollection from './pages/sections/Reports/MonthlyCollection'
 import { AuthProvider, useAuth } from './AuthContext'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -96,6 +99,9 @@ function AppRoutes() {
                 <Route path="/community-hub" element={<CommunityHub />} />
                 <Route path="/complaints/general-complaints" element={<GeneralComplaints />} />
                 <Route path="/complaints/service-complaints" element={<ServiceComplaints />} />
+                <Route path="/reports/cctv-request" element={<CCTVRequest />} />
+                <Route path="/reports/complaint-request" element={<ComplaintRequest />} />
+                <Route path="/reports/collection-report" element={<MonthlyCollection />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </MainLayout>
