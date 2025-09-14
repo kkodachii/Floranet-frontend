@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -24,6 +24,7 @@ export default function CCTVRequest() {
   const [dateRange, setDateRange] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [streetFilter, setStreetFilter] = useState('all');
+  const streets = ['Adelfa','Bougainvillea','Champaca','Dahlia','Gumamela','Ilang-ilang','Jasmin','Kalachuchi','Lilac','Rosal','Sampaguita','Santan','Waling-waling'];
 
   const handleGeneratePDF = async () => {
     try {
@@ -101,7 +102,7 @@ export default function CCTVRequest() {
                 <MenuItem value="all">All Status</MenuItem>
                 <MenuItem value="pending">Pending</MenuItem>
                 <MenuItem value="approved">Approved</MenuItem>
-                <MenuItem value="rejected">Rejected</MenuItem>
+                <MenuItem value="cancelled">Cancelled</MenuItem>
               </Select>
             </FormControl>
 
@@ -113,11 +114,11 @@ export default function CCTVRequest() {
                 onChange={(e) => setStreetFilter(e.target.value)}
               >
                 <MenuItem value="all">All Streets</MenuItem>
-                <MenuItem value="street1">Street 1</MenuItem>
-                <MenuItem value="street2">Street 2</MenuItem>
-                <MenuItem value="street3">Street 3</MenuItem>
-                <MenuItem value="street4">Street 4</MenuItem>
-                <MenuItem value="street5">Street 5</MenuItem>
+                {streets.map((street) => (
+                  <MenuItem key={street} value={street}>
+                    {street}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
 

@@ -1135,6 +1135,68 @@ class ApiService {
     }
   }
 
+  async generateAlertReportsPDF(filters) {
+    const url = `${this.baseURL}/api/admin/reports/alert-reports/pdf`;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: JSON.stringify(filters),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `PDF generation failed with status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        data: await response.blob()
+      };
+    } catch (error) {
+      console.error('Alert Reports PDF generation failed:', error);
+      throw error;
+    }
+  }
+
+  async generatePaymentDetailsPDF(residentId, year) {
+    const url = `${this.baseURL}/api/admin/reports/payment-details/pdf`;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ residentId, year }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `PDF generation failed with status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        data: await response.blob()
+      };
+    } catch (error) {
+      console.error('Payment Details PDF generation failed:', error);
+      throw error;
+    }
+  }
+
   async getStreets() {
     return this.request('/admin/reports/streets');
   }

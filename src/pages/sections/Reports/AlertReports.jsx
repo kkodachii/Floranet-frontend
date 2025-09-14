@@ -16,41 +16,27 @@ import {
 import { PictureAsPdf as PdfIcon } from '@mui/icons-material';
 import apiService from '../../../services/api';
 
-export default function MonthlyCollection() {
+export default function AlertReports() {
   const theme = useTheme();
   const [error, setError] = useState(null);
   const [generating, setGenerating] = useState(false);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [yearOptions, setYearOptions] = useState([]);
+  const [dateRange, setDateRange] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [streetFilter, setStreetFilter] = useState('all');
   const streets = ['Adelfa','Bougainvillea','Champaca','Dahlia','Gumamela','Ilang-ilang','Jasmin','Kalachuchi','Lilac','Rosal','Sampaguita','Santan','Waling-waling'];
-
-  // Load year options
-  const loadYearOptions = async () => {
-    try {
-      const response = await apiService.getCollectionReportYears();
-      if (response.success && response.data && response.data.length > 0) {
-        const years = response.data.map((y) => Number(y)).sort((a, b) => b - a);
-        setYearOptions(years);
-        if (!years.includes(selectedYear)) {
-          setSelectedYear(years[0]);
-        }
-      }
-    } catch (err) {
-      console.error('Error loading year options:', err);
-    }
-  };
-
-  useEffect(() => {
-    loadYearOptions();
-  }, []);
 
   const handleGeneratePDF = async () => {
     try {
       setGenerating(true);
       setError(null);
       
-      const response = await apiService.generateMonthlyCollectionPDF(selectedYear, streetFilter !== 'all' ? streetFilter : null);
+      const response = await apiService.generateAlertReportsPDF({
+        dateRange,
+        status: statusFilter !== 'all' ? statusFilter : null,
+        type: typeFilter !== 'all' ? typeFilter : null,
+        street: streetFilter !== 'all' ? streetFilter : null
+      });
       
       if (response.success) {
         // Create download link
@@ -58,7 +44,7 @@ export default function MonthlyCollection() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `monthly-collection-${selectedYear}-${new Date().toISOString().split('T')[0]}.pdf`;
+        link.download = `alert-reports-${new Date().toISOString().split('T')[0]}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -82,26 +68,57 @@ export default function MonthlyCollection() {
             variant="h5"
             sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}
           >
-            Generate Monthly Collection Report
+            Generate Alert Reports
           </Typography>
           <Typography
             variant="body2"
             sx={{ mb: 3, color: 'text.secondary' }}
           >
-            List of monthly collection data
+            List of emergency alerts and notifications
           </Typography>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="center" sx={{ mb: 3 }}>
             <FormControl sx={{ minWidth: 150 }}>
-              <InputLabel>Select Year</InputLabel>
+              <InputLabel>Date Range</InputLabel>
               <Select
-                value={selectedYear}
-                label="Select Year"
-                onChange={(e) => setSelectedYear(e.target.value)}
+                value={dateRange}
+                label="Date Range"
+                onChange={(e) => setDateRange(e.target.value)}
               >
-                {yearOptions.map((year) => (
-                  <MenuItem key={year} value={year}>{year}</MenuItem>
-                ))}
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="today">Today</MenuItem>
+                <MenuItem value="week">This Week</MenuItem>
+                <MenuItem value="month">This Month</MenuItem>
+                <MenuItem value="year">This Year</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 150 }}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="all">All Status</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="ongoing">Ongoing</MenuItem>
+                <MenuItem value="resolved">Resolved</MenuItem>
+                <MenuItem value="called">Called</MenuItem>
+                <MenuItem value="cancelled">Cancelled</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 150 }}>
+              <InputLabel>Alert Type</InputLabel>
+              <Select
+                value={typeFilter}
+                label="Alert Type"
+                onChange={(e) => setTypeFilter(e.target.value)}
+              >
+                <MenuItem value="all">All Types</MenuItem>
+                <MenuItem value="urgent">Urgent</MenuItem>
+                <MenuItem value="incident">Incident</MenuItem>
               </Select>
             </FormControl>
 

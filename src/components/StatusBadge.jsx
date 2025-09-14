@@ -28,10 +28,6 @@ const statusColors = {
     backgroundColor: 'rgba(76, 175, 80, 0.25)',
     color: '#4caf50'
   },
-  Rejected: { 
-    backgroundColor: 'rgba(244, 67, 54, 0.25)',
-    color: '#f44336'
-  },
   'In Progress': { 
     backgroundColor: 'rgba(156, 39, 176, 0.25)',
     color: '#9c27b0'

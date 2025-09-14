@@ -72,16 +72,18 @@ const sidebarItems = [
       { label: "Service complaints", to: "/complaints/service-complaints" },
     ],
   },
-  {
-    label: "Reports",
-    icon: <AssessmentIcon />,
-    section: "reports",
-    children: [
-      { label: "CCTV Request", to: "/reports/cctv-request" },
-      { label: "Complaint Request", to: "/reports/complaint-request" },
-      { label: "Monthly Collection", to: "/reports/collection-report" },
-    ],
-  },
+        {
+          label: "Reports",
+          icon: <AssessmentIcon />,
+          section: "reports",
+          children: [
+            { label: "Alert Reports", to: "/reports/alert-reports" },
+            { label: "CCTV Reports", to: "/reports/cctv-request" },
+            { label: "Complaint Reports", to: "/reports/complaint-request" },
+            { label: "Monthly Collection", to: "/reports/collection-report" },
+            
+          ],
+        },
 ];
 
 const bottomItems = [

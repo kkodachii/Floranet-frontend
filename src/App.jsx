@@ -29,6 +29,7 @@ import EditVehicle from './pages/sections/UserManagement/EditVehicle'
 import CCTVRequest from './pages/sections/Reports/CCTVRequest'
 import ComplaintRequest from './pages/sections/Reports/ComplaintRequest'
 import MonthlyCollection from './pages/sections/Reports/MonthlyCollection'
+import AlertReports from './pages/sections/Reports/AlertReports'
 import { AuthProvider, useAuth } from './AuthContext'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -102,6 +103,7 @@ function AppRoutes() {
                 <Route path="/reports/cctv-request" element={<CCTVRequest />} />
                 <Route path="/reports/complaint-request" element={<ComplaintRequest />} />
                 <Route path="/reports/collection-report" element={<MonthlyCollection />} />
+                <Route path="/reports/alert-reports" element={<AlertReports />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </MainLayout>

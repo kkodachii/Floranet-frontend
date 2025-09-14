@@ -133,30 +133,34 @@ function PaymentDetails() {
     }
   }, [residentId, selectedYear]);
 
-  const handlePrintReceipt = (payment) => {
-    console.log('Print receipt for:', payment);
-    // Implement print functionality
+  const handlePrintReceipt = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.generatePaymentDetailsPDF(residentId, selectedYear);
+      
+      if (response.success) {
+        const blob = response.data;
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `payment-details-${paymentDetails?.residentName || 'resident'}-${selectedYear}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setError('Failed to generate PDF. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  // Actions for payment table
-  const actions = [
-    {
-      label: 'Print Receipt',
-      icon: <PrintIcon fontSize="small" />,
-      color: 'success',
-      sx: { '&:hover': { bgcolor: 'success.main', color: '#fff' } },
-      onClick: (row) => {
-        if (row.hasReceipt) {
-          handlePrintReceipt(row);
-        }
-      },
-      show: (row) => row.hasReceipt, // Only show for paid payments
-    },
-  ];
 
   const columns = [
     { id: 'dateDue', label: 'DATE DUE', align: 'left' },
@@ -358,24 +362,39 @@ function PaymentDetails() {
             >
               Payment History - {selectedYear}
             </Typography>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel id="year-select-label">Year</InputLabel>
-              <Select
-                labelId="year-select-label"
-                value={selectedYear}
-                label="Year"
-                onChange={(e) => setSelectedYear(e.target.value)}
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Button
+                variant="contained"
+                startIcon={<PrintIcon />}
+                onClick={handlePrintReceipt}
+                disabled={loading}
+                sx={{
+                  backgroundColor: '#27ae60',
+                  '&:hover': {
+                    backgroundColor: '#219a52',
+                  },
+                }}
               >
-                {years.map((year) => (
-                  <MenuItem key={year} value={year}>{year}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                Print Report
+              </Button>
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel id="year-select-label">Year</InputLabel>
+                <Select
+                  labelId="year-select-label"
+                  value={selectedYear}
+                  label="Year"
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                >
+                  {years.map((year) => (
+                    <MenuItem key={year} value={year}>{year}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
           </Box>
           <FloraTable
             columns={columns}
             rows={filteredPaymentHistory}
-            actions={actions}
             page={1}
             rowsPerPage={13}
             maxHeight="60vh"
