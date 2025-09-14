@@ -368,12 +368,6 @@ function PaymentDetails() {
                 startIcon={<PrintIcon />}
                 onClick={handlePrintReceipt}
                 disabled={loading}
-                sx={{
-                  backgroundColor: '#27ae60',
-                  '&:hover': {
-                    backgroundColor: '#219a52',
-                  },
-                }}
               >
                 Print Report
               </Button>
