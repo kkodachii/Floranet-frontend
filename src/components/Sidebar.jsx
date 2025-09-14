@@ -17,6 +17,7 @@ import {
   Description as DescriptionIcon,
   Help as HelpIcon,
   Groups as GroupsIcon,
+  Assessment as AssessmentIcon,
   ExpandMore,
   ExpandLess,
 } from "@mui/icons-material";
@@ -71,6 +72,18 @@ const sidebarItems = [
       { label: "Service complaints", to: "/complaints/service-complaints" },
     ],
   },
+        {
+          label: "Reports",
+          icon: <AssessmentIcon />,
+          section: "reports",
+          children: [
+            { label: "Alert Reports", to: "/reports/alert-reports" },
+            { label: "CCTV Reports", to: "/reports/cctv-request" },
+            { label: "Complaint Reports", to: "/reports/complaint-request" },
+            { label: "Monthly Collection", to: "/reports/collection-report" },
+            
+          ],
+        },
 ];
 
 const bottomItems = [

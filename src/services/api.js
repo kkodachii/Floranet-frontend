@@ -1040,6 +1040,166 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Reports methods
+  async generateCCTVRequestPDF(filters) {
+    const url = `${this.baseURL}/api/admin/reports/cctv-request/pdf`;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: JSON.stringify(filters),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `PDF generation failed with status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        data: await response.blob()
+      };
+    } catch (error) {
+      console.error('CCTV Request PDF generation failed:', error);
+      throw error;
+    }
+  }
+
+  async generateComplaintRequestPDF(filters) {
+    const url = `${this.baseURL}/api/admin/reports/complaint-request/pdf`;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: JSON.stringify(filters),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `PDF generation failed with status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        data: await response.blob()
+      };
+    } catch (error) {
+      console.error('Complaint Request PDF generation failed:', error);
+      throw error;
+    }
+  }
+
+  async generateMonthlyCollectionPDF(year, street = null) {
+    const url = `${this.baseURL}/api/admin/reports/monthly-collection/pdf`;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ year, street }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `PDF generation failed with status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        data: await response.blob()
+      };
+    } catch (error) {
+      console.error('Monthly Collection PDF generation failed:', error);
+      throw error;
+    }
+  }
+
+  async generateAlertReportsPDF(filters) {
+    const url = `${this.baseURL}/api/admin/reports/alert-reports/pdf`;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: JSON.stringify(filters),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `PDF generation failed with status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        data: await response.blob()
+      };
+    } catch (error) {
+      console.error('Alert Reports PDF generation failed:', error);
+      throw error;
+    }
+  }
+
+  async generatePaymentDetailsPDF(residentId, year) {
+    const url = `${this.baseURL}/api/admin/reports/payment-details/pdf`;
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/pdf',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ residentId, year }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `PDF generation failed with status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        data: await response.blob()
+      };
+    } catch (error) {
+      console.error('Payment Details PDF generation failed:', error);
+      throw error;
+    }
+  }
+
+  async getStreets() {
+    return this.request('/admin/reports/streets');
+  }
 }
 
 // Create and export a singleton instance
