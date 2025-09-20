@@ -82,7 +82,7 @@ const sidebarItems = [
             { label: "CCTV Reports", to: "/reports/cctv-request" },
             { label: "Complaint Reports", to: "/reports/complaint-request" },
             { label: "Monthly Collection", to: "/reports/collection-report" },
-            
+            { label: "Payment Report", to: "/reports/payment-report" },
           ],
         },
 ];

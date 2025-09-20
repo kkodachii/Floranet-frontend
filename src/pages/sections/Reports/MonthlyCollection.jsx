@@ -20,7 +20,7 @@ export default function MonthlyCollection() {
   const theme = useTheme();
   const [error, setError] = useState(null);
   const [generating, setGenerating] = useState(false);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState('all');
   const [yearOptions, setYearOptions] = useState([]);
   const [streetFilter, setStreetFilter] = useState('all');
   const streets = ['Adelfa','Bougainvillea','Champaca','Dahlia','Gumamela','Ilang-ilang','Jasmin','Kalachuchi','Lilac','Rosal','Sampaguita','Santan','Waling-waling'];
@@ -32,12 +32,15 @@ export default function MonthlyCollection() {
       if (response.success && response.data && response.data.length > 0) {
         const years = response.data.map((y) => Number(y)).sort((a, b) => b - a);
         setYearOptions(years);
-        if (!years.includes(selectedYear)) {
-          setSelectedYear(years[0]);
-        }
+        // Keep "all" as default, don't change to first year
+      } else {
+        // If no years available, keep "all" selected
+        setYearOptions([]);
       }
     } catch (err) {
       console.error('Error loading year options:', err);
+      // On error, keep "all" selected
+      setYearOptions([]);
     }
   };
 
@@ -50,7 +53,7 @@ export default function MonthlyCollection() {
       setGenerating(true);
       setError(null);
       
-      const response = await apiService.generateMonthlyCollectionPDF(selectedYear, streetFilter !== 'all' ? streetFilter : null);
+      const response = await apiService.generateMonthlyCollectionPDF(selectedYear !== 'all' ? selectedYear : null, streetFilter !== 'all' ? streetFilter : null);
       
       if (response.success) {
         // Create download link
@@ -58,7 +61,7 @@ export default function MonthlyCollection() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `monthly-collection-${selectedYear}-${new Date().toISOString().split('T')[0]}.pdf`;
+        link.download = `monthly-collection-${selectedYear === 'all' ? 'all-years' : selectedYear}-${new Date().toISOString().split('T')[0]}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -99,6 +102,9 @@ export default function MonthlyCollection() {
                 label="Select Year"
                 onChange={(e) => setSelectedYear(e.target.value)}
               >
+                <MenuItem value="all">
+                  <em>All Years</em>
+                </MenuItem>
                 {yearOptions.map((year) => (
                   <MenuItem key={year} value={year}>{year}</MenuItem>
                 ))}
