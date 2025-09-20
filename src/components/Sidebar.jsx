@@ -54,6 +54,7 @@ const sidebarItems = [
       { label: "Collection", to: "/billing-payment/collection" },
       { label: "Personal payment", to: "/billing-payment/personal-payment" },
       { label: "Payment status", to: "/billing-payment/payment-status" },
+      { label: "Other payment", to: "/billing-payment/other-payment" },
       { label: "Collection report", to: "/billing-payment/collection-report" },
     ],
   },

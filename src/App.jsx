@@ -12,6 +12,7 @@ import WasteCollection from './pages/sections/Alert/WasteCollection'
 import PersonalPayment from './pages/sections/Billing/PersonalPayment'
 import PaymentStatus from './pages/sections/Billing/PaymentStatus'
 import PaymentDetails from './pages/sections/Billing/PaymentDetails'
+import OtherPayment from './pages/sections/Billing/OtherPayment'
 import CollectionReport from './pages/sections/Billing/CollectionReport'
 import Collection from './pages/sections/Billing/Collection'
 import AddCollection from './pages/sections/Billing/AddCollection'
@@ -90,6 +91,7 @@ function AppRoutes() {
                 <Route path="/billing-payment/personal-payment" element={<PersonalPayment />} />
                 <Route path="/billing-payment/payment-status" element={<PaymentStatus />} />
                 <Route path="/billing-payment/payment-details/:residentId" element={<PaymentDetails />} />
+                <Route path="/billing-payment/other-payment" element={<OtherPayment />} />
                 <Route path="/billing-payment/collection-report" element={<CollectionReport />} />
                 <Route path="/billing-payment/collection" element={<Collection />} />
                 <Route path="/billing-payment/add-collection" element={<AddCollection />} />
