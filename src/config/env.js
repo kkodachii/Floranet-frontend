@@ -6,6 +6,9 @@ export const config = {
   ENDPOINTS: {
     LOGIN: `${API_BASE_URL}/api/admin/login`,
     LOGOUT: `${API_BASE_URL}/api/admin/logout`,
+    FORGOT_PASSWORD: `${API_BASE_URL}/api/forgot-password`,
+    FORGOT_PASSWORD_ADMIN: `${API_BASE_URL}/api/forgot-password-admin`,
+    RESET_PASSWORD: `${API_BASE_URL}/api/reset-password`,
   }
 };
 
