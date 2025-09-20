@@ -36,6 +36,7 @@ const steps = [
 const streets = [
   'Adelfa',
   'Bougainvillea',
+'Camia',
   'Champaca',
   'Dahlia',
   'Gumamela',

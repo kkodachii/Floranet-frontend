@@ -138,6 +138,7 @@ function PaymentStatus() {
   const hardcodedStreets = [
     'Adelfa',
     'Bougainvillea',
+    'Camia',
     'Champaca',
     'Dahlia',
     'Gumamela',

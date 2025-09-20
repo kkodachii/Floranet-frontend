@@ -1294,6 +1294,40 @@ class ApiService {
       method: "DELETE",
     });
   }
+
+  async generateOtherPaymentReportPDF(params) {
+    const url = `${this.baseURL}/api/admin/reports/other-payments/pdf`;
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/pdf",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message ||
+            `PDF generation failed with status: ${response.status}`
+        );
+      }
+
+      return {
+        success: true,
+        data: await response.blob(),
+      };
+    } catch (error) {
+      console.error("Other Payment Report PDF generation failed:", error);
+      throw error;
+    }
+  }
 }
 
 // Create and export a singleton instance

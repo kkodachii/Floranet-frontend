@@ -267,6 +267,7 @@ function Vendors() {
   const streetOptions = [
     'Adelfa',
     'Bougainvillea',
+    'Camia',
     'Champaca',
     'Dahlia',
     'Gumamela',

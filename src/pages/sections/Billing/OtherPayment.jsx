@@ -12,7 +12,13 @@ import {
   CircularProgress,
   Button,
   FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useTheme } from "@mui/material/styles";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -43,8 +49,25 @@ function OtherPayment() {
     message: "",
     severity: "success",
   });
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDate, setFilterDate] = useState(null);
   const [filterMonth, setFilterMonth] = useState("");
+
+  // Months array for dropdown
+  const months = [
+    { value: "", label: "All Months" },
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -122,9 +145,11 @@ function OtherPayment() {
 
       const matchesType =
         filterValues.type === "all" || method === filterValues.type;
-      const matchesDate = !filterValues.date || date === filterValues.date;
+      const matchesDate = !filterValues.date || 
+        (date && filterValues.date && new Date(date).toDateString() === filterValues.date.toDateString());
       const matchesMonth =
-        !filterValues.month || date?.startsWith(filterValues.month);
+        !filterValues.month || 
+        (date && new Date(date).getMonth() + 1 === parseInt(filterValues.month));
       const matchesCategory =
         filterValues.paymentCategory === "all" ||
         category === filterValues.paymentCategory;
@@ -197,8 +222,9 @@ function OtherPayment() {
   ];
 
   return (
-    <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
-      <Box maxWidth="xl" mx="auto">
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
+        <Box maxWidth="xl" mx="auto">
         <Paper elevation={3} sx={{ borderRadius: 1, p: 1, boxShadow: 3 }}>
           <Box
             sx={{
@@ -240,53 +266,97 @@ function OtherPayment() {
                 }}
               />
 
-              <TextField
+              <DatePicker
                 label="Filter by Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                size="small"
                 value={filterDate}
-                onChange={(e) => {
-                  setFilterDate(e.target.value);
+                onChange={(newValue) => {
+                  setFilterDate(newValue);
                   setFilterMonth("");
                   setFilterValues({
                     ...filterValues,
-                    date: e.target.value,
+                    date: newValue,
                     month: "",
                   });
                 }}
-                sx={{
-                  height: 40,
-                  "& input[type='date']::-webkit-calendar-picker-indicator": {
-                    filter: "brightness(0) invert(1)", // Makes the calendar icon white
-                    cursor: "pointer",
-                  },
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    InputProps: {
+                      endAdornment: filterDate && (
+                        <InputAdornment position="end">
+                          <IconButton 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFilterDate(null);
+                              setFilterValues({
+                                ...filterValues,
+                                date: null,
+                              });
+                            }}
+                          >
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                    sx: {
+                      height: 40,
+                      "& .MuiInputBase-root": { height: 40 },
+                    }
+                  }
                 }}
               />
 
-              <TextField
-                label="Filter by Month"
-                type="month"
-                InputLabelProps={{ shrink: true }}
-                size="small"
-                value={filterMonth}
-                onChange={(e) => {
-                  setFilterMonth(e.target.value);
-                  setFilterDate("");
-                  setFilterValues({
-                    ...filterValues,
-                    month: e.target.value,
-                    date: "",
-                  });
-                }}
-                sx={{
-                  height: 40,
-                  "& input[type='month']::-webkit-calendar-picker-indicator": {
-                    filter: "brightness(0) invert(1)", // Makes the calendar icon white
-                    cursor: "pointer",
-                  },
-                }}
-              />
+              <FormControl size="small" sx={{ minWidth: 150, height: 40 }}>
+                <InputLabel id="month-filter-label">Filter by Month</InputLabel>
+                <Select
+                  labelId="month-filter-label"
+                  value={filterMonth}
+                  onChange={(e) => {
+                    setFilterMonth(e.target.value);
+                    setFilterDate("");
+                    setFilterValues({
+                      ...filterValues,
+                      month: e.target.value,
+                      date: "",
+                    });
+                  }}
+                  label="Filter by Month"
+                  endAdornment={
+                    filterMonth && (
+                      <InputAdornment position="end">
+                        <IconButton 
+                          size="small" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFilterMonth("");
+                            setFilterValues({
+                              ...filterValues,
+                              month: "",
+                            });
+                          }}
+                        >
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }
+                  sx={{
+                    height: 40,
+                    '& .MuiSelect-select': {
+                      minHeight: '1.4375em',
+                      padding: '16.5px 14px',
+                    },
+                  }}
+                >
+                  {months.map((month) => (
+                    <MenuItem key={month.value} value={month.value}>
+                      {month.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
 
             {/* Right side: Add Payment button */}
@@ -355,7 +425,8 @@ function OtherPayment() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+      </Box>
+    </LocalizationProvider>
   );
 }
 

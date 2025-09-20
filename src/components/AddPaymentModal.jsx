@@ -20,6 +20,7 @@ import {
   Box,
   CircularProgress,
 } from "@mui/material";
+import FloraTable from "./FloraTable";
 import apiService from "../services/api";
 
 export default function AddPaymentModal({ open, onClose, onSave }) {
@@ -35,11 +36,11 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
     residentDisplayId: "",
     residentNumber: "",
     residentEmail: "",
-    paymentCategory: "",
+    paymentCategory: "placeholder",
     customCategory: "",
     amount: "",
     additionalFee: "",
-    type: "",
+    type: "placeholder",
     date: new Date().toISOString().split("T")[0],
   });
 
@@ -74,11 +75,11 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
         residentDisplayId: "",
         residentNumber: "",
         residentEmail: "",
-        paymentCategory: "",
+        paymentCategory: "placeholder",
         customCategory: "",
         amount: "",
         additionalFee: "",
-        type: "",
+        type: "placeholder",
         date: new Date().toISOString().split("T")[0],
       });
     }
@@ -115,7 +116,7 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
       return false;
     }
     if (activeStep === 1) {
-      if (!newPayment.paymentCategory) {
+      if (!newPayment.paymentCategory || newPayment.paymentCategory === "placeholder") {
         alert("Please choose a payment category.");
         return false;
       }
@@ -127,7 +128,7 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
         alert("Please enter an amount.");
         return false;
       }
-      if (!newPayment.type) {
+      if (!newPayment.type || newPayment.type === "placeholder") {
         alert("Please select a payment method.");
         return false;
       }
@@ -258,8 +259,9 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
           <Grid container spacing={2} marginTop={1}>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Payment Category</InputLabel>
+                <InputLabel id="payment-category-label">Payment Category</InputLabel>
                 <Select
+                  labelId="payment-category-label"
                   value={newPayment.paymentCategory}
                   onChange={(e) => {
                     const category = e.target.value;
@@ -285,7 +287,30 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
                     }));
                   }}
                   label="Payment Category"
+                  sx={{
+                    minHeight: '56px',
+                    '& .MuiSelect-select': {
+                      minHeight: '1.4375em',
+                      padding: '16.5px 14px',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main',
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.23)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
+                      borderWidth: 2,
+                    }
+                  }}
                 >
+                  <MenuItem value="placeholder" disabled>
+                    <em>Select payment category</em>
+                  </MenuItem>
                   <MenuItem value="Parking">Parking</MenuItem>
                   <MenuItem value="Basketball Rental">Basketball Rental</MenuItem>
                   <MenuItem value="Swimming Pool Rental">Swimming Pool Rental</MenuItem>
@@ -296,22 +321,23 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Specify Other Category"
-                fullWidth
-                value={newPayment.customCategory}
-                onChange={(e) =>
-                  setNewPayment((prev) => ({
-                    ...prev,
-                    customCategory: e.target.value,
-                  }))
-                }
-                placeholder="Enter custom category"
-                disabled={newPayment.paymentCategory !== "Other"}
-                required={newPayment.paymentCategory === "Other"}
-              />
-            </Grid>
+            {newPayment.paymentCategory === "Other" && (
+              <Grid item xs={12}>
+                <TextField
+                  label="Specify Other Category"
+                  fullWidth
+                  value={newPayment.customCategory}
+                  onChange={(e) =>
+                    setNewPayment((prev) => ({
+                      ...prev,
+                      customCategory: e.target.value,
+                    }))
+                  }
+                  placeholder="Enter custom category"
+                  required
+                />
+              </Grid>
+            )}
 
             <Grid item xs={12}>
               <TextField
@@ -343,11 +369,36 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
 
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Method of Payment</InputLabel>
+                <InputLabel id="payment-method-label">Method of Payment</InputLabel>
                 <Select
+                  labelId="payment-method-label"
                   value={newPayment.type}
                   onChange={(e) => setNewPayment((prev) => ({ ...prev, type: e.target.value }))}
+                  label="Method of Payment"
+                  sx={{
+                    minHeight: '56px',
+                    '& .MuiSelect-select': {
+                      minHeight: '1.4375em',
+                      padding: '16.5px 14px',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main',
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.23)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
+                      borderWidth: 2,
+                    }
+                  }}
                 >
+                  <MenuItem value="placeholder" disabled>
+                    <em>Select payment method</em>
+                  </MenuItem>
                   <MenuItem value="Cash">Cash</MenuItem>
                   <MenuItem value="GCash">GCash</MenuItem>
                   <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
@@ -359,23 +410,73 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
 
         {/* Step 3: Summary */}
         {activeStep === 2 && (
-          <div>
+          <Box sx={{ mt: 2 }}>
             <Typography variant="h6" gutterBottom>
               Payment Summary
             </Typography>
-            <Typography>Resident: {newPayment.residentName}</Typography>
-            <Typography>ID: {newPayment.residentDisplayId}</Typography>
-            <Typography>
-              Category:{" "}
-              {newPayment.paymentCategory === "Other"
-                ? toTitleCase(newPayment.customCategory)
-                : newPayment.paymentCategory}
-            </Typography>
-            <Typography>Amount: ₱{newPayment.amount}</Typography>
-            <Typography>Additional Fee: ₱{newPayment.additionalFee || 0}</Typography>
-            <Typography>Method: {newPayment.type}</Typography>
-            <Typography>Date: {newPayment.date}</Typography>
-          </div>
+            <FloraTable
+              columns={[
+                {
+                  id: "field",
+                  label: "Field",
+                  render: (value) => <strong>{value}</strong>,
+                },
+                {
+                  id: "value",
+                  label: "Value",
+                },
+              ]}
+              rows={[
+                {
+                  field: "Resident Name",
+                  value: newPayment.residentName,
+                },
+                {
+                  field: "Resident ID",
+                  value: newPayment.residentDisplayId,
+                },
+                {
+                  field: "Payment Category",
+                  value: newPayment.paymentCategory === "Other"
+                    ? toTitleCase(newPayment.customCategory)
+                    : newPayment.paymentCategory,
+                },
+                {
+                  field: "Amount",
+                  value: `₱${Number(newPayment.amount || 0).toLocaleString()}`,
+                },
+                {
+                  field: "Additional Fee",
+                  value: `₱${Number(newPayment.additionalFee || 0).toLocaleString()}`,
+                },
+                {
+                  field: "Total Amount",
+                  value: `₱${(Number(newPayment.amount || 0) + Number(newPayment.additionalFee || 0)).toLocaleString()}`,
+                },
+                {
+                  field: "Payment Method",
+                  value: newPayment.type,
+                },
+                {
+                  field: "Date",
+                  value: new Date(newPayment.date).toLocaleDateString(),
+                },
+              ]}
+              actions={[]}
+              page={1}
+              rowsPerPage={10}
+              maxHeight="400px"
+              emptyMessage="No data to display"
+              disableInternalPagination
+              paginationInfo={{
+                total: 8,
+                totalPages: 1,
+                from: 1,
+                to: 8,
+              }}
+              onPageChange={() => {}}
+            />
+          </Box>
         )}
       </DialogContent>
 
