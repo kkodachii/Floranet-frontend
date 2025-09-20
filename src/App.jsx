@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import MainLayout from './MainLayout'
 import NotificationListerner from './services/NotificationListener'
 import CommunityHub from './pages/CommunityHub'
@@ -70,6 +71,11 @@ function AppRoutes() {
         <Route path="/login" element={
           <PublicRoute>
             <Login />
+          </PublicRoute>
+        } />
+        <Route path="/forgot-password" element={
+          <PublicRoute>
+            <ForgotPassword />
           </PublicRoute>
         } />
         <Route path="/" element={<Navigate to="/login" replace />} />
