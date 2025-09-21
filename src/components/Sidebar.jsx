@@ -55,6 +55,7 @@ const sidebarItems = [
       { label: "Collection", to: "/billing-payment/collection" },
       { label: "Personal payment", to: "/billing-payment/personal-payment" },
       { label: "Payment status", to: "/billing-payment/payment-status" },
+      { label: "Other payment", to: "/billing-payment/other-payment" },
       { label: "Collection report", to: "/billing-payment/collection-report" },
     ],
   },
@@ -81,7 +82,7 @@ const sidebarItems = [
             { label: "CCTV Reports", to: "/reports/cctv-request" },
             { label: "Complaint Reports", to: "/reports/complaint-request" },
             { label: "Monthly Collection", to: "/reports/collection-report" },
-            
+            { label: "Payment Report", to: "/reports/payment-report" },
           ],
         },
 ];

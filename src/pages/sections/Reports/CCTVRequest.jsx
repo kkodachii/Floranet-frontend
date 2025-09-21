@@ -24,7 +24,7 @@ export default function CCTVRequest() {
   const [dateRange, setDateRange] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [streetFilter, setStreetFilter] = useState('all');
-  const streets = ['Adelfa','Bougainvillea','Champaca','Dahlia','Gumamela','Ilang-ilang','Jasmin','Kalachuchi','Lilac','Rosal','Sampaguita','Santan','Waling-waling'];
+  const streets = ['Adelfa','Bougainvillea', 'Camia','Champaca','Dahlia','Gumamela','Ilang-ilang','Jasmin','Kalachuchi','Lilac','Rosal','Sampaguita','Santan','Waling-waling'];
 
   const handleGeneratePDF = async () => {
     try {

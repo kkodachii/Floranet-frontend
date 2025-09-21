@@ -22,15 +22,11 @@ export default function FullForm() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [view, setView] = React.useState("login");
   const [showPassword, setShowPassword] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [otpEmail, setOtpEmail] = React.useState("");
-  const [otpDigits, setOtpDigits] = React.useState(["", "", "", "", "", ""]);
   const [errorMsg, setErrorMsg] = React.useState({});
   const [isLoading, setIsLoading] = React.useState(false);
-  const inputRefs = React.useRef([]);
   const [isPasswordFocused, setIsPasswordFocused] = React.useState(false);
 
   const handleClickShowPassword = () => setShowPassword((prev) => !prev);
@@ -74,45 +70,6 @@ export default function FullForm() {
     }
   };
 
-  const handleForgotSubmit = () => {
-    let errors = {};
-    if (!otpEmail) errors.email = "Email is required.";
-    setErrorMsg(errors);
-    if (!errors.email) {
-      alert("OTP sent to email!");
-      setView("otp");
-    }
-  };
-
-  const handleOtpSubmit = () => {
-    const otpValue = otpDigits.join("");
-    let errors = {};
-    if (otpValue.length !== 6 || otpDigits.includes("")) {
-      errors.otp = "Enter a valid 6-digit OTP.";
-    }
-    setErrorMsg(errors);
-    if (!errors.otp) {
-      alert("OTP verified: " + otpValue);
-    }
-  };
-
-  const handleOtpChange = (e, index) => {
-    const value = e.target.value;
-    if (!/^\d?$/.test(value)) return;
-    const newOtp = [...otpDigits];
-    newOtp[index] = value;
-    setOtpDigits(newOtp);
-
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
 
   // Custom styles for transparent autofill
   const autofillTransparentStyles = {
@@ -212,249 +169,108 @@ export default function FullForm() {
             justifyContent: "center",
           }}
         >
-          {view === "login" && (
-            <>
-              <Typography
-                variant="h3"
-                fontWeight="bold"
-                align="center"
-                sx={{ color: "green", fontSize: "2.5rem" }}
-              >
-                Welcome
-              </Typography>
-              <Typography variant="body2" align="center" color="text.secondary">
-                Sign in to your account
-              </Typography>
-              {errorMsg.general && (
-                <Typography
-                  variant="body2"
-                  color="error"
-                  align="center"
-                  sx={{ mb: 1 }}
-                >
-                  {errorMsg.general}
-                </Typography>
-              )}
-              <TextField
-                label="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleLoginSubmit();
-                }}
-                error={!!errorMsg.email}
-                helperText={errorMsg.email}
-                sx={{
-                  width: "350px",
-                  alignSelf: "center",
-                  ...autofillTransparentStyles,
-                }}
-              />
-              <TextField
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleLoginSubmit();
-                }}
-                onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => setIsPasswordFocused(false)}
-                error={!!errorMsg.password}
-                helperText={errorMsg.password}
-                sx={{
-                  width: "350px",
-                  alignSelf: "center",
-                  ...autofillTransparentStyles,
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                        sx={{
-                          color: errorMsg.password
-                            ? "error.main"
-                            : isPasswordFocused
-                            ? "green"
-                            : "inherit",
-                        }}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <Box
-                sx={{
-                  width: "350px",
-                  alignSelf: "center",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={() => setView("forgot")}
-                  sx={{
-                    fontSize: "0.85rem",
-                    color: theme.palette.primary.main,
-                  }}
-                >
-                  Forgot Password?
-                </Link>
-              </Box>
-              <Button
-                variant="contained"
-                onClick={handleLoginSubmit}
-                disabled={isLoading}
-                sx={{ width: "350px", alignSelf: "center" }}
-              >
-                {isLoading ? "Signing In..." : "Sign In"}
-              </Button>
-            </>
+          <Typography
+            variant="h3"
+            fontWeight="bold"
+            align="center"
+            sx={{ color: "green", fontSize: "2.5rem" }}
+          >
+            Welcome
+          </Typography>
+          <Typography variant="body2" align="center" color="text.secondary">
+            Sign in to your account
+          </Typography>
+          {errorMsg.general && (
+            <Typography
+              variant="body2"
+              color="error"
+              align="center"
+              sx={{ mb: 1 }}
+            >
+              {errorMsg.general}
+            </Typography>
           )}
-
-          {view === "forgot" && (
-            <>
-              <Typography
-                variant="h3"
-                fontWeight="bold"
-                align="center"
-                sx={{ color: "green", fontSize: "2.5rem" }}
-              >
-                Forgot Password
-              </Typography>
-              <Typography variant="body2" align="center" color="text.secondary">
-                Enter your email to receive an OTP
-              </Typography>
-              <TextField
-                label="Email"
-                value={otpEmail}
-                onChange={(e) => setOtpEmail(e.target.value)}
-                error={!!errorMsg.email}
-                helperText={errorMsg.email}
-                sx={{
-                  width: "350px",
-                  alignSelf: "center",
-                  ...autofillTransparentStyles,
-                }}
-              />
-              <Box
-                sx={{
-                  width: "350px",
-                  alignSelf: "center",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={() => setView("login")}
-                  sx={{
-                    fontSize: "0.85rem",
-                    color: theme.palette.primary.main,
-                  }}
-                >
-                  Back to Login
-                </Link>
-              </Box>
-              <Button
-                variant="contained"
-                onClick={handleForgotSubmit}
-                sx={{ width: "350px", alignSelf: "center" }}
-              >
-                Send OTP
-              </Button>
-            </>
-          )}
-
-          {view === "otp" && (
-            <>
-              <Typography
-                variant="h3"
-                fontWeight="bold"
-                align="center"
-                sx={{ color: "green", fontSize: "2.5rem" }}
-              >
-                Verify OTP
-              </Typography>
-              <Typography variant="body2" align="center" color="text.secondary">
-                Enter the 6-digit code sent to your email
-              </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 1,
-                  justifyContent: "center",
-                  mt: 2,
-                  mb: 1,
-                }}
-              >
-                {[0, 1, 2, 3, 4, 5].map((_, index) => (
-                  <TextField
-                    key={index}
-                    inputRef={(ref) => (inputRefs.current[index] = ref)}
-                    value={otpDigits[index] || ""}
-                    onChange={(e) => handleOtpChange(e, index)}
-                    onKeyDown={(e) => handleOtpKeyDown(e, index)}
-                    inputProps={{
-                      maxLength: 1,
-                      style: {
-                        textAlign: "center",
-                        fontSize: "20px",
-                        width: "25px",
-                        height: "35px",
-                      },
+          <TextField
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleLoginSubmit();
+            }}
+            error={!!errorMsg.email}
+            helperText={errorMsg.email}
+            sx={{
+              width: "350px",
+              alignSelf: "center",
+              ...autofillTransparentStyles,
+            }}
+          />
+          <TextField
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleLoginSubmit();
+            }}
+            onFocus={() => setIsPasswordFocused(true)}
+            onBlur={() => setIsPasswordFocused(false)}
+            error={!!errorMsg.password}
+            helperText={errorMsg.password}
+            sx={{
+              width: "350px",
+              alignSelf: "center",
+              ...autofillTransparentStyles,
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                    sx={{
+                      color: errorMsg.password
+                        ? "error.main"
+                        : isPasswordFocused
+                        ? "green"
+                        : "inherit",
                     }}
-                    error={!!errorMsg.otp}
-                    sx={autofillTransparentStyles}
-                  />
-                ))}
-              </Box>
-              {errorMsg.otp && (
-                <Typography
-                  variant="caption"
-                  color="error"
-                  sx={{ textAlign: "center", display: "block" }}
-                >
-                  {errorMsg.otp}
-                </Typography>
-              )}
-              <Box
-                sx={{
-                  width: "350px",
-                  alignSelf: "center",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={() => setView("forgot")}
-                  sx={{
-                    fontSize: "0.85rem",
-                    color: theme.palette.primary.main,
-                  }}
-                >
-                  Resend OTP
-                </Link>
-              </Box>
-              <Button
-                variant="contained"
-                onClick={handleOtpSubmit}
-                sx={{ width: "350px", alignSelf: "center", mt: 1 }}
-              >
-                Verify
-              </Button>
-            </>
-          )}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Box
+            sx={{
+              width: "350px",
+              alignSelf: "center",
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Link
+              component="button"
+              variant="body2"
+              onClick={() => navigate("/forgot-password")}
+              sx={{
+                fontSize: "0.85rem",
+                color: theme.palette.primary.main,
+              }}
+            >
+              Forgot Password?
+            </Link>
+          </Box>
+          <Button
+            variant="contained"
+            onClick={handleLoginSubmit}
+            disabled={isLoading}
+            sx={{ width: "350px", alignSelf: "center" }}
+          >
+            {isLoading ? "Signing In..." : "Sign In"}
+          </Button>
         </Box>
 
         <Box

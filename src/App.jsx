@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import MainLayout from './MainLayout'
 import NotificationListerner from './services/NotificationListener'
 import CommunityHub from './pages/CommunityHub'
@@ -12,6 +13,7 @@ import WasteCollection from './pages/sections/Alert/WasteCollection'
 import PersonalPayment from './pages/sections/Billing/PersonalPayment'
 import PaymentStatus from './pages/sections/Billing/PaymentStatus'
 import PaymentDetails from './pages/sections/Billing/PaymentDetails'
+import OtherPayment from './pages/sections/Billing/OtherPayment'
 import CollectionReport from './pages/sections/Billing/CollectionReport'
 import Collection from './pages/sections/Billing/Collection'
 import AddCollection from './pages/sections/Billing/AddCollection'
@@ -30,6 +32,7 @@ import CCTVRequest from './pages/sections/Reports/CCTVRequest'
 import ComplaintRequest from './pages/sections/Reports/ComplaintRequest'
 import MonthlyCollection from './pages/sections/Reports/MonthlyCollection'
 import AlertReports from './pages/sections/Reports/AlertReports'
+import OtherPaymentReport from './pages/sections/Reports/OtherPaymentReport'
 import { AuthProvider, useAuth } from './AuthContext'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -72,6 +75,11 @@ function AppRoutes() {
             <Login />
           </PublicRoute>
         } />
+        <Route path="/forgot-password" element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        } />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/*" element={
           <ProtectedRoute>
@@ -94,6 +102,7 @@ function AppRoutes() {
                 <Route path="/billing-payment/personal-payment" element={<PersonalPayment />} />
                 <Route path="/billing-payment/payment-status" element={<PaymentStatus />} />
                 <Route path="/billing-payment/payment-details/:residentId" element={<PaymentDetails />} />
+                <Route path="/billing-payment/other-payment" element={<OtherPayment />} />
                 <Route path="/billing-payment/collection-report" element={<CollectionReport />} />
                 <Route path="/billing-payment/collection" element={<Collection />} />
                 <Route path="/billing-payment/add-collection" element={<AddCollection />} />
@@ -104,6 +113,7 @@ function AppRoutes() {
                 <Route path="/reports/complaint-request" element={<ComplaintRequest />} />
                 <Route path="/reports/collection-report" element={<MonthlyCollection />} />
                 <Route path="/reports/alert-reports" element={<AlertReports />} />
+                <Route path="/reports/payment-report" element={<OtherPaymentReport />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
               </Routes>

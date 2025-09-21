@@ -1263,6 +1263,77 @@ class ApiService {
   async getStreets() {
     return this.request("/admin/reports/streets");
   }
+  async getOtherPayments(page = 1, search = "", filters = {}) {
+    const params = new URLSearchParams();
+    params.append("page", page);
+    if (search) params.append("search", search);
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== "") {
+        params.append(key, value);
+      }
+    });
+
+    return this.request(`/admin/other-payments?${params.toString()}`);
+  }
+
+  async getOtherPaymentById(id) {
+    return this.request(`/admin/other-payments/${id}`);
+  }
+
+  async createOtherPayment(data) {
+    return this.request("/admin/other-payments", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateOtherPayment(id, data) {
+    return this.request(`/admin/other-payments/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteOtherPayment(id) {
+    return this.request(`/admin/other-payments/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async generateOtherPaymentReportPDF(params) {
+    const url = `${this.baseURL}/api/admin/reports/other-payments/pdf`;
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/pdf",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message ||
+            `PDF generation failed with status: ${response.status}`
+        );
+      }
+
+      return {
+        success: true,
+        data: await response.blob(),
+      };
+    } catch (error) {
+      console.error("Other Payment Report PDF generation failed:", error);
+      throw error;
+    }
+  }
 }
 
 // Create and export a singleton instance
