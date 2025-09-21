@@ -39,13 +39,36 @@ export default function Header({ children }) {
   const fetchNotifications = async () => {
     if (!token) return;
     try {
-      const res = await apiService.getNotifications();
+      const res = await apiService.getNotifications(user.id);
 
-      const data = res.data || [];
-      setNotifications(data.slice(0, 5)); // only 5 notifs
-      setUnreadCount(data.filter((n) => !n.read_at).length);
+      const unread = res.filter((n) => !n.read_at);
+
+      setNotifications(unread.slice(0, 5)); // only top 5 unread
+      setUnreadCount(unread.length);
     } catch (err) {
       console.error("❌ Error fetching notifications:", err);
+    }
+  };
+
+  const markNotification = async (id) => {
+    if (!token) return;
+
+    const notif = notifications.find((n) => n.id === id);
+
+    try {
+      if (!notif?.read_at) {
+        await apiService.markAsRead(id);
+
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+          )
+        );
+
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+      }
+    } catch (err) {
+      console.error("❌ Error reading notification:", err);
     }
   };
 
@@ -157,12 +180,31 @@ export default function Header({ children }) {
             </MenuItem>
           ) : (
             notifications.map((notif, index) => (
-              <MenuItem key={index} onClick={handleNotifClose}>
+              <MenuItem
+                key={index}
+                onClick={() => {
+                  markNotification(notif.id);
+                  handleNotifClose();
+                }}
+                sx={{
+                  bgcolor: notif.read_at ? "background.paper" : "action.hover",
+                  "&:hover": {
+                    bgcolor: "action.selected",
+                  },
+                }}
+              >
                 <Box>
-                  <Typography variant="subtitle2">
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: notif.read_at ? "normal" : "bold" }}
+                  >
                     {notif.data?.title || "Notification"}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontStyle: notif.read_at ? "italic" : "normal" }}
+                  >
                     {notif.data?.message || notif.created_at}
                   </Typography>
                 </Box>

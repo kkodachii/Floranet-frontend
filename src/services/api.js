@@ -54,6 +54,22 @@ class ApiService {
     });
   }
 
+  async getNotifications(id) {
+    return this.request(`/admin/notifications/${id}`);
+  }
+
+  async markAsRead(id) {
+    return this.request(`/admin/notifications/read/${id}`, {
+      method: "POST",
+    });
+  }
+
+  async markAllAsRead(id) {
+    return this.request(`/admin/notifications/read-all/${id}`, {
+      method: "POST",
+    });
+  }
+
   async sendOTP(email) {
     return this.request("/auth/send-otp", {
       method: "POST",
@@ -1246,16 +1262,6 @@ class ApiService {
 
   async getStreets() {
     return this.request("/admin/reports/streets");
-  }
-
-  async getNotifications() {
-    return this.request("/admin/notifications");
-  }
-
-  async markAsRead(id) {
-    return this.request(`/admin/notifications/read/${id}`, {
-      method: "POST",
-    });
   }
 }
 
