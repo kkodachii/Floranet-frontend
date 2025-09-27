@@ -480,10 +480,10 @@ class ApiService {
   }
 
   //send garbage alert
-  async sendGarbageAlert(title, content) {
-    return this.request("/sendPush", {
+  async sendGarbageAlert(title, message) {
+    return this.request("/waste-alert", {
       method: "POST",
-      body: JSON.stringify({ title, content }),
+      body: JSON.stringify({ title, message }),
     });
   }
 
