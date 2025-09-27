@@ -6,8 +6,8 @@ import MainLayout from './MainLayout'
 import NotificationListerner from './services/NotificationListener'
 import CommunityHub from './pages/CommunityHub'
 import Settings from './pages/Settings'
+import NotificationsPage from './pages/Notifications'
 import Alerts from './pages/sections/Alert/Alerts'
-
 import CCTV from './pages/sections/Alert/CCTV'
 import WasteCollection from './pages/sections/Alert/WasteCollection'
 import PersonalPayment from './pages/sections/Billing/PersonalPayment'
@@ -115,6 +115,7 @@ function AppRoutes() {
                 <Route path="/reports/alert-reports" element={<AlertReports />} />
                 <Route path="/reports/payment-report" element={<OtherPaymentReport />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
               </Routes>
             </MainLayout>
           </ProtectedRoute>
