@@ -880,9 +880,17 @@ class ApiService {
 
   async updateCCTVFootage(id, footageData) {
     const formData = new FormData();
-    formData.append("footage", footageData.file);
+
+    // ✅ Append with filename (important for Laravel)
+    formData.append("footage", footageData.file, footageData.file.name);
+
     if (footageData.description) {
       formData.append("description", footageData.description);
+    }
+
+    // 🔍 Debug: log FormData contents
+    for (let [key, value] of formData.entries()) {
+      console.log("FormData entry:", key, value);
     }
 
     const token = localStorage.getItem("token");
