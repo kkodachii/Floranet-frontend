@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import axios from "axios";
 import config from "../config/env";
+import { getProfilePictureUrl } from "../utils/profilePicture";
 import apiService from "../services/api";
 
 export default function Header({ children }) {
@@ -229,9 +230,8 @@ export default function Header({ children }) {
           <IconButton color="inherit" onClick={handleMenu} sx={{ ml: 1 }}>
             <Avatar
               src={
-                user?.profile_picture
-                  ? `${config.API_BASE_URL}/storage/${user.profile_picture}`
-                  : "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"
+                getProfilePictureUrl(user?.profile_picture) ||
+                "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"
               }
             />
           </IconButton>

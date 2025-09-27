@@ -65,7 +65,7 @@ class ApiService {
   }
 
   async markAllAsRead(id) {
-    return this.request(`/admin/notifications/read-all/${id}`, {
+    return this.request(`/admin/notifications/read-all`, {
       method: "POST",
     });
   }

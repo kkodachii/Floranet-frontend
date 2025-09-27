@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import config from '../config/env';
+import { getProfilePictureUrl } from '../utils/profilePicture';
 import { useAuth } from '../AuthContext';
 
 function Settings() {
@@ -325,7 +326,7 @@ function Settings() {
           onClick={() => !loading && document.getElementById('profile-picture-upload').click()}
           >
             <Avatar
-              src={profileData.profile_picture ? `${config.API_BASE_URL}/storage/${profileData.profile_picture}` : "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"}
+              src={getProfilePictureUrl(profileData.profile_picture) || "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"}
               sx={{
                 width: 140,
                 height: 140,

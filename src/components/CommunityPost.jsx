@@ -25,6 +25,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { useTheme, useMediaQuery } from "@mui/material";
 import config from "../config/env";
 import apiService from "../services/api";
+import { getProfilePictureUrl } from "../utils/profilePicture";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -180,8 +181,8 @@ function CommunityPost({
       if (response && response.success) {
         // Fetch fresh comments from the API
         await fetchComments();
-        // Update comment count
-        setCommentCount((prev) => prev + 1);
+        // Note: Comment count is already updated by the parent component
+        // No need to increment it here to avoid double counting
       }
 
       // Don't close the comment section - keep it open
@@ -284,7 +285,7 @@ function CommunityPost({
         >
           <Box sx={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
             <Avatar
-              src={avatarSrc}
+              src={getProfilePictureUrl(avatarSrc)}
               sx={{
                 width: 40,
                 height: 40,
@@ -830,7 +831,7 @@ function CommunityPost({
                         }}
                       >
                         <Avatar
-                          src={comment.user.profile_picture}
+                          src={getProfilePictureUrl(comment.user.profile_picture)}
                           sx={{
                             width: 32,
                             height: 32,
