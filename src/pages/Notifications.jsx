@@ -216,26 +216,6 @@ export default function NotificationsPage() {
                 {notifications.filter(n => !n.read_at).length} unread notifications
               </Typography>
             </Box>
-            {notifications.some((n) => !n.read_at) && (
-              <Button
-                startIcon={<MarkEmailReadIcon />}
-                onClick={markAllAsRead}
-                size="small"
-                variant="outlined"
-                sx={{
-                  backgroundColor: theme.palette.background.paper,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '&:hover': {
-                    backgroundColor: 'primary.main',
-                    color: '#fff',
-                    borderColor: 'primary.main',
-                  },
-                }}
-              >
-                Mark all as read
-              </Button>
-            )}
           </Box>
         </Box>
 
