@@ -37,26 +37,26 @@ export default function FullForm() {
     if (!email) errors.email = "Email is required.";
     if (!password) errors.password = "Password is required.";
     setErrorMsg(errors);
-    
+
     if (!errors.email && !errors.password) {
       setIsLoading(true);
       try {
         const response = await axios.post(config.ENDPOINTS.LOGIN, {
           email: email,
-          password: password
+          password: password,
         });
-        
+
         if (response.data) {
-          const userData = { 
-            email: email, 
-            ...response.data.user 
+          const userData = {
+            email: email,
+            ...response.data.user,
           };
           const authToken = response.data.token || response.data.access_token;
           login(userData, authToken);
           navigate("/user-management/residents");
         }
       } catch (error) {
-        console.error('Login error:', error);
+        console.error("Login error:", error);
         if (error.response?.data?.message) {
           setErrorMsg({ general: error.response.data.message });
         } else if (error.response?.status === 401) {
@@ -69,7 +69,6 @@ export default function FullForm() {
       }
     }
   };
-
 
   // Custom styles for transparent autofill
   const autofillTransparentStyles = {
@@ -334,10 +333,12 @@ export default function FullForm() {
                       : "#424242",
                 }}
               >
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos
-                blanditiis tenetur unde suscipit, quam beatae rerum inventore
-                consectetur, neque doloribus, cupiditate numquam dignissimos
-                laborum fugiat deleniti? Eum quasi quidem quibusdam.
+                A smart community management system for Milflora Homes
+                Subdivision. Floranet improves communication, promotes
+                transparency, and strengthens emergency response. It gives
+                residents one platform to receive announcements, pay bills,
+                promote businesses, and access essential community services with
+                ease.
               </Typography>
             </Box>
           </Box>
