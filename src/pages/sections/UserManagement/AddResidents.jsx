@@ -290,12 +290,28 @@ function AddResidents() {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
+  const toTitleCase = (str) => {
+  return str
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
+  let formattedValue = value;
+
+  if (['residentFirstName', 'residentLastName', 'homeownerName'].includes(field)) {
+    formattedValue = toTitleCase(value);
+  }
+
+  if (['block', 'lot'].includes(field)) {
+    formattedValue = value.toUpperCase();
+  }
+
+  setFormData((prev) => ({ ...prev, [field]: formattedValue }));
+
+  if (errors[field]) {
+    setErrors((prev) => ({ ...prev, [field]: '' }));
+  }
   };
 
   const validateStep = () => {
