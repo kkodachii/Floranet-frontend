@@ -513,18 +513,6 @@ function Settings() {
         </Stack>
       </Paper>
 
-      {/* Deactivate Account Section */}
-      <Paper sx={{ p: 3, background: (theme) => theme.palette.mode === 'light' ? '#fff8f8' : '#2d2323', width: '100%', mb: 4 }} elevation={2}>
-        <Typography variant="h6" sx={{ mb: 1, fontWeight: 700 }} color="error">
-          Deactivate Account
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Deactivating your account will disable access to your profile and all associated data. Please be aware that if you choose to deactivate your account, you will lose immediate access to all your data and any ongoing activities associated with your account until it is reactivated.
-        </Typography>
-        <Button variant="contained" color="error">
-          DEACTIVATE ACCOUNT
-        </Button>
-      </Paper>
 
       {/* Snackbar for showing messages */}
       <Snackbar

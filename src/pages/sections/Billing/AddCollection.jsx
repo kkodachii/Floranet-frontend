@@ -27,9 +27,9 @@ import FloraTable from '../../../components/FloraTable';
 import apiService from '../../../services/api';
 
 const steps = [
-  'Collection Details',
-  'Amount & Period',
-  'Reason & Submit'
+  'Period & Streets',
+  'Amount & Reason',
+  'Review & Submit'
 ];
 
 const months = [
@@ -82,28 +82,51 @@ function AddCollection() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(false);
   const [streets, setStreets] = useState([]);
+  const [streetsLoading, setStreetsLoading] = useState(false);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
 
-  const fetchStreets = async () => {
+  const fetchStreets = async (month = null, year = null) => {
     try {
-      const response = await apiService.getCollectionStreets();
+      setStreetsLoading(true);
+      const response = await apiService.getCollectionStreets(month, year);
       const apiStreets = response && response.success ? (response.data || []) : [];
-      // Merge API streets with defaults, preserving default order first
-      const merged = [...defaultStreets, ...apiStreets.filter(s => !defaultStreets.includes(s))];
-      setStreets(merged);
+      
+      if (month && year) {
+        // When filtering by month/year, only use API streets (already filtered)
+        setStreets(apiStreets);
+      } else {
+        // When no month/year specified, merge with defaults
+        const merged = [...defaultStreets, ...apiStreets.filter(s => !defaultStreets.includes(s))];
+        setStreets(merged);
+      }
     } catch (error) {
       console.error('Error fetching streets:', error);
       // Fallback to defaults if API fails
       setStreets(defaultStreets);
+    } finally {
+      setStreetsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchStreets();
   }, []);
+
+  // Refetch streets when month or year changes to filter out streets with existing collections
+  useEffect(() => {
+    if (formData.month && formData.year) {
+      // Clear selected streets first
+      setFormData(prev => ({ ...prev, streets: [] }));
+      // Then fetch filtered streets
+      fetchStreets(formData.month, formData.year);
+    } else if (!formData.month || !formData.year) {
+      // If month or year is cleared, show all streets
+      fetchStreets();
+    }
+  }, [formData.month, formData.year]);
 
   const handleNext = () => {
     if (validateStep()) {
@@ -125,12 +148,18 @@ function AddCollection() {
 
   const handleStreetChange = (event) => {
     const value = event.target.value;
+    
+    // Check if "all" is in the selected values
     if (value.includes('all')) {
-      // If "Select All" is selected, select all streets
-      setFormData(prev => ({ ...prev, streets: streets }));
+      // If "Select All" is selected, select all actual streets (not the "all" option)
+      const actualStreets = streets.filter(street => street !== 'all');
+      setFormData(prev => ({ ...prev, streets: actualStreets }));
     } else {
+      // Regular selection - just set the selected streets
       setFormData(prev => ({ ...prev, streets: value }));
     }
+    
+    // Clear error when user makes selection
     if (errors.streets) {
       setErrors(prev => ({ ...prev, streets: '' }));
     }
@@ -140,28 +169,36 @@ function AddCollection() {
     const newErrors = {};
 
     switch (activeStep) {
-      case 0: // Collection Details
-        if (!formData.streets || formData.streets.length === 0) {
-          newErrors.streets = 'At least one street is required';
-        }
-        break;
-
-      case 1: // Amount & Period
-        if (!formData.needToCollect || parseFloat(formData.needToCollect) <= 0) {
-          newErrors.needToCollect = 'Please enter a valid amount greater than 0';
-        }
+      case 0: // Period & Streets
         if (!formData.month) {
           newErrors.month = 'Month is required';
         }
         if (!formData.year) {
           newErrors.year = 'Year is required';
         }
+        if (!formData.streets || formData.streets.length === 0) {
+          const actualStreets = streets.filter(street => street !== 'all');
+          if (actualStreets.length === 0) {
+            newErrors.streets = 'No streets available for the selected month and year';
+          } else {
+            newErrors.streets = 'At least one street is required';
+          }
+        }
         break;
 
-      case 2: // Reason & Submit
+      case 1: // Amount & Reason
+        if (!formData.needToCollect || parseFloat(formData.needToCollect) <= 0) {
+          newErrors.needToCollect = 'Please enter a valid amount greater than 0';
+        } else if (parseFloat(formData.needToCollect) < 25) {
+          newErrors.needToCollect = 'Minimum amount is ₱25.00';
+        }
         if (!formData.reason.trim()) {
           newErrors.reason = 'Reason for collection is required';
         }
+        break;
+
+      case 2: // Review & Submit
+        // No validation needed for review step
         break;
 
       default:
@@ -224,85 +261,6 @@ function AddCollection() {
       case 0:
         return (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.streets} required sx={{ minWidth: 350, maxWidth: 500 }}>
-                <InputLabel>Streets</InputLabel>
-                <Select
-                  multiple
-                  value={formData.streets}
-                  label="Streets"
-                  onChange={handleStreetChange}
-                  renderValue={(selected) => {
-                    if (selected.length === 0) {
-                      return <em style={{ color: '#888' }}>Select Streets</em>;
-                    }
-                    if (selected.length === streets.length) {
-                      return 'All Streets Selected';
-                    }
-                    return `${selected.length} street(s) selected`;
-                  }}
-                  sx={{
-                    '& .MuiChip-root': {
-                      backgroundColor: 'primary.main !important',
-                      color: 'white !important',
-                      fontWeight: 'bold',
-                      '& .MuiChip-deleteIcon': {
-                        color: 'white !important',
-                        '&:hover': {
-                          color: 'primary.light !important',
-                        },
-                      },
-                    },
-                    '& .MuiChip-filled': {
-                      backgroundColor: 'primary.main !important',
-                      color: 'white !important',
-                    },
-                    '& .MuiChip-deletable': {
-                      backgroundColor: 'primary.main !important',
-                      color: 'white !important',
-                    },
-                  }}
-                >
-                  <MenuItem value="all">
-                    <em>Select All Streets</em>
-                  </MenuItem>
-                  {streets.map((street) => (
-                    <MenuItem key={street} value={street}>
-                      {street}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.streets && <FormHelperText>{errors.streets}</FormHelperText>}
-              </FormControl>
-            </Grid>
-          </Grid>
-        );
-
-      case 1:
-        return (
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Amount to Collect (per resident)"
-                type="number"
-                value={formData.needToCollect}
-                onChange={(e) => handleInputChange('needToCollect', e.target.value)}
-                error={!!errors.needToCollect}
-                helperText={errors.needToCollect || 'Enter amount per resident'}
-                required
-                placeholder="25.00"
-                inputProps={{ 
-                  min: "0.01", 
-                  step: "0.01",
-                  maxLength: 10 
-                }}
-                InputProps={{
-                  startAdornment: <span style={{ marginRight: 8 }}>₱</span>,
-                }}
-                sx={{ minWidth: 200, maxWidth: 300 }}
-              />
-            </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth error={!!errors.month} required sx={{ minWidth: 200, maxWidth: 300 }}>
                 <InputLabel>Month</InputLabel>
@@ -344,6 +302,119 @@ function AddCollection() {
                 </Select>
                 {errors.year && <FormHelperText>{errors.year}</FormHelperText>}
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth error={!!errors.streets} required sx={{ minWidth: 350, maxWidth: 500 }}>
+                <InputLabel>Streets</InputLabel>
+                <Select
+                  multiple
+                  value={formData.streets}
+                  label="Streets"
+                  onChange={handleStreetChange}
+                  disabled={streetsLoading || streets.filter(s => s !== 'all').length === 0}
+                  renderValue={(selected) => {
+                    if (streetsLoading) {
+                      return <em style={{ color: '#888' }}>Loading streets...</em>;
+                    }
+                    if (selected.length === 0) {
+                      const actualStreets = streets.filter(street => street !== 'all');
+                      if (actualStreets.length === 0) {
+                        return <em style={{ color: 'red' }}>No Available Streets</em>;
+                      }
+                      return <em style={{ color: '#888' }}>Select Streets</em>;
+                    }
+                    // Get actual streets (excluding "all" option)
+                    const actualStreets = streets.filter(street => street !== 'all');
+                    if (selected.length === actualStreets.length && actualStreets.length > 0) {
+                      return 'All Streets Selected';
+                    }
+                    return `${selected.length} street(s) selected`;
+                  }}
+                  sx={{
+                    '& .MuiChip-root': {
+                      backgroundColor: 'primary.main !important',
+                      color: 'white !important',
+                      fontWeight: 'bold',
+                      '& .MuiChip-deleteIcon': {
+                        color: 'white !important',
+                        '&:hover': {
+                          color: 'primary.light !important',
+                        },
+                      },
+                    },
+                    '& .MuiChip-filled': {
+                      backgroundColor: 'primary.main !important',
+                      color: 'white !important',
+                    },
+                    '& .MuiChip-deletable': {
+                      backgroundColor: 'primary.main !important',
+                      color: 'white !important',
+                    },
+                  }}
+                >
+                  {streets.filter(s => s !== 'all').length > 0 ? (
+                    <MenuItem value="all">
+                      <em>Select All Streets</em>
+                    </MenuItem>
+                  ) : (
+                    <MenuItem value="all" disabled>
+                      <em style={{ color: 'red', fontWeight: 'bold' }}>No Available Streets</em>
+                    </MenuItem>
+                  )}
+                  {streets.map((street) => (
+                    <MenuItem key={street} value={street}>
+                      {street}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.streets ? (
+                  <FormHelperText>{errors.streets}</FormHelperText>
+                ) : (
+                  <FormHelperText>
+                    {streetsLoading ? (
+                      'Loading available streets...'
+                    ) : formData.month && formData.year ? (
+                      streets.filter(s => s !== 'all').length === 0 ? (
+                        <span style={{ color: 'red', fontWeight: 'bold' }}>
+                          No streets available for {formData.month} {formData.year} - all streets already have monthly dues
+                        </span>
+                      ) : (
+                        `Only streets without existing monthly dues for ${formData.month} ${formData.year} are shown (${streets.filter(s => s !== 'all').length} available)`
+                      )
+                    ) : (
+                      'Select month and year first to see available streets'
+                    )}
+                  </FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+          </Grid>
+        );
+
+      case 1:
+        return (
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Amount to Collect (per household)"
+                type="number"
+                value={formData.needToCollect}
+                onChange={(e) => handleInputChange('needToCollect', e.target.value)}
+                error={!!errors.needToCollect}
+                helperText={errors.needToCollect || 'Minimum amount is ₱25.00 per household'}
+                required
+                placeholder="25.00"
+                inputProps={{ 
+                  min: "25.00", 
+                  step: "0.01",
+                  maxLength: 10 
+                }}
+                InputProps={{
+                  startAdornment: <span style={{ marginRight: 8 }}>₱</span>,
+                }}
+                sx={{ minWidth: 200, maxWidth: 300 }}
+              />
             </Grid>
             <Grid item xs={12}>
               <TextField

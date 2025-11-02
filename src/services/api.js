@@ -637,8 +637,13 @@ class ApiService {
     });
   }
 
-  async getCollectionStreets() {
-    return this.request("/admin/collections-streets");
+  async getCollectionStreets(month = null, year = null) {
+    const params = new URLSearchParams();
+    if (month) params.append("month", month);
+    if (year) params.append("year", year);
+    
+    const queryString = params.toString();
+    return this.request(`/admin/collections-streets${queryString ? `?${queryString}` : ''}`);
   }
 
   async getCollectionStats() {
