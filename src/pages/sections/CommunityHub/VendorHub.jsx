@@ -61,24 +61,26 @@ function VendorHub() {
     setShowCreateModal(false);
   };
 
-  const handleDeletePost = async (postId) => {
+  // Handle post archiving (admin side - archive instead of delete)
+  const handleArchivePost = async (postId) => {
     try {
-      await apiService.deleteCommunityPost(postId);
+      await apiService.archiveCommunityPost(postId);
+      // Remove the archived post from the list
       setPosts(prev => prev.filter(post => post.id !== postId));
-      setDeletingPost(null);
+      setDeletingPost(null); // Close confirmation modal
     } catch (error) {
-      console.error('Failed to delete post:', error);
-      setDeletingPost(null);
+      console.error('Failed to archive post:', error);
+      setDeletingPost(null); // Close confirmation modal
     }
   };
 
-  // Show delete confirmation
-  const showDeleteConfirmation = (post) => {
+  // Show archive confirmation
+  const showArchiveConfirmation = (post) => {
     setDeletingPost(post);
   };
 
-  // Cancel delete
-  const cancelDelete = () => {
+  // Cancel archive
+  const cancelArchive = () => {
     setDeletingPost(null);
   };
 
@@ -175,14 +177,13 @@ function VendorHub() {
           comments_count={post.comments_count}
           is_liked={post.is_liked}
           user_reaction={post.user_reaction}
-          onDeletePost={() => {
-            showDeleteConfirmation(post);
-          }}
+          onDeletePost={() => showArchiveConfirmation(post)}
           onEditPost={() => handleEditPost(post)}
           onLikePost={() => handleLikePost(post.id)}
           onAddComment={(commentText) => handleAddComment(post.id, commentText)}
           onCommentToggle={handleCommentToggle}
           isCommentsOpen={openCommentsPostId === post.id}
+          isAdminView={true}
         />
       ))}
 
@@ -211,11 +212,13 @@ function VendorHub() {
         defaultCategory="business"
       />
 
+      {/* Archive Confirmation Modal */}
       <DeleteConfirmationModal
         open={!!deletingPost}
-        onClose={cancelDelete}
-        onConfirm={() => handleDeletePost(deletingPost?.id)}
+        onClose={cancelArchive}
+        onConfirm={() => handleArchivePost(deletingPost?.id)}
         postTitle={deletingPost?.content && deletingPost.content !== 'null' ? deletingPost.content : 'this post'}
+        actionLabel="Archive"
       />
 
 

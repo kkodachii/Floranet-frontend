@@ -40,8 +40,8 @@ const columns = [
   { id: 'actions', label: 'Actions' },
 ];
 
-const statusOptions = ['open', 'in_progress', 'resolved', 'closed'];
-const priorityOptions = ['low', 'medium', 'high'];
+const statusOptions = ['pending', 'in_progress', 'resolved'];
+const priorityOptions = ['none', 'low', 'medium', 'high'];
 const categoryOptions = ['general', 'service'];
 
 export default function ServiceComplaints() {

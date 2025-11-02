@@ -12,6 +12,7 @@ import AdminHub from "./sections/CommunityHub/AdminHub";
 import ResidentsHub from "./sections/CommunityHub/ResidentsHub";
 import VendorHub from "./sections/CommunityHub/VendorHub";
 import ProjectHub from "./sections/CommunityHub/ProjectHub";
+import ArchivedPosts from "./sections/CommunityHub/ArchivedPosts";
 
 function CommunityHub() {
   const [activeTab, setActiveTab] = React.useState("admin");
@@ -56,6 +57,7 @@ function CommunityHub() {
                   <Tab label="Residents" value="residents" />
                   <Tab label="Vendor" value="vendor" />
                   <Tab label="Project" value="project" />
+                  <Tab label="Archived" value="archived" />
                 </TabList>
               </Box>
 
@@ -73,6 +75,10 @@ function CommunityHub() {
 
               <TabPanel value="project" sx={{ p: { xs: 1, sm: 2 } }}>
                 <ProjectHub />
+              </TabPanel>
+
+              <TabPanel value="archived" sx={{ p: { xs: 1, sm: 2 } }}>
+                <ArchivedPosts />
               </TabPanel>
             </TabContext>
           </Box>

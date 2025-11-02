@@ -637,8 +637,13 @@ class ApiService {
     });
   }
 
-  async getCollectionStreets() {
-    return this.request("/admin/collections-streets");
+  async getCollectionStreets(month = null, year = null) {
+    const params = new URLSearchParams();
+    if (month) params.append("month", month);
+    if (year) params.append("year", year);
+    
+    const queryString = params.toString();
+    return this.request(`/admin/collections-streets${queryString ? `?${queryString}` : ''}`);
   }
 
   async getCollectionStats() {
@@ -1068,6 +1073,39 @@ class ApiService {
     return this.request(`/admin/community-posts/${id}`, {
       method: "DELETE",
     });
+  }
+
+  async archiveCommunityPost(id) {
+    return this.request(`/admin/community-posts/${id}/archive`, {
+      method: "POST",
+    });
+  }
+
+  async unarchiveCommunityPost(id) {
+    return this.request(`/admin/community-posts/${id}/unarchive`, {
+      method: "POST",
+    });
+  }
+
+  async getArchivedCommunityPosts(page = 1, search = "", filters = {}) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      per_page: "20",
+    });
+
+    if (search) {
+      params.append("search", search);
+    }
+
+    if (filters.category && filters.category !== "all") {
+      params.append("category", filters.category);
+    }
+
+    if (filters.visibility) {
+      params.append("visibility", filters.visibility);
+    }
+
+    return this.request(`/admin/community-posts-archived?${params.toString()}`);
   }
 
   async likeCommunityPost(id, reaction = "like") {
