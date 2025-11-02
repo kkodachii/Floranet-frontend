@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
+  LocalizationProvider,
+  TimePicker,
+  DatePicker,
+} from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import {
   Dialog,
   DialogTitle,
   DialogContent,
@@ -19,7 +26,9 @@ import {
   Autocomplete,
   Box,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
+import ClearIcon from "@mui/icons-material/Clear";
 import FloraTable from "./FloraTable";
 import apiService from "../services/api";
 
@@ -42,17 +51,66 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
     additionalFee: "",
     type: "placeholder",
     date: new Date().toISOString().split("T")[0],
+    parkingStartDate: null,
+    parkingEndDate: null,
+    rentalStartTime: null,
+    rentalEndTime: null,
+    rentalDate: null,
   });
 
   // Helper function to convert to Title Case
   const toTitleCase = (str) =>
-    str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    str.replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+
+  // Helper to calculate months between dates
+  const calculateMonthsBetween = (startDate, endDate) => {
+    if (!startDate || !endDate) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const months =
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth()) +
+      1;
+    return Math.max(0, months);
+  };
+
+  // Helper to calculate hours between times
+  const calculateHoursBetween = (startTime, endTime) => {
+    if (!startTime || !endTime) return 0;
+
+    let start = dayjs(startTime);
+    let end = dayjs(endTime);
+
+    // If end time is before start time, assume it's the next day
+    if (end.isBefore(start)) {
+      end = end.add(1, "day");
+    }
+
+    const hours = end.diff(start, "hour", true);
+    return Math.max(0, Math.ceil(hours));
+  };
+
+  // Get hourly rate for rental category
+  const getHourlyRate = (category) => {
+    const rates = {
+      "Basketball Rental": 100,
+      "Swimming Pool Rental": 300,
+      Clubhouse: 300,
+      Gazebo: 100,
+    };
+    return rates[category] || 0;
+  };
 
   useEffect(() => {
     const loadResidents = async () => {
       try {
         setLoading(true);
-        const response = await apiService.getResidents(1, "", { per_page: 1000 });
+        const response = await apiService.getResidents(1, "", {
+          per_page: 1000,
+        });
         setResidents(response.data || []);
       } catch (error) {
         console.error("Error fetching residents:", error);
@@ -81,9 +139,66 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
         additionalFee: "",
         type: "placeholder",
         date: new Date().toISOString().split("T")[0],
+        parkingStartDate: null,
+        parkingEndDate: null,
+        rentalStartTime: null,
+        rentalEndTime: null,
+        rentalDate: null,
       });
     }
   }, [open]);
+
+  // Update amount when parking dates change
+  useEffect(() => {
+    if (
+      newPayment.paymentCategory === "Parking" &&
+      newPayment.parkingStartDate &&
+      newPayment.parkingEndDate
+    ) {
+      const months = calculateMonthsBetween(
+        newPayment.parkingStartDate,
+        newPayment.parkingEndDate
+      );
+      setNewPayment((prev) => ({
+        ...prev,
+        amount: String(months * 100), // ₱100 per month
+      }));
+    }
+  }, [
+    newPayment.parkingStartDate,
+    newPayment.parkingEndDate,
+    newPayment.paymentCategory,
+  ]);
+
+  // Update amount when rental times change
+  useEffect(() => {
+    const rentalCategories = [
+      "Basketball Rental",
+      "Swimming Pool Rental",
+      "Clubhouse",
+      "Gazebo",
+    ];
+
+    if (
+      rentalCategories.includes(newPayment.paymentCategory) &&
+      newPayment.rentalStartTime &&
+      newPayment.rentalEndTime
+    ) {
+      const hours = calculateHoursBetween(
+        newPayment.rentalStartTime,
+        newPayment.rentalEndTime
+      );
+      const hourlyRate = getHourlyRate(newPayment.paymentCategory);
+      setNewPayment((prev) => ({
+        ...prev,
+        amount: String(hours * hourlyRate),
+      }));
+    }
+  }, [
+    newPayment.rentalStartTime,
+    newPayment.rentalEndTime,
+    newPayment.paymentCategory,
+  ]);
 
   const handleResidentSelect = (newValue) => {
     setSelectedResident(newValue);
@@ -108,7 +223,11 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
     }
   };
 
-  const steps = ["Resident Information", "Payment Information", "Payment Summary"];
+  const steps = [
+    "Resident Information",
+    "Payment Information",
+    "Payment Summary",
+  ];
 
   const validateStep = () => {
     if (activeStep === 0 && !newPayment.residentId) {
@@ -116,11 +235,51 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
       return false;
     }
     if (activeStep === 1) {
-      if (!newPayment.paymentCategory || newPayment.paymentCategory === "placeholder") {
+      if (
+        !newPayment.paymentCategory ||
+        newPayment.paymentCategory === "placeholder"
+      ) {
         alert("Please choose a payment category.");
         return false;
       }
-      if (newPayment.paymentCategory === "Other" && !newPayment.customCategory) {
+      if (newPayment.paymentCategory === "Parking") {
+        if (!newPayment.parkingStartDate || !newPayment.parkingEndDate) {
+          alert("Please select both start and end dates for parking.");
+          return false;
+        }
+        if (
+          new Date(newPayment.parkingEndDate) <
+          new Date(newPayment.parkingStartDate)
+        ) {
+          alert("End date cannot be before start date.");
+          return false;
+        }
+      }
+      if (
+        [
+          "Basketball Rental",
+          "Swimming Pool Rental",
+          "Clubhouse",
+          "Gazebo",
+        ].includes(newPayment.paymentCategory)
+      ) {
+        if (!newPayment.rentalDate) {
+          alert("Please select a rental date.");
+          return false;
+        }
+        if (!newPayment.rentalStartTime || !newPayment.rentalEndTime) {
+          alert("Please select both start and end times for the rental.");
+          return false;
+        }
+        if (newPayment.rentalEndTime.isSame(newPayment.rentalStartTime)) {
+          alert("End time cannot be the same as start time.");
+          return false;
+        }
+      }
+      if (
+        newPayment.paymentCategory === "Other" &&
+        !newPayment.customCategory
+      ) {
         alert("Please specify the custom category.");
         return false;
       }
@@ -139,7 +298,6 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
   const handleNext = async () => {
     if (!validateStep()) return;
 
-    // Convert customCategory to Title Case for submission
     const finalCustomCategory =
       newPayment.paymentCategory === "Other"
         ? toTitleCase(newPayment.customCategory)
@@ -160,6 +318,43 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
           other_reason: finalCustomCategory,
           method_of_payment: newPayment.type,
           paid_at: newPayment.date,
+          parking_start_date:
+            newPayment.paymentCategory === "Parking" &&
+            newPayment.parkingStartDate
+              ? newPayment.parkingStartDate.format("YYYY-MM-DD")
+              : null,
+          parking_end_date:
+            newPayment.paymentCategory === "Parking" &&
+            newPayment.parkingEndDate
+              ? newPayment.parkingEndDate.format("YYYY-MM-DD")
+              : null,
+          rental_date:
+            [
+              "Basketball Rental",
+              "Swimming Pool Rental",
+              "Clubhouse",
+              "Gazebo",
+            ].includes(newPayment.paymentCategory) && newPayment.rentalDate
+              ? newPayment.rentalDate.format("YYYY-MM-DD")
+              : null,
+          rental_start_time:
+            [
+              "Basketball Rental",
+              "Swimming Pool Rental",
+              "Clubhouse",
+              "Gazebo",
+            ].includes(newPayment.paymentCategory) && newPayment.rentalStartTime
+              ? newPayment.rentalStartTime.format("HH:mm:ss")
+              : null,
+          rental_end_time:
+            [
+              "Basketball Rental",
+              "Swimming Pool Rental",
+              "Clubhouse",
+              "Gazebo",
+            ].includes(newPayment.paymentCategory) && newPayment.rentalEndTime
+              ? newPayment.rentalEndTime.format("HH:mm:ss")
+              : null,
         };
 
         const response = await apiService.createOtherPayment(paymentData);
@@ -179,6 +374,30 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
 
   const handleBack = () => {
     setActiveStep((prev) => prev - 1);
+  };
+
+  const formatDateRange = () => {
+    if (!newPayment.parkingStartDate || !newPayment.parkingEndDate) return "";
+    const start = new Date(newPayment.parkingStartDate);
+    const end = new Date(newPayment.parkingEndDate);
+    const months = calculateMonthsBetween(
+      newPayment.parkingStartDate,
+      newPayment.parkingEndDate
+    );
+    return `${start.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    })} to ${end.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    })} (${months} month${months !== 1 ? "s" : ""})`;
+  };
+
+  const formatTimeRange = () => {
+    if (!newPayment.rentalStartTime || !newPayment.rentalEndTime) return "";
+    return `${newPayment.rentalStartTime.format(
+      "h:mm A"
+    )} - ${newPayment.rentalEndTime.format("h:mm A")}`;
   };
 
   return (
@@ -201,8 +420,14 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
               <Autocomplete
                 options={residents}
                 loading={loading}
-                getOptionLabel={(option) => `${option.resident_id} - ${option.name}`}
-                value={residents.find((resident) => resident.id === newPayment.residentId) || null}
+                getOptionLabel={(option) =>
+                  `${option.resident_id} - ${option.name}`
+                }
+                value={
+                  residents.find(
+                    (resident) => resident.id === newPayment.residentId
+                  ) || null
+                }
                 onChange={(event, newValue) => handleResidentSelect(newValue)}
                 renderInput={(params) => (
                   <TextField
@@ -215,7 +440,9 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
                       ...params.InputProps,
                       endAdornment: (
                         <>
-                          {loading && <CircularProgress size={20} color="inherit" />}
+                          {loading && (
+                            <CircularProgress size={20} color="inherit" />
+                          )}
                           {params.InputProps.endAdornment}
                         </>
                       ),
@@ -234,178 +461,411 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
                     </Box>
                   </Box>
                 )}
-                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                isOptionEqualToValue={(option, value) =>
+                  option?.id === value?.id
+                }
                 sx={{ mb: 3 }}
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Resident Name" value={newPayment.residentName} disabled />
+              <TextField
+                fullWidth
+                label="Resident Name"
+                value={newPayment.residentName}
+                disabled
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Resident ID" value={newPayment.residentDisplayId} disabled />
+              <TextField
+                fullWidth
+                label="Resident ID"
+                value={newPayment.residentDisplayId}
+                disabled
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Contact Number" value={newPayment.residentNumber} disabled />
+              <TextField
+                fullWidth
+                label="Contact Number"
+                value={newPayment.residentNumber}
+                disabled
+              />
             </Grid>
             <Grid item xs={12}>
-              <TextField fullWidth label="Email Address" value={newPayment.residentEmail} disabled />
+              <TextField
+                fullWidth
+                label="Email Address"
+                value={newPayment.residentEmail}
+                disabled
+              />
             </Grid>
           </Grid>
         )}
 
         {/* Step 2: Payment Info */}
         {activeStep === 1 && (
-          <Grid container spacing={2} marginTop={1}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel id="payment-category-label">Payment Category</InputLabel>
-                <Select
-                  labelId="payment-category-label"
-                  value={newPayment.paymentCategory}
-                  onChange={(e) => {
-                    const category = e.target.value;
-                    setNewPayment((prev) => ({
-                      ...prev,
-                      paymentCategory: category,
-                      amount:
-                        category === "Parking"
-                          ? "100"
-                          : category === "Basketball Rental"
-                          ? "200"
-                          : category === "Swimming Pool Rental"
-                          ? "300"
-                          : category === "Clubhouse"
-                          ? "600"
-                          : category === "Gazebo"
-                          ? "500"
-                          : category === "Other"
-                          ? ""
-                          : "",
-                      additionalFee: category === "Other" ? prev.additionalFee : "0",
-                      customCategory: category === "Other" ? prev.customCategory : "",
-                    }));
-                  }}
-                  label="Payment Category"
-                  sx={{
-                    minHeight: '56px',
-                    '& .MuiSelect-select': {
-                      minHeight: '1.4375em',
-                      padding: '16.5px 14px',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'primary.main',
-                    },
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(0, 0, 0, 0.23)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(0, 0, 0, 0.87)',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                      borderWidth: 2,
-                    }
-                  }}
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Box
+              sx={{
+                maxHeight: "65vh",
+                overflowY: "auto",
+                overflowX: "hidden",
+                p: 2,
+                display: "flex",
+                flexDirection: "column",
+                gap: 3,
+              }}
+            >
+              {/* ROW 1 */}
+              <Grid container spacing={2} alignItems="center">
+                <Grid
+                  item
+                  xs={12}
+                  sm={newPayment.paymentCategory === "Other" ? 6 : 12}
                 >
-                  <MenuItem value="placeholder" disabled>
-                    <em>Select payment category</em>
-                  </MenuItem>
-                  <MenuItem value="Parking">Parking</MenuItem>
-                  <MenuItem value="Basketball Rental">Basketball Rental</MenuItem>
-                  <MenuItem value="Swimming Pool Rental">Swimming Pool Rental</MenuItem>
-                  <MenuItem value="Clubhouse">Clubhouse</MenuItem>
-                  <MenuItem value="Gazebo">Gazebo</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+                  <FormControl sx={{ minWidth: 250, flexGrow: 1 }}>
+                    <InputLabel>Payment Category</InputLabel>
+                    <Select
+                      value={newPayment.paymentCategory}
+                      label="Payment Category"
+                      onChange={(e) => {
+                        const category = e.target.value;
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          paymentCategory: category,
+                          customCategory: "",
+                          parkingStartDate: null,
+                          parkingEndDate: null,
+                          rentalDate: null,
+                          rentalStartTime: null,
+                          rentalEndTime: null,
+                          amount:
+                            category === "Parking"
+                              ? ""
+                              : category === "Basketball Rental"
+                              ? "200"
+                              : category === "Swimming Pool Rental"
+                              ? "300"
+                              : category === "Clubhouse"
+                              ? "600"
+                              : category === "Gazebo"
+                              ? "500"
+                              : "",
+                          additionalFee: "",
+                          type: "",
+                        }));
+                      }}
+                    >
+                      <MenuItem value="Parking">Parking</MenuItem>
+                      <MenuItem value="Basketball Rental">
+                        Basketball Rental
+                      </MenuItem>
+                      <MenuItem value="Swimming Pool Rental">
+                        Swimming Pool Rental
+                      </MenuItem>
+                      <MenuItem value="Clubhouse">Clubhouse</MenuItem>
+                      <MenuItem value="Gazebo">Gazebo</MenuItem>
+                      <MenuItem value="Other">Other</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            {newPayment.paymentCategory === "Other" && (
-              <Grid item xs={12}>
-                <TextField
-                  label="Specify Other Category"
-                  fullWidth
-                  value={newPayment.customCategory}
-                  onChange={(e) =>
-                    setNewPayment((prev) => ({
-                      ...prev,
-                      customCategory: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter custom category"
-                  required
-                />
+                {newPayment.paymentCategory === "Other" && (
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Specify Category"
+                      fullWidth
+                      value={newPayment.customCategory}
+                      onChange={(e) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          customCategory: e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                )}
               </Grid>
-            )}
 
-            <Grid item xs={12}>
-              <TextField
-                label="Amount"
-                type="number"
-                fullWidth
-                InputProps={{ startAdornment: <InputAdornment position="start">₱</InputAdornment> }}
-                value={newPayment.amount}
-                onChange={(e) =>
-                  setNewPayment((prev) => ({ ...prev, amount: e.target.value }))
-                }
-                disabled={newPayment.paymentCategory !== "Other" && newPayment.paymentCategory !== ""}
-              />
-            </Grid>
+              {/* ROW 2 - Parking Dates */}
+              {newPayment.paymentCategory === "Parking" && (
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <DatePicker
+                      label="Start Date"
+                      value={newPayment.parkingStartDate}
+                      onChange={(newValue) => {
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          parkingStartDate: newValue,
+                        }));
+                      }}
+                      slotProps={{
+                        popper: {
+                          placement: "bottom-start",
+                        },
+                        textField: {
+                          fullWidth: true,
+                          InputProps: {
+                            endAdornment: newPayment.parkingStartDate && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewPayment((prev) => ({
+                                      ...prev,
+                                      parkingStartDate: null,
+                                    }));
+                                  }}
+                                >
+                                  <ClearIcon fontSize="small" />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <DatePicker
+                      label="End Date"
+                      value={newPayment.parkingEndDate}
+                      onChange={(newValue) => {
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          parkingEndDate: newValue,
+                        }));
+                      }}
+                      slotProps={{
+                        popper: {
+                          placement: "bottom-start",
+                        },
+                        textField: {
+                          fullWidth: true,
+                          InputProps: {
+                            endAdornment: newPayment.parkingEndDate && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewPayment((prev) => ({
+                                      ...prev,
+                                      parkingEndDate: null,
+                                    }));
+                                  }}
+                                >
+                                  <ClearIcon fontSize="small" />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              )}
 
-            <Grid item xs={12}>
-              <TextField
-                label="Additional Fee"
-                type="number"
-                fullWidth
-                InputProps={{ startAdornment: <InputAdornment position="start">₱</InputAdornment> }}
-                value={newPayment.additionalFee}
-                onChange={(e) =>
-                  setNewPayment((prev) => ({ ...prev, additionalFee: e.target.value }))
-                }
-                disabled={newPayment.paymentCategory === "Other"}
-              />
-            </Grid>
+              {/* ROW 2 - Rental Date and Times */}
+              {[
+                "Basketball Rental",
+                "Swimming Pool Rental",
+                "Clubhouse",
+                "Gazebo",
+              ].includes(newPayment.paymentCategory) && (
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
+                    <DatePicker
+                      label="Reservation Date"
+                      value={newPayment.rentalDate}
+                      onChange={(newValue) => {
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          rentalDate: newValue,
+                        }));
+                      }}
+                      slotProps={{
+                        popper: {
+                          placement: "bottom-start",
+                        },
+                        textField: {
+                          fullWidth: true,
+                          InputProps: {
+                            endAdornment: newPayment.rentalDate && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewPayment((prev) => ({
+                                      ...prev,
+                                      rentalDate: null,
+                                    }));
+                                  }}
+                                >
+                                  <ClearIcon fontSize="small" />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TimePicker
+                      label="Start Time"
+                      value={newPayment.rentalStartTime}
+                      onChange={(val) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          rentalStartTime: val,
+                        }))
+                      }
+                      slotProps={{
+                        popper: {
+                          placement: "bottom-start",
+                        },
+                        textField: {
+                          fullWidth: true,
+                          InputProps: {
+                            endAdornment: newPayment.rentalStartTime && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewPayment((prev) => ({
+                                      ...prev,
+                                      rentalStartTime: null,
+                                    }));
+                                  }}
+                                >
+                                  <ClearIcon fontSize="small" />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TimePicker
+                      label="End Time"
+                      value={newPayment.rentalEndTime}
+                      onChange={(val) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          rentalEndTime: val,
+                        }))
+                      }
+                      slotProps={{
+                        popper: {
+                          placement: "bottom-start",
+                        },
+                        textField: {
+                          fullWidth: true,
+                          InputProps: {
+                            endAdornment: newPayment.rentalEndTime && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewPayment((prev) => ({
+                                      ...prev,
+                                      rentalEndTime: null,
+                                    }));
+                                  }}
+                                >
+                                  <ClearIcon fontSize="small" />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              )}
 
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel id="payment-method-label">Method of Payment</InputLabel>
-                <Select
-                  labelId="payment-method-label"
-                  value={newPayment.type}
-                  onChange={(e) => setNewPayment((prev) => ({ ...prev, type: e.target.value }))}
-                  label="Method of Payment"
-                  sx={{
-                    minHeight: '56px',
-                    '& .MuiSelect-select': {
-                      minHeight: '1.4375em',
-                      padding: '16.5px 14px',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'primary.main',
-                    },
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(0, 0, 0, 0.23)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(0, 0, 0, 0.87)',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                      borderWidth: 2,
+              {/* ROW 3 - Amount, Additional Fee, Payment Method */}
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    label="Amount"
+                    type="number"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">₱</InputAdornment>
+                      ),
+                    }}
+                    value={newPayment.amount}
+                    onChange={(e) =>
+                      setNewPayment((prev) => ({
+                        ...prev,
+                        amount: e.target.value,
+                      }))
                     }
-                  }}
-                >
-                  <MenuItem value="placeholder" disabled>
-                    <em>Select payment method</em>
-                  </MenuItem>
-                  <MenuItem value="Cash">Cash</MenuItem>
-                  <MenuItem value="GCash">GCash</MenuItem>
-                  <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+                    disabled={
+                      newPayment.paymentCategory === "Parking" ||
+                      [
+                        "Basketball Rental",
+                        "Swimming Pool Rental",
+                        "Clubhouse",
+                        "Gazebo",
+                      ].includes(newPayment.paymentCategory)
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    label="Additional Fee"
+                    type="number"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">₱</InputAdornment>
+                      ),
+                    }}
+                    value={newPayment.additionalFee}
+                    onChange={(e) =>
+                      setNewPayment((prev) => ({
+                        ...prev,
+                        additionalFee: e.target.value,
+                      }))
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <FormControl sx={{ minWidth: 250, flexGrow: 1 }}>
+                    <InputLabel>Payment Method</InputLabel>
+                    <Select
+                      value={newPayment.type}
+                      label="Payment Method"
+                      onChange={(e) =>
+                        setNewPayment((prev) => ({
+                          ...prev,
+                          type: e.target.value,
+                        }))
+                      }
+                    >
+                      <MenuItem value="Cash">Cash</MenuItem>
+                      <MenuItem value="GCash">GCash</MenuItem>
+                      <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Box>
+          </LocalizationProvider>
         )}
 
         {/* Step 3: Summary */}
@@ -437,21 +897,54 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
                 },
                 {
                   field: "Payment Category",
-                  value: newPayment.paymentCategory === "Other"
-                    ? toTitleCase(newPayment.customCategory)
-                    : newPayment.paymentCategory,
+                  value:
+                    newPayment.paymentCategory === "Other"
+                      ? toTitleCase(newPayment.customCategory)
+                      : newPayment.paymentCategory,
                 },
+                ...(newPayment.paymentCategory === "Parking"
+                  ? [
+                      {
+                        field: "Parking Duration",
+                        value: formatDateRange(),
+                      },
+                    ]
+                  : []),
+                ...([
+                  "Basketball Rental",
+                  "Swimming Pool Rental",
+                  "Clubhouse",
+                  "Gazebo",
+                ].includes(newPayment.paymentCategory)
+                  ? [
+                      {
+                        field: "Rental Date",
+                        value: newPayment.rentalDate
+                          ? newPayment.rentalDate.format("MM/DD/YYYY")
+                          : "",
+                      },
+                      {
+                        field: "Rental Time",
+                        value: formatTimeRange(),
+                      },
+                    ]
+                  : []),
                 {
                   field: "Amount",
                   value: `₱${Number(newPayment.amount || 0).toLocaleString()}`,
                 },
                 {
                   field: "Additional Fee",
-                  value: `₱${Number(newPayment.additionalFee || 0).toLocaleString()}`,
+                  value: `₱${Number(
+                    newPayment.additionalFee || 0
+                  ).toLocaleString()}`,
                 },
                 {
                   field: "Total Amount",
-                  value: `₱${(Number(newPayment.amount || 0) + Number(newPayment.additionalFee || 0)).toLocaleString()}`,
+                  value: `₱${(
+                    Number(newPayment.amount || 0) +
+                    Number(newPayment.additionalFee || 0)
+                  ).toLocaleString()}`,
                 },
                 {
                   field: "Payment Method",
@@ -468,12 +961,6 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
               maxHeight="400px"
               emptyMessage="No data to display"
               disableInternalPagination
-              paginationInfo={{
-                total: 8,
-                totalPages: 1,
-                from: 1,
-                to: 8,
-              }}
               onPageChange={() => {}}
             />
           </Box>
@@ -481,10 +968,22 @@ export default function AddPaymentModal({ open, onClose, onSave }) {
       </DialogContent>
 
       <DialogActions>
-        {activeStep > 0 && <Button onClick={handleBack} disabled={submitting}>Back</Button>}
-        <Button onClick={onClose} disabled={submitting}>Cancel</Button>
+        {activeStep > 0 && (
+          <Button onClick={handleBack} disabled={submitting}>
+            Back
+          </Button>
+        )}
+        <Button onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
         <Button variant="contained" onClick={handleNext} disabled={submitting}>
-          {submitting ? <CircularProgress size={20} color="inherit" /> : activeStep === steps.length - 1 ? "Submit" : "Next"}
+          {submitting ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : activeStep === steps.length - 1 ? (
+            "Submit"
+          ) : (
+            "Next"
+          )}
         </Button>
       </DialogActions>
     </Dialog>
