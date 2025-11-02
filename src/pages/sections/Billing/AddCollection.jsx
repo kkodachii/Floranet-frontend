@@ -73,10 +73,10 @@ function AddCollection() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     streets: [],
-    needToCollect: '',
+    needToCollect: '300',
     month: '',
     year: currentYear.toString(),
-    reason: ''
+    reason: 'Monthly Collection'
   });
   const [errors, setErrors] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -187,14 +187,7 @@ function AddCollection() {
         break;
 
       case 1: // Amount & Reason
-        if (!formData.needToCollect || parseFloat(formData.needToCollect) <= 0) {
-          newErrors.needToCollect = 'Please enter a valid amount greater than 0';
-        } else if (parseFloat(formData.needToCollect) < 25) {
-          newErrors.needToCollect = 'Minimum amount is ₱25.00';
-        }
-        if (!formData.reason.trim()) {
-          newErrors.reason = 'Reason for collection is required';
-        }
+        // Price and reason are fixed, so no validation needed
         break;
 
       case 2: // Review & Submit
@@ -402,11 +395,11 @@ function AddCollection() {
                 value={formData.needToCollect}
                 onChange={(e) => handleInputChange('needToCollect', e.target.value)}
                 error={!!errors.needToCollect}
-                helperText={errors.needToCollect || 'Minimum amount is ₱25.00 per household'}
+                helperText="Fixed amount: ₱300.00 per household"
                 required
-                placeholder="25.00"
+                disabled
                 inputProps={{ 
-                  min: "25.00", 
+                  min: "300.00", 
                   step: "0.01",
                   maxLength: 10 
                 }}
@@ -423,9 +416,9 @@ function AddCollection() {
                 value={formData.reason}
                 onChange={(e) => handleInputChange('reason', e.target.value)}
                 error={!!errors.reason}
-                helperText={errors.reason || 'Enter the reason for this collection (e.g., Monthly maintenance, Security fee, etc.)'}
+                helperText="Fixed reason for collection"
                 required
-                placeholder="Monthly maintenance fee for street lighting and security"
+                disabled
                 multiline
                 rows={3}
                 inputProps={{ maxLength: 200 }}

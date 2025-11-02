@@ -52,6 +52,8 @@ function CommunityPost({
   onAddComment,
   onCommentToggle,
   isCommentsOpen = false,
+  isAdminView = false,
+  isArchived = false,
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -389,7 +391,9 @@ function CommunityPost({
           {onVisitUser && <MenuItem onClick={handleVisit}>Visit User</MenuItem>}
           {onEditPost && <MenuItem onClick={handleEdit}>Edit Post</MenuItem>}
           {onDeletePost && (
-            <MenuItem onClick={handleDelete}>Delete Post</MenuItem>
+            <MenuItem onClick={handleDelete}>
+              {isArchived ? 'Unarchive Post' : isAdminView ? 'Archive Post' : 'Delete Post'}
+            </MenuItem>
           )}
         </Menu>
       </Box>

@@ -226,6 +226,7 @@ function AddResidents() {
     homeownerName: '',
     residentFirstName: '',
     residentLastName: '',
+    residentMiddleName: '',
     residentId: '',
     block: '',
     lot: '',
@@ -264,6 +265,15 @@ function AddResidents() {
     }
   }, [formData.residentFirstName]);
 
+  // Helper function to format name as "lastname firstname middlename"
+  const formatDisplayName = (firstName, lastName, middleName) => {
+    const parts = [];
+    if (lastName) parts.push(lastName);
+    if (firstName) parts.push(firstName);
+    if (middleName) parts.push(middleName);
+    return parts.join(' ');
+  };
+
   useEffect(() => {
     const loadNextId = async () => {
       try {
@@ -299,7 +309,7 @@ function AddResidents() {
   const handleInputChange = (field, value) => {
   let formattedValue = value;
 
-  if (['residentFirstName', 'residentLastName', 'homeownerName'].includes(field)) {
+  if (['residentFirstName', 'residentLastName', 'residentMiddleName', 'homeownerName'].includes(field)) {
     formattedValue = toTitleCase(value);
   }
 
@@ -369,6 +379,7 @@ function AddResidents() {
         house_owner_name: formData.homeownerName,
         first_name: formData.residentFirstName,
         last_name: formData.residentLastName,
+        middle_name: formData.residentMiddleName.trim() || null,
         email: formData.email || null,
         contact_no: formData.contactNumber || null,
         block: formData.block,
@@ -428,6 +439,16 @@ function AddResidents() {
                 error={!!errors.residentLastName}
                 helperText={errors.residentLastName}
                 required
+                inputProps={{ maxLength: 25 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+              <TextField
+                fullWidth
+                label="Middle Name (Optional)"
+                value={formData.residentMiddleName}
+                onChange={(e) => handleInputChange('residentMiddleName', e.target.value)}
+                helperText="Optional: Enter full middle name"
                 inputProps={{ maxLength: 25 }}
               />
             </Grid>
@@ -572,7 +593,7 @@ function AddResidents() {
                 rows={[
                   {
                     homeownerName: formData.homeownerName,
-                    residentName: `${formData.residentFirstName} ${formData.residentLastName}`,
+                    residentName: formatDisplayName(formData.residentFirstName, formData.residentLastName, formData.residentMiddleName),
                     residentId: formData.residentId,
                     houseNumber: `${formData.block}-${formData.lot}`,
                     street: formData.street,

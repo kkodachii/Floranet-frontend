@@ -290,12 +290,30 @@ function Residents() {
     // The useEffect will handle the data fetching when filterValues changes
   };
 
+  // Helper function to format name as "lastname firstname middlename"
+  const formatDisplayName = (user) => {
+    // Use formatted_name from API if available
+    if (user.formatted_name) {
+      return user.formatted_name;
+    }
+    // Otherwise format from individual fields
+    const parts = [];
+    if (user.last_name) parts.push(user.last_name);
+    if (user.first_name) parts.push(user.first_name);
+    if (user.middle_name) parts.push(user.middle_name);
+    // Fallback to old name field
+    if (parts.length === 0 && user.name) {
+      return user.name;
+    }
+    return parts.join(' ');
+  };
+
   // Transform backend data to match frontend expectations
   const transformData = (data) => {
     return data.map(item => ({
       id: item.id,
       homeownerName: item.house_owner_name || 'N/A',
-      residentName: item.name || 'N/A',
+      residentName: formatDisplayName(item) || 'N/A',
       residentId: item.resident_id || 'N/A',
       houseNumber: item.house?.house_number || 'N/A',
       street: item.house?.street || 'N/A',

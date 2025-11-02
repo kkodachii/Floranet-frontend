@@ -30,7 +30,9 @@ const StatusPriorityDropdown = ({
 
   const handleOptionClick = async (option) => {
     try {
-      await onUpdate(option);
+      // If updating from legacy 'open' status, convert it to 'pending'
+      const statusToUpdate = (type === 'status' && option === 'open') ? 'pending' : option;
+      await onUpdate(statusToUpdate);
       handleClose();
     } catch (error) {
       console.error(`Error updating ${type}:`, error);
@@ -45,14 +47,18 @@ const StatusPriorityDropdown = ({
       if (value === 'completed') return 'COMPLETED';
       if (value === 'cancelled') return 'CANCELLED';
       
+      // Handle legacy 'open' status and map it to 'pending'
+      if (value === 'open') return 'PENDING';
+      
       // Fallback for other statuses
-      return value === 'open' ? 'OPEN' :
+      return value === 'pending' ? 'PENDING' :
              value === 'in_progress' ? 'IN PROGRESS' :
-             value === 'resolved' ? 'RESOLVED' :
-             value === 'closed' ? 'CLOSED' : value.toUpperCase();
+             value === 'resolved' ? 'RESOLVED' : value.toUpperCase();
     } else if (type === 'priority') {
       return value === 'high' ? 'HIGH' :
-             value === 'medium' ? 'MEDIUM' : 'LOW';
+             value === 'medium' ? 'MEDIUM' :
+             value === 'low' ? 'LOW' :
+             value === 'none' ? 'NONE' : value.toUpperCase();
     }
     return value.toUpperCase();
   };
@@ -66,16 +72,19 @@ const StatusPriorityDropdown = ({
       if (value === 'cancelled') return '#f44336'; // Red background
       
       // Complaint Status colors (same color scheme)
+      // Handle legacy 'open' status as 'pending'
       if (value === 'open') return '#ff9800'; // Orange background (same as pending)
+      if (value === 'pending') return '#ff9800'; // Orange background (same as pending)
       if (value === 'in_progress') return '#2196f3'; // Blue background
       if (value === 'resolved') return '#4caf50'; // Green background (same as completed)
-      if (value === 'closed') return '#9e9e9e'; // Grey background
       
       // Fallback for other statuses
       return 'grey.300';
     } else if (type === 'priority') {
       return value === 'high' ? 'error.light' :
-             value === 'medium' ? 'warning.light' : 'success.light';
+             value === 'medium' ? 'warning.light' :
+             value === 'low' ? 'success.light' :
+             value === 'none' ? 'grey.300' : 'grey.300';
     }
     return 'grey.300';
   };
@@ -89,16 +98,19 @@ const StatusPriorityDropdown = ({
       if (value === 'cancelled') return '#ffffff'; // White text
       
       // Complaint Status text colors (same color scheme)
+      // Handle legacy 'open' status as 'pending'
       if (value === 'open') return '#ffffff'; // White text (same as pending)
+      if (value === 'pending') return '#ffffff'; // White text (same as pending)
       if (value === 'in_progress') return '#ffffff'; // White text
       if (value === 'resolved') return '#ffffff'; // White text (same as completed)
-      if (value === 'closed') return '#ffffff'; // White text
       
       // Fallback for other statuses
       return 'grey.700';
     } else if (type === 'priority') {
       return value === 'high' ? 'error.contrastText' :
-             value === 'medium' ? 'warning.contrastText' : 'success.contrastText';
+             value === 'medium' ? 'warning.contrastText' :
+             value === 'low' ? 'success.contrastText' :
+             value === 'none' ? 'grey.700' : 'grey.700';
     }
     return 'grey.700';
   };
