@@ -3,7 +3,7 @@
 
 import config from "../config/env";
 
-const API_BASE_URL = config.API_BASE_URL;
+const API_BASE_URL = 'http://api.floranet.online';
 
 class ApiService {
   constructor() {
@@ -484,6 +484,28 @@ class ApiService {
     return this.request("/waste-alert", {
       method: "POST",
       body: JSON.stringify({ title, message }),
+    });
+  }
+
+  //save garbage schedule
+  async saveGarbageSchedule(schedule) {
+    return this.request("/garbage-schedule/save", {
+      method: "POST",
+      body: JSON.stringify({ schedule }),
+    });
+  }
+
+  //get garbage schedule
+  async getGarbageSchedule() {
+    return this.request("/garbage-schedule", {
+      method: "GET",
+    });
+  }
+
+    //cancel garbage schedule
+  async cancelGarbageCollection() {
+    return this.request("/cancel-waste-schedule", {
+      method: "POST",
     });
   }
 

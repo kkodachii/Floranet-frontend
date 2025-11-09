@@ -1,18 +1,84 @@
-import React, { useState } from "react";
-import { Box, Paper, Typography, Button, Stack, TextField } from "@mui/material";
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import { useTheme } from '@mui/material/styles';
-import axios from "axios";
-import config from "../../../config/env";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Stack,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import { useTheme } from "@mui/material/styles";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import apiService from "../../../services/api";
 
 export default function WasteCollection() {
-  const today = new Date().toISOString().split("T")[0];
-  const [collectionTime, setCollectionTime] = useState("07:30"); // 24h format for input type="time"
-  const [collectionDate, setCollectionDate] = useState(today); // yyyy-mm-dd for input type="date"
-  const [isLoading, setIsLoading] = React.useState(false);
   const theme = useTheme();
 
+  const today = new Date().toISOString().split("T")[0];
+  const [collectionTime, setCollectionTime] = useState("07:30");
+  const [collectionDate, setCollectionDate] = useState(today);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedHour, setSelectedHour] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState("AM");
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        const response = await apiService.getGarbageSchedule();
+        console.log("sched", response);
+        if (response.success && response.data?.schedule) {
+          const schedule = new Date(response.data.schedule);
+
+          // Update manual alert inputs
+          setCollectionDate(schedule.toISOString().split("T")[0]);
+          setCollectionTime(schedule.toTimeString().slice(0, 5));
+
+          // Update dropdowns
+          const daysOfWeek = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+          ];
+          const dayName = daysOfWeek[schedule.getDay()];
+
+          let hour = schedule.getHours();
+          let period = "AM";
+          if (hour === 0) hour = 12;
+          else if (hour === 12) period = "PM";
+          else if (hour > 12) {
+            hour -= 12;
+            period = "PM";
+          }
+
+          setSelectedDay(dayName);
+          setSelectedHour(hour);
+          setSelectedPeriod(period);
+
+          console.log("Fetched schedule:", schedule);
+          console.log("Dropdowns:", dayName, hour, period);
+        }
+      } catch (error) {
+        console.error("Error fetching schedule:", error);
+        toast.error("❌ Failed to fetch schedule");
+      }
+    };
+
+    fetchSchedule();
+  }, []);
+
+  // Send garbage collection alert
   const handleSendAlert = async () => {
     let title = "Garbage Collection Alert";
     let content =
@@ -20,31 +86,24 @@ export default function WasteCollection() {
 
     if (collectionDate && collectionTime) {
       const now = new Date();
-
-      // ✅ Build local datetime from date (yyyy-mm-dd) + time (HH:mm)
       const [year, month, day] = collectionDate.split("-").map(Number);
       const [hours, minutes] = collectionTime.split(":").map(Number);
-      const collectionDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      const collectionDateTime = new Date(year, month - 1, day, hours, minutes);
 
-      // ✅ Prevent sending if already passed
       if (collectionDateTime.getTime() <= now.getTime()) {
-        alert("⚠️ Collection time has already passed. Please choose a future time.");
+        toast.warning(
+          "⚠️ Collection time has already passed. Please choose a future time."
+        );
         return;
       }
 
-      
-
-      // ✅ Get difference in minutes
       const diffMinutes = Math.floor((collectionDateTime - now) / 60000);
-
-      // ✅ Format into 12-hour time with AM/PM
       const formattedTime = collectionDateTime.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
       });
 
-      // ✅ If at least 30 minutes ahead → change title/content
       if (diffMinutes >= 30) {
         title = "Garbage Collection on " + formattedTime;
         content =
@@ -57,29 +116,96 @@ export default function WasteCollection() {
     setIsLoading(true);
     try {
       const response = await apiService.sendGarbageAlert(title, content);
-
-      if (response.success) {
-        console.log("nasend na");
-      }
+      if (response.success) toast.success("✅ Alert sent successfully!");
+      else toast.error("❌ Failed to send alert");
     } catch (error) {
       console.error("Alert error:", error);
-      if (error.response?.data?.message) {
-        setErrorMsg({ general: error.response.data.message });
-      }
+      toast.error("❌ Failed to send alert");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Save weekly schedule
+  const handleSaveSchedule = async () => {
+    if (!selectedDay || !selectedHour || !selectedPeriod) {
+      toast.warning("⚠️ Please select day, hour, and AM/PM.");
+      return;
+    }
 
+    const today = new Date();
+    const dayIndex = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ].indexOf(selectedDay);
+
+    const daysToAdd = (dayIndex + 7 - today.getDay()) % 7 || 7;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysToAdd);
+
+    let hour = parseInt(selectedHour, 10);
+    if (selectedPeriod === "PM" && hour < 12) hour += 12;
+    if (selectedPeriod === "AM" && hour === 12) hour = 0;
+
+    targetDate.setHours(hour, 0, 0, 0);
+    const combinedDateTime = targetDate.toISOString();
+
+    setIsLoading(true);
+    try {
+      console.log("sched", combinedDateTime);
+      const response = await apiService.saveGarbageSchedule(combinedDateTime);
+      if (response.success) toast.success("✅ Schedule saved successfully!");
+      else toast.error("❌ Failed to save schedule");
+    } catch (error) {
+      console.error("Save schedule error:", error);
+      toast.error("❌ Failed to save schedule");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cancel collection
+  const handleSendCancellation = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiService.cancelGarbageCollection(
+        "Garbage collection has been cancelled."
+      );
+      if (response.success)
+        toast.success("✅ Garbage collection cancelled successfully!");
+      else toast.error("❌ Failed to cancel garbage collection");
+    } catch (error) {
+      console.error("Cancel error:", error);
+      toast.error("❌ Failed to cancel garbage collection");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
     <Box
       sx={{
-        minHeight: 'calc(100vh - 64px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        minHeight: "calc(100vh - 64px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         bgcolor: theme.palette.background.default,
         p: { xs: 2, sm: 4 },
       }}
@@ -89,62 +215,164 @@ export default function WasteCollection() {
         sx={{
           borderRadius: 3,
           maxWidth: 800,
-          width: '100%',
-          mx: 'auto',
+          width: "100%",
+          mx: "auto",
           p: { xs: 4, sm: 8 },
-          boxShadow: theme.palette.mode === 'dark' ? '0 4px 32px rgba(0,0,0,0.40)' : '0 4px 32px rgba(0,0,0,0.10)',
-          border: '1.5px solid',
+          boxShadow:
+            theme.palette.mode === "dark"
+              ? "0 4px 32px rgba(0,0,0,0.40)"
+              : "0 4px 32px rgba(0,0,0,0.10)",
+          border: "1.5px solid",
           borderColor: theme.palette.divider,
-          textAlign: 'center',
+          textAlign: "center",
           bgcolor: theme.palette.background.paper,
         }}
       >
         <Stack spacing={5} alignItems="center">
           <Box
             sx={{
-              width: 120,
-              height: 120,
-              borderRadius: '50%',
-              backgroundColor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: 90,
+              height: 90,
+              borderRadius: "50%",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? theme.palette.primary.dark
+                  : theme.palette.primary.light,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               mb: 1,
             }}
           >
-            <DeleteSweepIcon sx={{ fontSize: 70, color: theme.palette.primary.main }} />
+            <DeleteSweepIcon
+              sx={{ fontSize: 70, color: theme.palette.primary.main }}
+            />
           </Box>
-          <Typography variant="h3" fontWeight={800} color="text.primary" gutterBottom>
-            Waste Collection Alert
-          </Typography>
-          <Typography variant="h5" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
-            The garbage collector is on its way. Please prepare your waste for collection.
-          </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={6} justifyContent="center" alignItems="center">
-            <Box>
-              <Typography variant="subtitle1" color="text.secondary" mb={1}>
-                Collection Time
-              </Typography>
-              <TextField
-                type="time"
-                value={collectionTime}
-                onChange={e => setCollectionTime(e.target.value)}
-                inputProps={{ step: 60 }}
-                sx={{ minWidth: 120, bgcolor: theme.palette.background.paper }}
-              />
-            </Box>
-          </Stack>
-          <Button
-            variant="contained"
-            onClick={handleSendAlert}
-            color="error"
-            size="large"
-            sx={{ mt: 2, px: 10, py: 2.5, fontWeight: 800, borderRadius: 2, textTransform: 'uppercase', letterSpacing: 2, fontSize: '1.5rem' }}
+
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            color="text.primary"
+            gutterBottom
           >
-            {isLoading ? "Sending Alert..." : "Send Alert"}
-          </Button>
+            Waste Collection Management
+          </Typography>
+
+          {/* Weekly Schedule */}
+          <Box sx={{ width: "100%" }}>
+            <Typography variant="h5" gutterBottom>
+              Set Weekly Schedule
+            </Typography>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <FormControl sx={{ minWidth: 120 }}>
+                <InputLabel>Day</InputLabel>
+                <Select
+                  value={selectedDay}
+                  label="Day"
+                  onChange={(e) => setSelectedDay(e.target.value)}
+                >
+                  {daysOfWeek.map((day) => (
+                    <MenuItem key={day} value={day}>
+                      {day}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl sx={{ minWidth: 100 }}>
+                <InputLabel>Hour</InputLabel>
+                <Select
+                  value={selectedHour}
+                  label="Hour"
+                  onChange={(e) => setSelectedHour(e.target.value)}
+                >
+                  {hours.map((h) => (
+                    <MenuItem key={h} value={h}>
+                      {h}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl sx={{ minWidth: 100 }}>
+                <InputLabel>AM/PM</InputLabel>
+                <Select
+                  value={selectedPeriod}
+                  label="AM/PM"
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                >
+                  <MenuItem value="AM">AM</MenuItem>
+                  <MenuItem value="PM">PM</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSaveSchedule}
+                disabled={isLoading}
+              >
+                {isLoading ? "Saving..." : "Save Schedule"}
+              </Button>
+            </Stack>
+          </Box>
+
+          {/* Send Alert */}
+          <Box>
+            <Typography variant="h5" gutterBottom>
+              Send Garbage Alert
+            </Typography>
+            <TextField
+              type="time"
+              value={collectionTime}
+              onChange={(e) => setCollectionTime(e.target.value)}
+              inputProps={{ step: 60 }}
+              sx={{ minWidth: 150, mr: 2 }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleSendAlert}
+              color="success"
+              disabled={isLoading}
+            >
+              {isLoading ? "Sending..." : "Send Alert"}
+            </Button>
+          </Box>
+
+          {/* Cancel Collection */}
+          <Box>
+            <Typography variant="h5" gutterBottom>
+              Cancel Collection
+            </Typography>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleSendCancellation}
+              sx={{ mt: 2 }}
+            >
+              Send cancellation alert
+            </Button>
+          </Box>
         </Stack>
       </Paper>
+
+      {/* Toast container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </Box>
   );
 }
