@@ -3,7 +3,7 @@
 
 import config from "../config/env";
 
-const API_BASE_URL = 'http://api.floranet.online';
+const API_BASE_URL = 'https://api.floranet.online';
 
 class ApiService {
   constructor() {
