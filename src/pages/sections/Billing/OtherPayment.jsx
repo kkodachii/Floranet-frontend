@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   TextField,
-  Tooltip,
   InputAdornment,
   IconButton,
   useMediaQuery,
@@ -15,6 +14,11 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -24,13 +28,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import FloraTable from "../../../components/FloraTable";
 import AddPaymentModal from "../../../components/AddPaymentModal";
 import apiService from "../../../services/api";
 
 function OtherPayment() {
-  const [paymentData, setPaymentData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
@@ -41,9 +45,16 @@ function OtherPayment() {
     month: "",
     paymentCategory: "all",
   });
-  const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [payments, setPayments] = useState([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    per_page: 10,
+  });
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -52,7 +63,6 @@ function OtherPayment() {
   const [filterDate, setFilterDate] = useState(null);
   const [filterMonth, setFilterMonth] = useState("");
 
-  // Months array for dropdown
   const months = [
     { value: "", label: "All Months" },
     { value: "01", label: "January" },
@@ -72,35 +82,40 @@ function OtherPayment() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (page = 1, searchTerm = "", filters = {}) => {
     try {
       setLoading(true);
-      setError(null);
-      const response = await apiService.getOtherPayments();
-      let data = [];
-      if (Array.isArray(response.data)) data = response.data;
-      else if (response.data?.data && Array.isArray(response.data.data))
-        data = response.data.data;
-      else if (response.data) data = [response.data];
-      setPaymentData(data);
-    } catch (err) {
-      console.error("API Error:", err);
-      setError(
-        `Failed to load payments: ${err.response?.status || err.message}`
+      const response = await apiService.getOtherPayments(
+        page,
+        searchTerm,
+        filters
       );
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || err.message,
-        severity: "error",
+      const result = (await response.json) ? await response.json() : response;
+
+      setPayments(result.data || []);
+      setPagination({
+        current_page: result.current_page || 1,
+        last_page: result.last_page || 1,
+        total: result.total || 0,
+        per_page: result.per_page || 10,
       });
-    } finally {
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      setError("Failed to load payments");
       setLoading(false);
     }
   };
 
+  // Initial load
   useEffect(() => {
-    fetchPayments();
+    fetchPayments(1, search, filterValues);
   }, []);
+
+  // Fetch when search or filters change
+  useEffect(() => {
+    fetchPayments(1, search, filterValues);
+  }, [search, filterValues]);
 
   const handlePaymentAdded = async () => {
     setSnackbar({
@@ -108,7 +123,7 @@ function OtherPayment() {
       message: "Payment added successfully!",
       severity: "success",
     });
-    await fetchPayments();
+    await fetchPayments(pagination.current_page, search, filterValues);
   };
 
   const handleSearch = (e) => {
@@ -116,69 +131,65 @@ function OtherPayment() {
     setSearch(e.target.value);
   };
 
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.last_page) {
+      fetchPayments(newPage, search, filterValues);
+    }
+  };
+
   const handleClearSearch = () => {
     setSearchInput("");
     setSearch("");
   };
 
-  const filteredData = useMemo(() => {
-    return paymentData.filter((payment) => {
-      const residentName =
-        payment.resident?.name || payment.resident_name || "";
-      const residentId =
-        payment.resident?.resident_id || payment.resident_id || "";
-      const email = payment.resident?.email || payment.email || "";
-      const phone = payment.resident?.contact_no || payment.phone_number || "";
-      const method = payment.method_of_payment || "";
-      const category = payment.payment_category || "";
-      const date = payment.paid_at || payment.date || "";
+  const handleViewPayment = (payment) => {
+    setSelectedPayment(payment);
+    setShowViewModal(true);
+  };
 
-      const searchTerm = search.toLowerCase();
-      const matchesSearch =
-        !search ||
-        residentName.toLowerCase().includes(searchTerm) ||
-        residentId.toLowerCase().includes(searchTerm) ||
-        method.toLowerCase().includes(searchTerm) ||
-        category.toLowerCase().includes(searchTerm) ||
-        email.toLowerCase().includes(searchTerm) ||
-        phone.toLowerCase().includes(searchTerm);
+  const handleCloseViewModal = () => {
+    setShowViewModal(false);
+    setSelectedPayment(null);
+  };
 
-      const matchesType =
-        filterValues.type === "all" || method === filterValues.type;
-      const matchesDate = !filterValues.date || 
-        (date && filterValues.date && new Date(date).toDateString() === filterValues.date.toDateString());
-      const matchesMonth =
-        !filterValues.month || 
-        (date && new Date(date).getMonth() + 1 === parseInt(filterValues.month));
-      const matchesCategory =
-        filterValues.paymentCategory === "all" ||
-        category === filterValues.paymentCategory;
+  const formatDateRange = (payment) => {
+    if (!payment?.parking_start_date || !payment?.parking_end_date) return "-";
+    const start = new Date(payment.parking_start_date);
+    const end = new Date(payment.parking_end_date);
 
-      return (
-        matchesSearch &&
-        matchesType &&
-        matchesDate &&
-        matchesMonth &&
-        matchesCategory
-      );
-    });
-  }, [paymentData, search, filterValues]);
+    const months =
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth()) +
+      1;
 
-  const paginationInfo = useMemo(() => {
-    const total = filteredData.length;
-    const totalPages = Math.ceil(total / rowsPerPage);
-    return {
-      total,
-      totalPages,
-      from: (page - 1) * rowsPerPage + 1,
-      to: Math.min(page * rowsPerPage, total),
+    return `${start.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    })} to ${end.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    })} (${months} month${months !== 1 ? "s" : ""})`;
+  };
+
+  const formatTimeRange = (payment) => {
+    if (!payment?.rental_start_time || !payment?.rental_end_time) return "-";
+
+    const formatTime = (timeString) => {
+      const [hours, minutes] = timeString.split(":");
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
     };
-  }, [filteredData, page]);
 
-  const paginatedData = useMemo(
-    () => filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage),
-    [filteredData, page]
-  );
+    return `${formatTime(payment.rental_start_time)} - ${formatTime(
+      payment.rental_end_time
+    )}`;
+  };
+
+  const { current_page, last_page, total, per_page } = pagination;
+  const from = total === 0 ? 0 : (current_page - 1) * per_page + 1;
+  const to = Math.min(current_page * per_page, total);
 
   const columns = [
     {
@@ -221,210 +232,459 @@ function OtherPayment() {
     },
   ];
 
-  return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+  const actions = [
+    {
+      label: "View",
+      icon: <VisibilityIcon fontSize="small" />,
+      color: "primary",
+      sx: { "&:hover": { bgcolor: "primary.main", color: "#fff" } },
+      onClick: (row) => handleViewPayment(row),
+    },
+  ];
+
+  const getViewModalRows = () => {
+    if (!selectedPayment) return [];
+
+    const payment = selectedPayment;
+    const isRentalType = [
+      "Basketball Rental",
+      "Swimming Pool Rental",
+      "Clubhouse",
+      "Gazebo",
+    ].includes(payment.payment_category);
+    const isParkingType = payment.payment_category === "Parking";
+
+    return [
+      { field: "Resident Name", value: payment.resident?.name || "-" },
+      { field: "Resident ID", value: payment.resident?.resident_id || "-" },
+      { field: "Email", value: payment.resident?.email || "-" },
+      { field: "Phone Number", value: payment.resident?.contact_no || "-" },
+      {
+        field: "Payment Category",
+        value:
+          payment.payment_category === "Other" && payment.other_reason
+            ? payment.other_reason
+            : payment.payment_category || "-",
+      },
+      ...(isParkingType
+        ? [{ field: "Parking Duration", value: formatDateRange(payment) }]
+        : []),
+      ...(isRentalType
+        ? [
+            {
+              field: "Rental Date",
+              value: payment.rental_date
+                ? new Date(payment.rental_date).toLocaleDateString()
+                : "-",
+            },
+            { field: "Rental Time", value: formatTimeRange(payment) },
+          ]
+        : []),
+      {
+        field: "Amount",
+        value: `₱${Number(payment.amount || 0).toLocaleString()}`,
+      },
+      {
+        field: "Additional Fee",
+        value: `₱${Number(payment.additional_fee || 0).toLocaleString()}`,
+      },
+      {
+        field: "Total Amount",
+        value: `₱${(
+          Number(payment.amount || 0) + Number(payment.additional_fee || 0)
+        ).toLocaleString()}`,
+      },
+      { field: "Payment Method", value: payment.method_of_payment || "-" },
+      {
+        field: "Date Paid",
+        value: payment.paid_at
+          ? new Date(payment.paid_at).toLocaleDateString()
+          : "-",
+      },
+    ];
+  };
+
+  const tableMaxHeight = isMobile ? "40vh" : "60vh";
+
+  if (loading && payments.length === 0) {
+    return (
       <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
         <Box maxWidth="xl" mx="auto">
-        <Paper elevation={3} sx={{ borderRadius: 1, p: 1, boxShadow: 3 }}>
-          <Box
+          <Paper
+            elevation={3}
             sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 1,
-              mb: 1,
-              alignItems: "center",
-              my: 2, // Add top and bottom margins to the button container
+              borderRadius: 1,
+              overflow: "hidden",
+              p: { xs: 0.5, sm: 1 },
+              boxShadow: 3,
+              minHeight: 300,
             }}
           >
-            {/* Left side: Search + filters */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, flex: 1 }}>
-              <TextField
-                variant="outlined"
-                size="small"
-                placeholder="Search payments..."
-                value={searchInput}
-                onChange={handleSearch}
-                disabled={loading}
-                sx={{
-                  width: { xs: "100%", sm: 250 },
-                  height: 40,
-                  "& .MuiInputBase-root": { height: 40 },
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchInput && (
-                    <InputAdornment position="end">
-                      <IconButton size="small" onClick={handleClearSearch}>
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <DatePicker
-                label="Filter by Date"
-                value={filterDate}
-                onChange={(newValue) => {
-                  setFilterDate(newValue);
-                  setFilterMonth("");
-                  setFilterValues({
-                    ...filterValues,
-                    date: newValue,
-                    month: "",
-                  });
-                }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    InputProps: {
-                      endAdornment: filterDate && (
-                        <InputAdornment position="end">
-                          <IconButton 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFilterDate(null);
-                              setFilterValues({
-                                ...filterValues,
-                                date: null,
-                              });
-                            }}
-                          >
-                            <ClearIcon fontSize="small" />
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                    sx: {
-                      height: 40,
-                      "& .MuiInputBase-root": { height: 40 },
-                    }
-                  }
-                }}
-              />
-
-              <FormControl size="small" sx={{ minWidth: 150, height: 40 }}>
-                <InputLabel id="month-filter-label">Filter by Month</InputLabel>
-                <Select
-                  labelId="month-filter-label"
-                  value={filterMonth}
-                  onChange={(e) => {
-                    setFilterMonth(e.target.value);
-                    setFilterDate("");
-                    setFilterValues({
-                      ...filterValues,
-                      month: e.target.value,
-                      date: "",
-                    });
-                  }}
-                  label="Filter by Month"
-                  endAdornment={
-                    filterMonth && (
-                      <InputAdornment position="end">
-                        <IconButton 
-                          size="small" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFilterMonth("");
-                            setFilterValues({
-                              ...filterValues,
-                              month: "",
-                            });
-                          }}
-                        >
-                          <ClearIcon fontSize="small" />
-                        </IconButton>
-                      </InputAdornment>
-                    )
-                  }
-                  sx={{
-                    height: 40,
-                    '& .MuiSelect-select': {
-                      minHeight: '1.4375em',
-                      padding: '16.5px 14px',
-                    },
-                  }}
-                >
-                  {months.map((month) => (
-                    <MenuItem key={month.value} value={month.value}>
-                      {month.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-
-            {/* Right side: Add Payment button */}
-            <Box sx={{ ml: "auto" }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setShowAddForm(true)}
-                sx={{
-                  height: 40,
-                  my: 1, // Add top and bottom margins to the Add Payment button
-                }}
-              >
-                Add Payment
-              </Button>
-            </Box>
-          </Box>
-
-          {loading ? (
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "center",
-                height: 200,
                 alignItems: "center",
+                minHeight: 200,
               }}
             >
-              <CircularProgress />
+              <CircularProgress color="primary" />
             </Box>
-          ) : (
+          </Paper>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
+        <Box maxWidth="xl" mx="auto">
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box sx={{ p: { xs: 0.5, sm: 1 } }}>
+        <Box maxWidth="xl" mx="auto">
+          <Paper
+            elevation={3}
+            sx={{
+              borderRadius: 1,
+              overflow: "hidden",
+              p: { xs: 0.5, sm: 1 },
+              boxShadow: 3,
+              minHeight: 300,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+                mb: 1,
+                px: 1,
+                py: 0.5,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  width: { xs: "100%", sm: "auto" },
+                  flexDirection: { xs: "column", sm: "row" },
+                }}
+              >
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  placeholder="Search payments..."
+                  value={searchInput}
+                  onChange={handleSearch}
+                  sx={{
+                    width: { xs: "100%", sm: 320 },
+                    m: 0,
+                    height: 40,
+                    "& .MuiInputBase-root": {
+                      height: 40,
+                      minHeight: 40,
+                      py: 0,
+                    },
+                    "& .MuiOutlinedInput-root": {
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "primary.main",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "primary.main",
+                      },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: search && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={handleClearSearch}
+                          sx={{ p: 0 }}
+                        >
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    sx: { py: 0 },
+                  }}
+                />
+
+                <DatePicker
+                  label="Filter by Date"
+                  value={filterDate}
+                  onChange={(newValue) => {
+                    setFilterDate(newValue);
+                    setFilterMonth("");
+                    setFilterValues({
+                      ...filterValues,
+                      date: newValue,
+                      month: "",
+                    });
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                      sx: {
+                        width: { xs: "100%", sm: 200 },
+                        height: 40,
+                        "& .MuiInputBase-root": { height: 40 },
+                      },
+                    },
+                  }}
+                />
+
+                <FormControl
+                  size="small"
+                  sx={{ width: { xs: "100%", sm: 200 } }}
+                >
+                  <InputLabel>Filter by Month</InputLabel>
+                  <Select
+                    value={filterMonth}
+                    label="Filter by Month"
+                    onChange={(e) => {
+                      setFilterMonth(e.target.value);
+                      setFilterDate(null);
+                      setFilterValues({
+                        ...filterValues,
+                        month: e.target.value,
+                        date: "",
+                      });
+                    }}
+                    sx={{
+                      height: 40,
+                      "& .MuiSelect-select": {
+                        py: 0,
+                        display: "flex",
+                        alignItems: "center",
+                      },
+                    }}
+                  >
+                    {months.map((month) => (
+                      <MenuItem key={month.value} value={month.value}>
+                        {month.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              <Box sx={{ ml: "auto" }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setShowAddForm(true)}
+                  sx={{ height: 40 }}
+                >
+                  Add Payment
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Active filters summary */}
+            {(search || filterDate || filterMonth) && (
+              <Box sx={{ px: 1, py: 0.5, mb: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  {search && `Search: "${search}"`}
+                  {search && (filterDate || filterMonth) && " | "}
+                  {filterDate && `Date: ${filterDate.toLocaleDateString()}`}
+                  {filterMonth &&
+                    `Month: ${
+                      months.find((m) => m.value === filterMonth)?.label
+                    }`}
+                </Typography>
+              </Box>
+            )}
+
             <FloraTable
               columns={columns}
-              rows={paginatedData}
-              actions={[]}
-              page={page}
-              rowsPerPage={rowsPerPage}
-              maxHeight={isMobile ? "40vh" : "60vh"}
+              rows={payments}
+              actions={actions}
+              page={current_page}
+              rowsPerPage={per_page}
+              maxHeight={tableMaxHeight}
               emptyMessage="No payments found."
-              disableInternalPagination
-              paginationInfo={paginationInfo}
-              onPageChange={setPage}
-              PrevIcon={<ChevronLeftIcon />}
-              NextIcon={<ChevronRightIcon />}
+              loading={loading}
+              disableInternalPagination={true}
             />
-          )}
-        </Paper>
-      </Box>
 
-      <AddPaymentModal
-        open={showAddForm}
-        onClose={() => setShowAddForm(false)}
-        onSave={handlePaymentAdded}
-      />
+            {/* Manual Pagination Controls */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                justifyContent: "space-between",
+                alignItems: { xs: "flex-start", md: "center" },
+                p: 1,
+                gap: 1,
+              }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  whiteSpace: "nowrap",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  minHeight: 32,
+                }}
+              >
+                {total === 0 ? "0 of 0" : `${from}–${to} of ${total}`}
+              </Typography>
+              <Box
+                width="100%"
+                display="flex"
+                justifyContent={{ xs: "center", md: "flex-end" }}
+              >
+                <IconButton
+                  onClick={() => handlePageChange(current_page - 1)}
+                  disabled={current_page <= 1}
+                  sx={{
+                    border: "1.5px solid",
+                    borderColor: current_page <= 1 ? "divider" : "primary.main",
+                    borderRadius: 2,
+                    mx: 0.5,
+                    bgcolor: "background.paper",
+                    color: current_page <= 1 ? "text.disabled" : "primary.main",
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor:
+                        current_page <= 1 ? "background.paper" : "primary.main",
+                      color: current_page <= 1 ? "text.disabled" : "#fff",
+                      borderColor:
+                        current_page <= 1 ? "divider" : "primary.main",
+                      "& .MuiSvgIcon-root": {
+                        color: current_page <= 1 ? "text.disabled" : "#fff",
+                      },
+                    },
+                  }}
+                  size="small"
+                >
+                  <ChevronLeftIcon
+                    sx={{
+                      color:
+                        current_page <= 1 ? "text.disabled" : "primary.main",
+                    }}
+                  />
+                </IconButton>
+                <IconButton
+                  onClick={() => handlePageChange(current_page + 1)}
+                  disabled={current_page >= last_page}
+                  sx={{
+                    border: "1.5px solid",
+                    borderColor:
+                      current_page >= last_page ? "divider" : "primary.main",
+                    borderRadius: 2,
+                    mx: 0.5,
+                    bgcolor: "background.paper",
+                    color:
+                      current_page >= last_page
+                        ? "text.disabled"
+                        : "primary.main",
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor:
+                        current_page >= last_page
+                          ? "background.paper"
+                          : "primary.main",
+                      color:
+                        current_page >= last_page ? "text.disabled" : "#fff",
+                      borderColor:
+                        current_page >= last_page ? "divider" : "primary.main",
+                      "& .MuiSvgIcon-root": {
+                        color:
+                          current_page >= last_page ? "text.disabled" : "#fff",
+                      },
+                    },
+                  }}
+                  size="small"
+                >
+                  <ChevronRightIcon
+                    sx={{
+                      color:
+                        current_page >= last_page
+                          ? "text.disabled"
+                          : "primary.main",
+                    }}
+                  />
+                </IconButton>
+              </Box>
+            </Box>
+          </Paper>
+        </Box>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        <AddPaymentModal
+          open={showAddForm}
+          onClose={() => setShowAddForm(false)}
+          onSave={handlePaymentAdded}
+        />
+
+        <Dialog
+          open={showViewModal}
+          onClose={handleCloseViewModal}
+          maxWidth="md"
+          fullWidth
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <DialogTitle>Payment Details</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <FloraTable
+                columns={[
+                  {
+                    id: "field",
+                    label: "Field",
+                    render: (value) => <strong>{value}</strong>,
+                  },
+                  { id: "value", label: "Value" },
+                ]}
+                rows={getViewModalRows()}
+                actions={[]}
+                page={1}
+                rowsPerPage={20}
+                maxHeight="500px"
+                emptyMessage="No data to display"
+                disableInternalPagination={true}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseViewModal} variant="contained">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </LocalizationProvider>
   );

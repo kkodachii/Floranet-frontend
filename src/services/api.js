@@ -1403,7 +1403,6 @@ class ApiService {
     }
   }
 }
-
 // Create and export a singleton instance
 const apiService = new ApiService();
 export default apiService;
