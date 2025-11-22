@@ -67,7 +67,7 @@ function DeleteConfirmationModal({
             border: '1px solid',
             borderColor: 'error.main'
           }}>
-            <Typography variant="body2" color="error.dark">
+            <Typography variant="body2" color="white">
               <strong>Warning:</strong> This action cannot be undone. The {itemName} will be permanently deleted.
             </Typography>
           </Box>

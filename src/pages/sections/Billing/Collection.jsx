@@ -27,10 +27,12 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useTheme } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import FloraTable from '../../../components/FloraTable';
+import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import apiService from '../../../services/api';
 
 
@@ -55,6 +57,7 @@ function Collection() {
     to: 0
   });
   const [amountDialog, setAmountDialog] = useState({ open: false, data: null, amount: '' });
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, data: null });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [yearOptions, setYearOptions] = useState([]);
   const [streetOptions, setStreetOptions] = useState([]);
@@ -153,6 +156,39 @@ function Collection() {
     }
   };
 
+  const handleEdit = (row) => {
+    const amount = row.originalData?.amount_per_resident || '';
+    setAmountDialog({ 
+      open: true, 
+      data: row, 
+      amount: amount.toString() 
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteDialog.data) return;
+    
+    try {
+      const response = await apiService.deleteCollection(deleteDialog.data.originalData.id);
+      
+      if (response.success) {
+        setSnackbar({ open: true, message: 'Collection deleted successfully', severity: 'success' });
+        setDeleteDialog({ open: false, data: null });
+        // Refresh the data
+        fetchData(page);
+      } else {
+        setSnackbar({ open: true, message: response.message || 'Failed to delete collection', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Failed to delete collection', 
+        severity: 'error' 
+      });
+    }
+  };
+
   useEffect(() => {
     fetchFilterOptions();
   }, []);
@@ -220,7 +256,20 @@ function Collection() {
   const transformedData = transformData(collections);
 
   // Actions for each row
-  const actions = [];
+  const actions = [
+    {
+      icon: <EditIcon fontSize="small" />,
+      label: 'Edit Amount',
+      onClick: handleEdit,
+      color: 'primary'
+    },
+    {
+      icon: <DeleteIcon fontSize="small" />,
+      label: 'Delete',
+      onClick: (row) => setDeleteDialog({ open: true, data: row }),
+      color: 'error'
+    }
+  ];
 
   const columns = [
     { id: 'month', label: 'Month' },
@@ -477,7 +526,7 @@ function Collection() {
         </Paper>
       </Box>
 
-      {/* Set Amount Dialog */}
+      {/* Edit Amount Dialog */}
       <Dialog
         open={amountDialog.open}
         onClose={() => setAmountDialog({ open: false, data: null, amount: '' })}
@@ -485,11 +534,11 @@ function Collection() {
         fullWidth
       >
         <DialogTitle>
-          Set Collection Amount
+          Edit Collection Amount
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Set the amount to collect per resident for {amountDialog.data?.originalData?.month} {amountDialog.data?.originalData?.year} - {amountDialog.data?.originalData?.street}
+            Edit the amount to collect per resident for {amountDialog.data?.originalData?.month} {amountDialog.data?.originalData?.year} - {amountDialog.data?.originalData?.street}
           </Typography>
           <TextField
             autoFocus
@@ -518,10 +567,20 @@ function Collection() {
             variant="contained"
             disabled={!amountDialog.amount || parseFloat(amountDialog.amount) <= 0}
           >
-            Set Amount
+            Update Amount
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationModal
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, data: null })}
+        onConfirm={handleDelete}
+        title="Delete Collection"
+        message={`Are you sure you want to delete the collection for ${deleteDialog.data?.originalData?.month} ${deleteDialog.data?.originalData?.year} - ${deleteDialog.data?.originalData?.street}?`}
+        itemName="collection"
+      />
 
       {/* Snackbar for notifications */}
       <Snackbar
