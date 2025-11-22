@@ -342,6 +342,7 @@ export default function GeneralComplaints() {
           options={statusOptions}
           onUpdate={(newStatus) => handleStatusChange(complaint.id, newStatus)}
           type="status"
+          disabled={complaint.status === 'resolved'}
         />
       ),
       remarks: (
